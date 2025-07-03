@@ -226,4 +226,224 @@ YOUTUBE_API_KEY=tu-api-key
 - El backend es el único proveedor de datos para el frontend.
 - Estructura modular y escalable, lista para microservicios.
 - Seguridad y buenas prácticas garantizadas.
-- Fácil integración con cualquier frontend moderno (Next.js, React, Expo, etc). 
+- Fácil integración con cualquier frontend moderno (Next.js, React, Expo, etc).
+
+# 🛠️ Plan de Desarrollo Backend GVSAnime
+
+## 1. Autenticación y Usuarios
+- [x] Integrar Supabase Auth (registro, login, JWT)
+- [x] Crear tabla `users` (perfil extendido) y triggers para sincronización con `auth.users`
+- [ ] Endpoint para obtener perfil de usuario
+- [ ] Endpoint para actualizar perfil de usuario
+
+## 2. Favoritos
+- [x] Crear tabla `favorites` en Supabase
+- [x] Endpoint para agregar anime a favoritos
+- [x] Endpoint para listar favoritos del usuario
+- [x] Endpoint para eliminar favorito
+
+## 3. Reseñas
+- [x] Crear tabla `reviews` en Supabase
+- [x] Endpoint para crear reseña
+- [x] Endpoint para listar reseñas de un anime
+- [x] Endpoint para eliminar reseña (solo autor)
+
+## 4. Videos Propios
+- [x] Crear tabla `videos` en Supabase
+- [ ] Endpoint para agregar video
+- [ ] Endpoint para listar videos
+- [ ] Endpoint para filtrar videos por anime
+
+## 5. Comentarios y Foros
+- [x] Crear tablas `comments` y `forums` en Supabase
+- [ ] Endpoint para crear comentario
+- [ ] Endpoint para listar comentarios
+- [ ] Endpoint para crear foro/hilo
+- [ ] Endpoint para listar foros
+
+## 6. Integración con APIs externas y MongoDB
+- [x] Integrar Jikan API para info de anime
+- [x] Integrar YouTube API para trailers
+- [x] Integrar MongoDB para cache de anime y trailers
+
+## 7. Seguridad y Middlewares
+- [x] Middleware para verificar JWT (proteger rutas)
+- [ ] Middleware de roles (admin/moderador)
+
+## 8. Documentación y Pruebas
+- [x] Documentar endpoints en README o Swagger
+- [ ] Pruebas básicas de endpoints
+
+---
+
+# 🧪 Ejemplos de Prueba de Endpoints
+
+## Auth
+
+### Registro
+```bash
+curl -X POST http://localhost:5000/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"email": "test@correo.com", "password": "123456"}'
+```
+**Respuesta esperada:**
+```json
+{
+  "user": { "id": "...", "email": "test@correo.com" },
+  "token": "..."
+}
+```
+
+### Login
+```bash
+curl -X POST http://localhost:5000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email": "test@correo.com", "password": "123456"}'
+```
+**Respuesta esperada:**
+```json
+{
+  "user": { "id": "...", "email": "test@correo.com" },
+  "token": "..."
+}
+```
+
+## Anime
+
+### Buscar anime
+```bash
+curl -X GET "http://localhost:5000/api/anime/search?q=naruto" \
+  -H "Authorization: Bearer <token>"
+```
+**Respuesta esperada:**
+```json
+[
+  {
+    "id": "20",
+    "title": "Naruto",
+    "image_url": "...",
+    "score": 7.9,
+    ...
+  },
+  ...
+]
+```
+
+### Obtener detalles de anime
+```bash
+curl -X GET http://localhost:5000/api/anime/20 \
+  -H "Authorization: Bearer <token>"
+```
+**Respuesta esperada:**
+```json
+{
+  "id": "20",
+  "title": "Naruto",
+  "episodes": 220,
+  "synopsis": "...",
+  "genres": ["Action", "Adventure"],
+  "trailer": { ... },
+  "image_url": "...",
+  "score": 7.9,
+  "favorites_count": 5,
+  "reviews": [ ... ],
+  "comments": [ ... ],
+  "forums": [ ... ]
+}
+```
+
+## Favoritos
+
+### Agregar a favoritos
+```bash
+curl -X POST http://localhost:5000/api/favorites \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{"anime_id": "20"}'
+```
+**Respuesta esperada:**
+```json
+{
+  "message": "Anime agregado a favoritos"
+}
+```
+
+### Listar favoritos
+```bash
+curl -X GET http://localhost:5000/api/favorites \
+  -H "Authorization: Bearer <token>"
+```
+**Respuesta esperada:**
+```json
+[
+  {
+    "animeId": "20",
+    "title": "Naruto",
+    "image_url": "..."
+  },
+  ...
+]
+```
+
+### Eliminar favorito
+```bash
+curl -X DELETE http://localhost:5000/api/favorites/20 \
+  -H "Authorization: Bearer <token>"
+```
+**Respuesta esperada:**
+```json
+{
+  "message": "Favorito eliminado"
+}
+```
+
+## Reseñas
+
+### Crear reseña
+```bash
+curl -X POST http://localhost:5000/api/reviews \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{"anime_id": "20", "rating": 9, "comment": "¡Excelente!"}'
+```
+**Respuesta esperada:**
+```json
+{
+  "message": "Reseña creada"
+}
+```
+
+### Listar reseñas de un anime
+```bash
+curl -X GET http://localhost:5000/api/reviews/20
+```
+**Respuesta esperada:**
+```json
+[
+  {
+    "user": "usuario1",
+    "rating": 9,
+    "comment": "¡Excelente!",
+    "date": "2024-06-01"
+  },
+  ...
+]
+```
+
+### Eliminar reseña
+```bash
+curl -X DELETE http://localhost:5000/api/reviews/123 \
+  -H "Authorization: Bearer <token>"
+```
+**Respuesta esperada:**
+```json
+{
+  "message": "Reseña eliminada"
+}
+```
+
+// ... Puedes seguir este formato para videos, comentarios y foros cuando estén implementados ...
+
+---
+
+**Trabajaremos siguiendo este plan, sección por sección.** 
