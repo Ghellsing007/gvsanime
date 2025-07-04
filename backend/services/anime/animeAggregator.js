@@ -6,6 +6,7 @@ import mongoose from '../../services/shared/mongooseClient.js';
 import getSupabaseClient from '../../services/shared/supabaseClient.js';
 import { getAnimeById, searchAnime } from './jikanService.js';
 import { getReviews, getUserReview, getFavoritesCount, isAnimeFavorite, getComments, getForums } from './animeUtils.js';
+import { unifiedAnimeSearch } from './unifiedSearchService.js';
 // Aquí puedes importar más servicios externos en el futuro
 
 // Modelo para el cache de anime en MongoDB
@@ -19,7 +20,8 @@ const AnimeCache = mongoose.models.AnimeCache || mongoose.model('AnimeCache', ne
 const SearchCache = mongoose.models.SearchCache || mongoose.model('SearchCache', new mongoose.Schema({
   query: { type: String, required: true, index: true },
   results: [Object],
-  updatedAt: { type: Date, default: Date.now }
+  updatedAt: { type: Date, default: Date.now },
+  source: String
 }));
 
 // Función para buscar anime con caché
@@ -28,23 +30,24 @@ export async function searchAnimeWithCache(query) {
   let cache = await SearchCache.findOne({ query: query.toLowerCase() });
   if (cache) {
     console.log(`Resultados de búsqueda encontrados en caché para: ${query}`);
-    return cache.results;
+    return { source: cache.source, results: cache.results };
   }
 
-  // 2. Si no está en caché, buscar en APIs externas
+  // 2. Si no está en caché, buscar en APIs externas (servicio unificado)
   console.log(`Buscando en APIs externas para: ${query}`);
-  const results = await searchAnime(query);
+  const { source, results } = await unifiedAnimeSearch(query);
 
   // 3. Guardar en cache para futuras consultas
   if (results && results.length > 0) {
     await SearchCache.create({ 
       query: query.toLowerCase(), 
-      results: results 
+      results: results,
+      source: source
     });
     console.log(`Resultados guardados en caché para: ${query}`);
   }
 
-  return results;
+  return { source, results };
 }
 
 // Función principal para obtener los datos completos de un anime
