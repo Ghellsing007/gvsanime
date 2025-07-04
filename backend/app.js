@@ -1,9 +1,13 @@
+import dotenv from 'dotenv';
+dotenv.config();
+console.log('SUPABASE_JWT_SECRET en app.js:', process.env.SUPABASE_JWT_SECRET);
 import express from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
 import routes from './routes/index.js';
 import { connectMongo } from './services/shared/mongooseClient.js';
 import { checkSupabaseConnection } from './services/shared/supabaseClient.js';
+
 
 const app = express();
 const PORT = process.env.PORT || 5000;

@@ -282,9 +282,8 @@ YOUTUBE_API_KEY=tu-api-key
 
 ### Registro
 ```bash
-curl -X POST http://localhost:5000/api/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{"email": "test@correo.com", "password": "123456"}'
+curl -X POST http://localhost:5001/api/auth/register -H "Content-Type: application/json" -d "{\"email\": \"test@correo.com\", \"password\": \"123456\"}"
+
 ```
 **Respuesta esperada:**
 ```json
@@ -446,4 +445,44 @@ curl -X DELETE http://localhost:5000/api/reviews/123 \
 
 ---
 
-**Trabajaremos siguiendo este plan, sección por sección.** 
+**Trabajaremos siguiendo este plan, sección por sección.**
+
+---
+
+## 🆕 Registro de Usuario vía Backend
+
+Ahora puedes registrar usuarios directamente desde el backend usando Supabase.
+
+### Endpoint
+- **POST** `/api/auth/register`
+
+### Body (JSON)
+- `email` (obligatorio)
+- `password` (obligatorio)
+- `username` (opcional)
+
+### Ejemplo con curl
+```bash
+curl -X POST http://localhost:5000/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@correo.com", "password":"123456", "username":"opcional"}'
+```
+
+Si no quieres enviar username:
+```bash
+curl -X POST http://localhost:5000/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@correo.com", "password":"123456"}'
+```
+
+### Respuesta exitosa
+```json
+{
+  "message": "Usuario registrado correctamente",
+  "user": {
+    "id": "...",
+    "email": "test@correo.com",
+    ...
+  }
+}
+``` 
