@@ -128,4 +128,97 @@
 
 > Todos estos componentes deben migrar a usar axios apuntando a los endpoints del backend, eliminando el uso de datos mock y asegurando que la información mostrada sea dinámica y actualizada.
 
+---
+
+## 10. Resolución de conflictos y aclaraciones para la migración
+
+### 1. Acceso público a `/anime`
+- **Situación:** En el server, la ruta `/anime` es pública para mostrar datos en la página de inicio y exploración.
+- **Acción:** El endpoint `/api/anime` en el backend debe ser público (no requerir JWT) para permitir mostrar animes en la home y exploración.
+
+### 2. Filtros y funcionalidades faltantes en `/api/anime`
+- **Situación:** El backend actualmente NO soporta filtros de top, temporada, género ni recientes.
+- **Acción:** Implementar en `/api/anime` los siguientes filtros:
+  - `?sort=top` o `/top` para animes top
+  - `?season=year-season` o `/season/:year/:season` para temporada
+  - `?genre=nombre` o `/genre/:genre` para género
+  - `?sort=recent` o `/recent` para recientes
+
+### 3. Uso de `/anime/:id`
+- **Situación:** Esta ruta se usa para mostrar el detalle de un anime específico (ficha completa, sinopsis, imagen, etc.).
+- **Acción:** El endpoint `/api/anime/:id` debe devolver todos los datos necesarios para la página de detalle de anime.
+
+### 4. Diferencia entre reviews y comments
+- **Situación:**
+  - **Reviews:** Son reseñas que pueden venir de la API externa (Jikan) y se muestran como información general del anime.
+  - **Comments:** Son comentarios hechos por los usuarios de la página, almacenados en la base de datos propia.
+- **Acción:**
+  - `/api/reviews/:animeId` debe devolver reseñas externas (Jikan) para mostrar opiniones generales.
+  - `/api/comments/:animeId` debe manejar los comentarios de usuarios propios (crear, listar, editar, eliminar, like, etc.).
+  - Todas las rutas tipo `/comments/:id` deben operar sobre los comentarios de usuarios, no sobre reviews externos.
+
+### 5. Instrucciones para actualizar el backend
+- Hacer público el endpoint `/api/anime`.
+- Implementar los filtros de top, temporada, género y recientes en `/api/anime`.
+- Asegurar que `/api/anime/:id` devuelva todos los datos necesarios para la ficha de anime.
+- Separar claramente los endpoints de reviews (externos) y comments (usuarios):
+  - `/api/reviews/:animeId` → reseñas externas (solo lectura)
+  - `/api/comments/:animeId` → comentarios de usuarios (CRUD, likes, etc.)
+- Actualizar la documentación y la tabla de endpoints en este plan según estos cambios.
+
+---
+
+> Con estas aclaraciones, el siguiente paso es ir al backend y actualizar/implementar los endpoints y filtros necesarios para cubrir las necesidades del frontend y la migración.
+
+---
+
+## 11. Planificación de la implementación en el backend
+
+### 1. Hacer público el endpoint `/api/anime`
+- Quitar la protección JWT para permitir acceso público a la lista de animes.
+
+### 2. Implementar filtros en `/api/anime`
+- Agregar soporte para:
+  - `?sort=top` o `/top` → animes top
+  - `?season=year-season` o `/season/:year/:season` → por temporada
+  - `?genre=nombre` o `/genre/:genre` → por género
+  - `?sort=recent` o `/recent` → recientes
+
+### 3. Mejorar `/api/anime/:id`
+- Asegurarse de que devuelva todos los datos necesarios para la ficha de anime (sinopsis, imagen, score, géneros, episodios, año, temporada, etc.).
+
+### 4. Endpoints de reviews y comments
+- `/api/reviews/:animeId`: Solo lectura, obtener reseñas externas (Jikan).
+- `/api/comments/:animeId`: CRUD y likes de comentarios de usuarios propios.
+- `/api/comments/:id`: Editar, eliminar, dar like a comentarios de usuarios.
+
+### 5. Implementar `/api/genres`
+- Endpoint para devolver la lista de géneros y conteo de animes por género.
+
+### 6. PopularAnime y RecentlyUpdated
+- `/api/anime?sort=popularity` → populares/top (por género si se pasa `genre`)
+- `/api/anime?sort=recent` → recientemente actualizados
+
+### 7. FeaturedAnime
+- `/api/anime?featured=true` o `/api/anime?sort=featured` → destacados
+
+---
+
+## 12. Datos mock en el frontend y su equivalente necesario en el backend
+
+| Componente           | Datos mock actuales                                                                 | Equivalente necesario en backend (endpoint sugerido)         |
+|----------------------|-------------------------------------------------------------------------------------|--------------------------------------------------------------|
+| FeaturedAnime        | Array de animes destacados (id, title, image, score, episodes, genres, year, season)| `/api/anime?featured=true` o `/api/anime?sort=featured`      |
+| GenreShowcase        | Array de géneros (id, name, description, image, count)                              | `/api/genres`                                                |
+| PopularAnime         | Objeto con arrays de animes populares por categoría (all, action, romance, etc.)    | `/api/anime?sort=popularity` y/o `/api/anime?genre=...`      |
+| RecentlyUpdated      | Array de animes recientemente actualizados                                          | `/api/anime?sort=recent`                                     |
+
+---
+
+> Todos estos datos mock deben ser reemplazados por consultas reales al backend usando axios, asegurando que la información mostrada sea dinámica y actualizada.
+
+---
+
+¿Falta algo? Verificar que todos los datos que muestra el frontend estén cubiertos por los endpoints del backend. Si algún dato no está cubierto, agregarlo a la planificación.
+
 --- 
