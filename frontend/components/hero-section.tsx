@@ -5,49 +5,45 @@ import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { motion } from "framer-motion"
 import { Play, Info } from "lucide-react"
+import api from "../lib/api"
 
-// Mock featured anime data
-const featuredAnime = [
-  {
-    id: 1,
-    title: "Demon Slayer: Kimetsu no Yaiba",
-    description: "A boy raised by a family of demons hunts down the demons who slaughtered his family.",
-    image: "/placeholder.svg?height=600&width=1200",
-    genres: ["Action", "Fantasy", "Historical"],
-    rating: 8.9,
-  },
-  {
-    id: 2,
-    title: "Attack on Titan",
-    description:
-      "In a world where humanity lives within cities surrounded by enormous walls due to the Titans, giant humanoid beings who devour humans seemingly without reason.",
-    image: "/placeholder.svg?height=600&width=1200",
-    genres: ["Action", "Drama", "Fantasy"],
-    rating: 9.1,
-  },
-  {
-    id: 3,
-    title: "My Hero Academia",
-    description:
-      "A superhero-loving boy without any powers is determined to enroll in a prestigious hero academy and learn what it really means to be a hero.",
-    image: "/placeholder.svg?height=600&width=1200",
-    genres: ["Action", "Comedy", "Superhero"],
-    rating: 8.5,
-  },
-]
+type Anime = {
+  id: number | string;
+  title: string;
+  image?: string;
+  score?: number;
+  rating?: number;
+  genres?: string[];
+  synopsis?: string;
+  description?: string;
+};
 
 export default function HeroSection() {
+  const [animes, setAnimes] = useState<Anime[]>([])
   const [currentSlide, setCurrentSlide] = useState(0)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<Error | null>(null)
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % featuredAnime.length)
-    }, 8000)
-
-    return () => clearInterval(interval)
+    api.get('/anime/search?featured=true')
+      .then((res: any) => setAnimes(res.data.results))
+      .catch((err: any) => setError(err))
+      .finally(() => setLoading(false))
   }, [])
 
-  const anime = featuredAnime[currentSlide]
+  useEffect(() => {
+    if (!animes.length) return;
+    const interval = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % animes.length)
+    }, 8000)
+    return () => clearInterval(interval)
+  }, [animes.length])
+
+  if (loading) return <div>Cargando...</div>;
+  if (error) return <div>Error: {error.message}</div>;
+  if (!animes.length) return <div>No hay animes destacados.</div>;
+
+  const anime = animes[currentSlide]
 
   return (
     <section className="relative h-[500px] md:h-[600px] overflow-hidden rounded-xl mb-12">
@@ -74,15 +70,15 @@ export default function HeroSection() {
           <h1 className="text-3xl md:text-5xl font-bold mb-4">{anime.title}</h1>
           <div className="flex items-center mb-4 space-x-2">
             <div className="bg-primary/90 text-primary-foreground px-2 py-1 rounded text-sm font-medium">
-              {anime.rating} ★
+              {anime.score || anime.rating} ★
             </div>
-            {anime.genres.map((genre) => (
+            {anime.genres?.map((genre) => (
               <div key={genre} className="bg-background/50 backdrop-blur-sm px-2 py-1 rounded text-sm">
                 {genre}
               </div>
             ))}
           </div>
-          <p className="text-lg mb-6 max-w-2xl">{anime.description}</p>
+          <p className="text-lg mb-6 max-w-2xl">{anime.synopsis || anime.description}</p>
           <div className="flex space-x-4">
             <Button className="gap-2">
               <Play className="h-4 w-4" />
@@ -97,7 +93,7 @@ export default function HeroSection() {
       </div>
 
       <div className="absolute bottom-6 left-0 right-0 z-20 flex justify-center space-x-2">
-        {featuredAnime.map((_, index) => (
+        {animes.map((_, index) => (
           <button
             key={index}
             onClick={() => setCurrentSlide(index)}
