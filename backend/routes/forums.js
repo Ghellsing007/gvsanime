@@ -1,19 +1,28 @@
 import express from 'express';
-import { authMiddleware } from '../middleware/index.js';
-import { addForum, getForums, updateForum, deleteForum } from '../controllers/forumsController.js';
+import { getCategories, createCategory, getCategory, updateCategory, deleteCategory, getTopics, createTopic, getTopic, updateTopic, deleteTopic, getPosts, createPost, updatePost, deletePost, likePost } from '../controllers/forumsController.js';
+import authMiddleware from '../middleware/auth.js';
 
 const router = express.Router();
 
-// Crear un foro/hilo (protegido)
-router.post('/', authMiddleware, addForum);
+// Categorías
+router.get('/categories', getCategories);
+router.post('/categories', authMiddleware, createCategory);
+router.get('/categories/:id', getCategory);
+router.put('/categories/:id', authMiddleware, updateCategory);
+router.delete('/categories/:id', authMiddleware, deleteCategory);
 
-// Listar foros/hilos (público)
-router.get('/', getForums);
+// Temas
+router.get('/topics', getTopics);
+router.post('/topics', authMiddleware, createTopic);
+router.get('/topics/:id', getTopic);
+router.put('/topics/:id', authMiddleware, updateTopic);
+router.delete('/topics/:id', authMiddleware, deleteTopic);
 
-// Editar un foro/hilo (protegido, solo el autor)
-router.put('/:id', authMiddleware, updateForum);
-
-// Eliminar un foro/hilo (protegido, solo el autor)
-router.delete('/:id', authMiddleware, deleteForum);
+// Posts
+router.get('/posts', getPosts);
+router.post('/posts', authMiddleware, createPost);
+router.put('/posts/:id', authMiddleware, updatePost);
+router.delete('/posts/:id', authMiddleware, deletePost);
+router.put('/posts/:id/like', authMiddleware, likePost);
 
 export default router; 

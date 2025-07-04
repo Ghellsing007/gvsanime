@@ -1,19 +1,22 @@
 import express from 'express';
-import { authMiddleware } from '../middleware/index.js';
-import { addComment, getComments, updateComment, deleteComment } from '../controllers/commentsController.js';
+import { getComments, addComment, updateComment, deleteComment, likeComment } from '../controllers/commentsController.js';
+import authMiddleware from '../middleware/auth.js';
 
 const router = express.Router();
 
-// Crear un comentario (protegido)
-router.post('/', authMiddleware, addComment);
+// Listar comentarios de un anime (público)
+router.get('/:animeId', getComments);
 
-// Listar comentarios (público, con filtro opcional por anime o video)
-router.get('/', getComments);
+// Crear comentario (requiere autenticación)
+router.post('/:animeId', authMiddleware, addComment);
 
-// Editar un comentario (protegido, solo el autor)
+// Editar comentario (requiere autenticación)
 router.put('/:id', authMiddleware, updateComment);
 
-// Eliminar un comentario (protegido, solo el autor)
+// Eliminar comentario (requiere autenticación)
 router.delete('/:id', authMiddleware, deleteComment);
+
+// Dar o quitar like a un comentario (requiere autenticación)
+router.put('/:id/like', authMiddleware, likeComment);
 
 export default router; 

@@ -7,6 +7,7 @@ import getSupabaseClient from '../../services/shared/supabaseClient.js';
 import { getAnimeById, searchAnime } from './jikanService.js';
 import { getReviews, getUserReview, getFavoritesCount, isAnimeFavorite, getComments, getForums } from './animeUtils.js';
 import { unifiedAnimeSearch } from './unifiedSearchService.js';
+import ReviewCache from './reviewCacheModel.js';
 // Aquí puedes importar más servicios externos en el futuro
 
 // Modelo para el cache de anime en MongoDB
@@ -23,6 +24,30 @@ const SearchCache = mongoose.models.SearchCache || mongoose.model('SearchCache',
   updatedAt: { type: Date, default: Date.now },
   source: String,
   animeIds: [String] // Relación explícita con los mal_id de los animes
+}));
+
+// Modelo para el cache de géneros en MongoDB
+const GenreCache = mongoose.models.GenreCache || mongoose.model('GenreCache', new mongoose.Schema({
+  genres: [Object],
+  updatedAt: { type: Date, default: Date.now }
+}));
+
+// Modelo para el cache de animes top en MongoDB
+const TopAnimeCache = mongoose.models.TopAnimeCache || mongoose.model('TopAnimeCache', new mongoose.Schema({
+  animes: [Object],
+  updatedAt: { type: Date, default: Date.now }
+}));
+
+// Modelo para el cache de animes recientes en MongoDB
+const RecentAnimeCache = mongoose.models.RecentAnimeCache || mongoose.model('RecentAnimeCache', new mongoose.Schema({
+  animes: [Object],
+  updatedAt: { type: Date, default: Date.now }
+}));
+
+// Modelo para el cache de animes destacados en MongoDB
+const FeaturedAnimeCache = mongoose.models.FeaturedAnimeCache || mongoose.model('FeaturedAnimeCache', new mongoose.Schema({
+  animes: [Object],
+  updatedAt: { type: Date, default: Date.now }
 }));
 
 // Función para buscar anime con caché
@@ -233,4 +258,187 @@ export async function cleanAllCache() {
   const animes = await AnimeCache.deleteMany({});
   const searches = await SearchCache.deleteMany({});
   return { animes: animes.deletedCount, searches: searches.deletedCount };
-} 
+}
+
+// Obtener animes top con cache configurable
+export async function getTopAnime() {
+  const hours = parseInt(process.env.TOP_ANIME_CACHE_HOURS || '6', 10);
+  const expiration = new Date(Date.now() - hours * 60 * 60 * 1000);
+  let cache = await TopAnimeCache.findOne({ updatedAt: { $gte: expiration } });
+  if (cache) {
+    return cache.animes;
+  }
+  const response = await fetch('https://api.jikan.moe/v4/top/anime?limit=24');
+  if (!response.ok) throw new Error('Error obteniendo animes top');
+  const data = await response.json();
+  const animes = data.data.map(anime => ({
+    id: anime.mal_id,
+    title: anime.title,
+    image: anime.images?.jpg?.image_url,
+    score: anime.score,
+    episodes: anime.episodes,
+    genres: anime.genres?.map(g => g.name),
+    year: anime.year,
+    season: anime.season,
+  }));
+  await TopAnimeCache.deleteMany({});
+  await TopAnimeCache.create({ animes });
+  return animes;
+}
+
+// Obtener animes recientes con cache configurable
+export async function getRecentAnime() {
+  const hours = parseInt(process.env.RECENT_ANIME_CACHE_HOURS || '3', 10);
+  const expiration = new Date(Date.now() - hours * 60 * 60 * 1000);
+  let cache = await RecentAnimeCache.findOne({ updatedAt: { $gte: expiration } });
+  if (cache) {
+    return cache.animes;
+  }
+  const response = await fetch('https://api.jikan.moe/v4/seasons/now?limit=24');
+  if (!response.ok) throw new Error('Error obteniendo animes recientes');
+  const data = await response.json();
+  const animes = data.data.map(anime => ({
+    id: anime.mal_id,
+    title: anime.title,
+    image: anime.images?.jpg?.image_url,
+    score: anime.score,
+    episodes: anime.episodes,
+    genres: anime.genres?.map(g => g.name),
+    year: anime.year,
+    season: anime.season,
+  }));
+  await RecentAnimeCache.deleteMany({});
+  await RecentAnimeCache.create({ animes });
+  return animes;
+}
+
+// Obtener animes destacados con cache configurable
+export async function getFeaturedAnime() {
+  const hours = parseInt(process.env.FEATURED_ANIME_CACHE_HOURS || '12', 10);
+  const expiration = new Date(Date.now() - hours * 60 * 60 * 1000);
+  let cache = await FeaturedAnimeCache.findOne({ updatedAt: { $gte: expiration } });
+  if (cache) {
+    return cache.animes;
+  }
+  const response = await fetch('https://api.jikan.moe/v4/top/anime?limit=6');
+  if (!response.ok) throw new Error('Error obteniendo animes destacados');
+  const data = await response.json();
+  const animes = data.data.map(anime => ({
+    id: anime.mal_id,
+    title: anime.title,
+    image: anime.images?.jpg?.image_url,
+    score: anime.score,
+    episodes: anime.episodes,
+    genres: anime.genres?.map(g => g.name),
+    year: anime.year,
+    season: anime.season,
+  }));
+  await FeaturedAnimeCache.deleteMany({});
+  await FeaturedAnimeCache.create({ animes });
+  return animes;
+}
+
+// Obtener animes por temporada
+export async function getAnimeBySeason(year, season) {
+  const response = await fetch(`https://api.jikan.moe/v4/seasons/${year}/${season.toLowerCase()}?limit=24`);
+  if (!response.ok) throw new Error('Error obteniendo animes por temporada');
+  const data = await response.json();
+  return data.data.map(anime => ({
+    id: anime.mal_id,
+    title: anime.title,
+    image: anime.images?.jpg?.image_url,
+    score: anime.score,
+    episodes: anime.episodes,
+    genres: anime.genres?.map(g => g.name),
+    year: anime.year,
+    season: anime.season,
+  }));
+}
+
+// Obtener animes por género
+export async function getAnimeByGenre(genre) {
+  // Jikan requiere el id numérico del género, aquí deberías mapear el nombre a id
+  // Por simplicidad, ejemplo con Action (id=1)
+  const genreMap = {
+    'Action': 1,
+    'Adventure': 2,
+    'Comedy': 4,
+    'Drama': 8,
+    'Fantasy': 10,
+    'Horror': 14,
+    'Romance': 22,
+    'Sci-Fi': 24,
+    // ...agrega más según la documentación de Jikan
+  };
+  const genreId = genreMap[genre] || 1;
+  const response = await fetch(`https://api.jikan.moe/v4/anime?genres=${genreId}&limit=24`);
+  if (!response.ok) throw new Error('Error obteniendo animes por género');
+  const data = await response.json();
+  return data.data.map(anime => ({
+    id: anime.mal_id,
+    title: anime.title,
+    image: anime.images?.jpg?.image_url,
+    score: anime.score,
+    episodes: anime.episodes,
+    genres: anime.genres?.map(g => g.name),
+    year: anime.year,
+    season: anime.season,
+  }));
+}
+
+// Obtener la lista de géneros (con cache en MongoDB y tiempo configurable)
+export async function getGenres() {
+  // Permitir controlar el tiempo de expiración por variable de entorno (por defecto 24h)
+  const hours = parseInt(process.env.GENRES_CACHE_HOURS || '24', 10);
+  const expiration = new Date(Date.now() - hours * 60 * 60 * 1000);
+  let cache = await GenreCache.findOne({ updatedAt: { $gte: expiration } });
+  if (cache) {
+    return cache.genres;
+  }
+  // 2. Si no está en cache, obtener desde Jikan
+  const response = await fetch('https://api.jikan.moe/v4/genres/anime');
+  if (!response.ok) throw new Error('Error obteniendo géneros desde Jikan');
+  const data = await response.json();
+  const genres = data.data.map(g => ({
+    id: g.mal_id,
+    name: g.name,
+    count: g.count,
+    description: g.description,
+  }));
+  // 3. Guardar en cache
+  await GenreCache.deleteMany({}); // Limpiar cache anterior
+  await GenreCache.create({ genres });
+  return genres;
+}
+
+// Obtener reviews externas de Jikan con cache configurable
+export async function getExternalReviews(animeId) {
+  const hours = parseInt(process.env.REVIEWS_CACHE_HOURS || '24', 10);
+  const expiration = new Date(Date.now() - hours * 60 * 60 * 1000);
+  let cache = await ReviewCache.findOne({ animeId, updatedAt: { $gte: expiration } });
+  if (cache) {
+    return cache.reviews;
+  }
+  // Consultar Jikan
+  const response = await fetch(`https://api.jikan.moe/v4/anime/${animeId}/reviews?limit=10`);
+  if (!response.ok) throw new Error('Error obteniendo reviews externas');
+  const data = await response.json();
+  const reviews = data.data.map(r => ({
+    user: r.user?.username,
+    score: r.score,
+    comment: r.review,
+    date: r.date,
+  }));
+  // Guardar en cache
+  await ReviewCache.deleteMany({ animeId });
+  await ReviewCache.create({ animeId, reviews });
+  return reviews;
+}
+
+// Ejemplo para otros caches:
+// const hours = parseInt(process.env.TOP_ANIME_CACHE_HOURS || '6', 10);
+// const expiration = new Date(Date.now() - hours * 60 * 60 * 1000);
+// let cache = await TopAnimeCache.findOne({ updatedAt: { $gte: expiration } });
+// ...
+// Así puedes controlar el tiempo de cada cache por separado.
+// ... código existente ... 

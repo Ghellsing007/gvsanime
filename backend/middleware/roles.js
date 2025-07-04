@@ -12,6 +12,13 @@ export function requireRole(roles = []) {
   };
 }
 
+export default function isAdmin(req, res, next) {
+  if (req.user && req.user.role === 'admin') {
+    return next();
+  }
+  return res.status(403).json({ error: 'Solo administradores pueden acceder a este recurso.' });
+}
+
 // Sugerencias de uso:
 // - requireRole(['admin']) para rutas solo de administradores
 // - requireRole(['admin', 'moderador']) para rutas de admin o moderadores

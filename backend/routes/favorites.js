@@ -1,16 +1,16 @@
 import express from 'express';
-import { authMiddleware } from '../middleware/index.js';
-import { addFavorite, getFavorites, deleteFavorite } from '../controllers/favoritesController.js';
+import { getFavorites, addFavorite, removeFavorite } from '../controllers/favoritesController.js';
+import authMiddleware from '../middleware/auth.js';
 
 const router = express.Router();
-
-// Agregar un anime a favoritos
-router.post('/', authMiddleware, addFavorite);
 
 // Listar favoritos del usuario autenticado
 router.get('/', authMiddleware, getFavorites);
 
-// Eliminar un favorito por su id
-router.delete('/:id', authMiddleware, deleteFavorite);
+// Agregar anime a favoritos
+router.post('/', authMiddleware, addFavorite);
+
+// Eliminar anime de favoritos
+router.delete('/:animeId', authMiddleware, removeFavorite);
 
 export default router; 

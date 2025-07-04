@@ -1,5 +1,5 @@
 import express from 'express';
-import { getAnimeById, searchAnimeController } from '../controllers/animeController.js';
+import { getAnimeById, searchAnimeController, getGenresController, getExternalReviewsController, getRecommendationsController } from '../controllers/animeController.js';
 import {
   cleanOldCache, getCacheStats, clearSearchCache,
   listAnimeCache, listSearchCache, getAnimeCacheById, getSearchCacheByQuery,
@@ -13,6 +13,15 @@ router.get('/search', searchAnimeController);
 
 // Ruta para obtener un anime por ID (público)
 router.get('/:id', getAnimeById);
+
+// Ruta para obtener la lista de géneros (público)
+router.get('/genres', getGenresController);
+
+// Ruta para obtener reviews externas de Jikan (público)
+router.get('/reviews/:animeId', getExternalReviewsController);
+
+// Ruta para recomendaciones de anime (pública/personalizada)
+router.get('/recommendations', getRecommendationsController);
 
 // --- ADMINISTRACIÓN DE CACHÉ ---
 

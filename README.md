@@ -39,8 +39,18 @@
 
 - **Sistema:** Supabase Auth
 - **Flujo:** Login / Registro → JWT
-- **Seguridad:** Middleware verifySupabaseJWT en backend
-- **Roles futuros:** Soporte para admin/moderador vía Supabase claims
+- **Seguridad:** Middleware authMiddleware en backend
+- **Uso:**
+  - Importa el middleware como:
+    ```js
+    import authMiddleware from '../middleware/auth.js';
+    ```
+  - Úsalo en las rutas privadas:
+    ```js
+    router.get('/privada', authMiddleware, controlador);
+    ```
+  - Si el usuario no envía un JWT válido, recibe 401.
+  - El frontend debe enviar el JWT en el header `Authorization: Bearer <token>`.
 
 ---
 
