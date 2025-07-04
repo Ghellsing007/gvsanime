@@ -1,4 +1,4 @@
-import supabase from '../services/shared/supabaseClient.js';
+import getSupabaseClient from '../services/shared/supabaseClient.js';
 
 // Crear un foro/hilo
 export async function addForum(req, res) {
@@ -7,6 +7,7 @@ export async function addForum(req, res) {
     if (!title) {
       return res.status(400).json({ error: 'title es requerido' });
     }
+    const supabase = getSupabaseClient();
     const { data, error } = await supabase
       .from('forums')
       .insert({
@@ -28,6 +29,7 @@ export async function addForum(req, res) {
 // Listar foros/hilos
 export async function getForums(req, res) {
   try {
+    const supabase = getSupabaseClient();
     const { data, error } = await supabase
       .from('forums')
       .select('*');
@@ -52,6 +54,7 @@ export async function updateForum(req, res) {
     if (title) updateFields.title = title;
     if (content) updateFields.content = content;
     // Solo permite editar si el foro es del usuario autenticado
+    const supabase = getSupabaseClient();
     const { data, error } = await supabase
       .from('forums')
       .update(updateFields)
@@ -73,6 +76,7 @@ export async function deleteForum(req, res) {
   try {
     const { id } = req.params;
     // Solo permite borrar si el foro es del usuario autenticado
+    const supabase = getSupabaseClient();
     const { data, error } = await supabase
       .from('forums')
       .delete()

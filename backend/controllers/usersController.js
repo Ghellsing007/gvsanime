@@ -1,8 +1,9 @@
-import supabase from '../services/shared/supabaseClient.js';
+import getSupabaseClient from '../services/shared/supabaseClient.js';
 
 // Controlador para obtener el perfil del usuario autenticado
 export async function getProfile(req, res) {
   try {
+    const supabase = getSupabaseClient();
     const { data, error } = await supabase
       .from('users')
       .select('id, username, avatar_url, bio, created_at, updated_at')
@@ -28,6 +29,7 @@ export async function updateProfile(req, res) {
     if (username) updateFields.username = username;
     if (avatar_url) updateFields.avatar_url = avatar_url;
     if (bio) updateFields.bio = bio;
+    const supabase = getSupabaseClient();
     const { data, error } = await supabase
       .from('users')
       .update(updateFields)

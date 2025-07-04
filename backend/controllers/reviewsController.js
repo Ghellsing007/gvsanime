@@ -1,4 +1,4 @@
-import supabase from '../services/shared/supabaseClient.js';
+import getSupabaseClient from '../services/shared/supabaseClient.js';
 
 // Crear una reseña
 export async function createReview(req, res) {
@@ -10,6 +10,7 @@ export async function createReview(req, res) {
     if (rating < 1 || rating > 10) {
       return res.status(400).json({ error: 'El rating debe estar entre 1 y 10' });
     }
+    const supabase = getSupabaseClient();
     const { data, error } = await supabase
       .from('reviews')
       .insert({
@@ -33,6 +34,7 @@ export async function createReview(req, res) {
 export async function getReviewsByAnime(req, res) {
   try {
     const { anime_id } = req.params;
+    const supabase = getSupabaseClient();
     const { data, error } = await supabase
       .from('reviews')
       .select('*')
@@ -51,6 +53,7 @@ export async function deleteReview(req, res) {
   try {
     const { id } = req.params;
     // Solo permite borrar si la reseña es del usuario autenticado
+    const supabase = getSupabaseClient();
     const { data, error } = await supabase
       .from('reviews')
       .delete()
@@ -78,6 +81,7 @@ export async function updateReview(req, res) {
     if (rating && (rating < 1 || rating > 10)) {
       return res.status(400).json({ error: 'El rating debe estar entre 1 y 10' });
     }
+    const supabase = getSupabaseClient();
     const updateFields = {};
     if (rating) updateFields.rating = rating;
     if (comment) updateFields.comment = comment;

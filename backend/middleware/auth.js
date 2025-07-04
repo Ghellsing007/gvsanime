@@ -9,7 +9,6 @@ export default function authMiddleware(req, res, next) {
   const SUPABASE_JWT_SECRET = process.env.SUPABASE_JWT_SECRET;
   // 1. Leer el header Authorization
   const authHeader = req.headers['authorization'];
-  console.log('Authorization header recibido:', authHeader);
   if (!authHeader) {
     return res.status(401).json({ error: 'No se encontró el header Authorization' });
   }

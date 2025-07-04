@@ -1,4 +1,4 @@
-import supabase from '../services/shared/supabaseClient.js';
+import getSupabaseClient from '../services/shared/supabaseClient.js';
 
 // Crear un comentario
 export async function addComment(req, res) {
@@ -7,6 +7,7 @@ export async function addComment(req, res) {
     if (!content || (!anime_id && !video_id)) {
       return res.status(400).json({ error: 'content y anime_id o video_id son requeridos' });
     }
+    const supabase = getSupabaseClient();
     const { data, error } = await supabase
       .from('comments')
       .insert({
@@ -30,6 +31,7 @@ export async function addComment(req, res) {
 export async function getComments(req, res) {
   try {
     const { anime_id, video_id } = req.query;
+    const supabase = getSupabaseClient();
     let query = supabase.from('comments').select('*');
     if (anime_id) {
       query = query.eq('anime_id', anime_id);
@@ -56,6 +58,7 @@ export async function updateComment(req, res) {
       return res.status(400).json({ error: 'Debes enviar el contenido actualizado' });
     }
     // Solo permite editar si el comentario es del usuario autenticado
+    const supabase = getSupabaseClient();
     const { data, error } = await supabase
       .from('comments')
       .update({ content })
@@ -77,6 +80,7 @@ export async function deleteComment(req, res) {
   try {
     const { id } = req.params;
     // Solo permite borrar si el comentario es del usuario autenticado
+    const supabase = getSupabaseClient();
     const { data, error } = await supabase
       .from('comments')
       .delete()

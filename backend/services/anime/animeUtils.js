@@ -1,7 +1,8 @@
-import supabase from '../../services/shared/supabaseClient.js';
+import getSupabaseClient from '../../services/shared/supabaseClient.js';
 
 // Obtener todas las reviews de un anime (con paginación, join de usuario y orden descendente)
 export async function getReviews(animeId, { limit = 10, offset = 0 } = {}) {
+  const supabase = getSupabaseClient();
   const { data, error } = await supabase
     .from('reviews')
     .select(`
@@ -27,6 +28,7 @@ export async function getReviews(animeId, { limit = 10, offset = 0 } = {}) {
 
 // Obtener la review de un usuario específico para un anime
 export async function getUserReview(animeId, userId) {
+  const supabase = getSupabaseClient();
   const { data, error } = await supabase
     .from('reviews')
     .select('id, user_id, rating, comment, created_at')
@@ -41,6 +43,7 @@ export async function getUserReview(animeId, userId) {
 
 // Obtener el número de favoritos de un anime
 export async function getFavoritesCount(animeId) {
+  const supabase = getSupabaseClient();
   const { count, error } = await supabase
     .from('favorites')
     .select('id', { count: 'exact', head: true })
@@ -54,6 +57,7 @@ export async function getFavoritesCount(animeId) {
 
 // Saber si un anime es favorito del usuario
 export async function isAnimeFavorite(animeId, userId) {
+  const supabase = getSupabaseClient();
   const { data, error } = await supabase
     .from('favorites')
     .select('id')
@@ -65,6 +69,7 @@ export async function isAnimeFavorite(animeId, userId) {
 
 // Obtener comentarios de un anime, incluyendo datos del usuario, paginación y orden descendente
 export async function getComments(animeId, { limit = 10, offset = 0 } = {}) {
+  const supabase = getSupabaseClient();
   const { data, error } = await supabase
     .from('comments')
     .select(`
@@ -89,6 +94,7 @@ export async function getComments(animeId, { limit = 10, offset = 0 } = {}) {
 
 // Obtener foros relacionados a un anime, incluyendo datos del usuario, paginación y orden descendente
 export async function getForums(animeId, { limit = 10, offset = 0 } = {}) {
+  const supabase = getSupabaseClient();
   const { data, error } = await supabase
     .from('forums')
     .select(`

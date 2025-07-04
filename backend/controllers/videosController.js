@@ -1,4 +1,4 @@
-import supabase from '../services/shared/supabaseClient.js';
+import getSupabaseClient from '../services/shared/supabaseClient.js';
 
 // Agregar un video
 export async function addVideo(req, res) {
@@ -7,6 +7,7 @@ export async function addVideo(req, res) {
     if (!title || !platform || !video_id) {
       return res.status(400).json({ error: 'title, platform y video_id son requeridos' });
     }
+    const supabase = getSupabaseClient();
     const { data, error } = await supabase
       .from('videos')
       .insert({
@@ -33,6 +34,7 @@ export async function addVideo(req, res) {
 export async function getVideos(req, res) {
   try {
     const { anime } = req.query;
+    const supabase = getSupabaseClient();
     let query = supabase.from('videos').select('*');
     if (anime) {
       query = query.contains('related_anime', [anime]);
@@ -55,6 +57,7 @@ export async function updateVideo(req, res) {
     if (!title && !platform && !video_id && !embed_url && !type && !related_anime) {
       return res.status(400).json({ error: 'Debes enviar al menos un campo para actualizar' });
     }
+    const supabase = getSupabaseClient();
     const updateFields = {};
     if (title) updateFields.title = title;
     if (platform) updateFields.platform = platform;
@@ -83,6 +86,7 @@ export async function updateVideo(req, res) {
 export async function deleteVideo(req, res) {
   try {
     const { id } = req.params;
+    const supabase = getSupabaseClient();
     // Solo permite borrar si el video es del usuario autenticado
     const { data, error } = await supabase
       .from('videos')

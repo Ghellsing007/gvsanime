@@ -1,4 +1,4 @@
-import supabase from '../services/shared/supabaseClient.js';
+import getSupabaseClient from '../services/shared/supabaseClient.js';
 
 // Controlador para registrar un usuario
 export async function registerUser(req, res) {
@@ -7,6 +7,7 @@ export async function registerUser(req, res) {
     return res.status(400).json({ error: 'Email y password son obligatorios' });
   }
   // 1. Crear usuario en Supabase Auth
+  const supabase = getSupabaseClient();
   const { data: user, error } = await supabase.auth.signUp({
     email,
     password,
@@ -28,6 +29,7 @@ export async function loginUser(req, res) {
     return res.status(400).json({ error: 'Email y password son obligatorios' });
   }
   // Autenticar con Supabase
+  const supabase = getSupabaseClient();
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password,

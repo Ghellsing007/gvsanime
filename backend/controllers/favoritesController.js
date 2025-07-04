@@ -1,4 +1,4 @@
-import supabase from '../services/shared/supabaseClient.js';
+import getSupabaseClient from '../services/shared/supabaseClient.js';
 
 // Agregar un anime a favoritos
 export async function addFavorite(req, res) {
@@ -7,6 +7,7 @@ export async function addFavorite(req, res) {
     if (!anime_id || !anime_title) {
       return res.status(400).json({ error: 'anime_id y anime_title son requeridos' });
     }
+    const supabase = getSupabaseClient();
     const { data, error } = await supabase
       .from('favorites')
       .insert({
@@ -29,6 +30,7 @@ export async function addFavorite(req, res) {
 // Listar favoritos del usuario autenticado
 export async function getFavorites(req, res) {
   try {
+    const supabase = getSupabaseClient();
     const { data, error } = await supabase
       .from('favorites')
       .select('*')
@@ -46,6 +48,7 @@ export async function getFavorites(req, res) {
 export async function deleteFavorite(req, res) {
   try {
     const { id } = req.params;
+    const supabase = getSupabaseClient();
     const { data, error } = await supabase
       .from('favorites')
       .delete()
