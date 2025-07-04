@@ -1,6 +1,5 @@
 import dotenv from 'dotenv';
 dotenv.config();
-console.log('SUPABASE_JWT_SECRET en app.js:', process.env.SUPABASE_JWT_SECRET);
 import express from 'express';
 import cors from 'cors';
 import morgan from 'morgan';

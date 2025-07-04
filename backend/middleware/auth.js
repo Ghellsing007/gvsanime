@@ -7,7 +7,6 @@ import jwt from 'jsonwebtoken';
 // Middleware principal
 export default function authMiddleware(req, res, next) {
   const SUPABASE_JWT_SECRET = process.env.SUPABASE_JWT_SECRET;
-  console.log('SUPABASE_JWT_SECRET en auth.js:', SUPABASE_JWT_SECRET); // log temporal
   // 1. Leer el header Authorization
   const authHeader = req.headers['authorization'];
   console.log('Authorization header recibido:', authHeader);

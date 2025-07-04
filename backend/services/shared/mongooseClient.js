@@ -1,8 +1,7 @@
 import mongoose from 'mongoose';
 
-const MONGO_URI = process.env.MONGO_URI;
-
 export async function connectMongo() {
+  const MONGO_URI = process.env.MONGO_URI;
   if (!MONGO_URI) {
     throw new Error('MONGO_URI no está definida en las variables de entorno');
   }
