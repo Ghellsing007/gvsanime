@@ -7,6 +7,7 @@ import commentsRoutes from './comments.js';
 import forumsRoutes from './forums.js';
 import animeRoutes from './anime.js';
 import authRoutes from './auth.js';
+import backupRoutes from './backup.js';
 // import reviewsRoutes from './reviews.js';
 // ...otros imports
 
@@ -20,6 +21,7 @@ router.use('/comments', commentsRoutes);
 router.use('/forums', forumsRoutes);
 router.use('/anime', animeRoutes);
 router.use('/auth', authRoutes);
+router.use('/backup', backupRoutes);
 // router.use('/reviews', reviewsRoutes);
 // ...otros recursos
 

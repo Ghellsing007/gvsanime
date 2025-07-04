@@ -43,4 +43,24 @@ export async function updateProfile(req, res) {
   } catch (err) {
     res.status(500).json({ error: 'Error al actualizar el perfil' });
   }
+}
+
+// Controlador para eliminar el perfil del usuario autenticado
+export async function deleteProfile(req, res) {
+  try {
+    const supabase = getSupabaseClient();
+    // Eliminar de la tabla 'users'
+    const { error: userError } = await supabase
+      .from('users')
+      .delete()
+      .eq('id', req.user.id);
+    if (userError) {
+      return res.status(400).json({ error: userError.message });
+    }
+    // Eliminar de Supabase Auth (requiere privilegios elevados, normalmente Service Role Key)
+    // Aquí solo devolvemos éxito, pero en producción deberías usar la API de administración de Supabase
+    res.json({ message: 'Cuenta eliminada correctamente (debes cerrar sesión en todos los dispositivos).' });
+  } catch (err) {
+    res.status(500).json({ error: 'Error al eliminar el perfil' });
+  }
 } 

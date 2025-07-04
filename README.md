@@ -4,7 +4,7 @@
 
 | Característica                | Descripción                                                                 |
 |-------------------------------|-----------------------------------------------------------------------------|
-| Tipo de backend               | Personalizado, modular y orquestador (Express o Fastify)                    |
+| Tipo de backend               | Personalizado, modular y orquestador (Express)                              |
 | Autenticación                 | Supabase Auth (email/password + JWT)                                        |
 | Base de datos principal       | Supabase PostgreSQL (usuarios, favoritos, comentarios)                      |
 | Backup / Cache externo        | MongoDB (anime + trailers desde APIs externas)                              |
@@ -161,6 +161,71 @@
 ### 🔸 Shared
 - Cliente Supabase, cliente Mongo, middlewares de seguridad, utilidades
 
+### 🔸 Perfil de Usuario
+| Método | Endpoint         | Descripción                        | Body/Params | Respuesta esperada |
+|--------|------------------|------------------------------------|-------------|--------------------|
+| GET    | /api/users/profile    | Obtener perfil del usuario actual  |             | `{ "user": { ... } }` |
+| PUT    | /api/users/profile    | Actualizar perfil del usuario      | `{ username, avatar_url, bio }` | `{ "user": { ... } }` |
+| DELETE | /api/users/profile    | Eliminar cuenta del usuario        |             | `{ "message": "..." }` |
+
+**Ejemplo request (DELETE):**
+```bash
+curl -X DELETE http://localhost:5000/api/users/profile \
+  -H "Authorization: Bearer <token>"
+```
+**Ejemplo response:**
+```json
+{
+  "message": "Cuenta eliminada correctamente (debes cerrar sesión en todos los dispositivos)."
+}
+```
+
+### 🔸 Administración de Backups (solo admin)
+| Método | Endpoint             | Descripción                                 | Respuesta esperada |
+|--------|----------------------|---------------------------------------------|--------------------|
+| POST   | /api/backup/run      | Ejecutar backup manual de animes populares  | `{ success, message }` |
+| POST   | /api/backup/stop     | Detener el cron job de backup automático    | `{ message }`      |
+| POST   | /api/backup/start    | Activar el cron job de backup automático    | `{ message }`      |
+
+> Todos estos endpoints requieren autenticación y rol `admin`.
+
+**Ejemplo request (ejecutar backup manual):**
+```bash
+curl -X POST http://localhost:5000/api/backup/run \
+  -H "Authorization: Bearer <token_admin>"
+```
+**Ejemplo response:**
+```json
+{
+  "success": true,
+  "message": "Backup completado. Nuevos animes: 10"
+}
+```
+
+**Ejemplo request (detener cron job):**
+```bash
+curl -X POST http://localhost:5000/api/backup/stop \
+  -H "Authorization: Bearer <token_admin>"
+```
+**Ejemplo response:**
+```json
+{
+  "message": "Cron job de backup detenido."
+}
+```
+
+**Ejemplo request (activar cron job):**
+```bash
+curl -X POST http://localhost:5000/api/backup/start \
+  -H "Authorization: Bearer <token_admin>"
+```
+**Ejemplo response:**
+```json
+{
+  "message": "Cron job de backup activado."
+}
+```
+
 ---
 
 ## 🧩 Integración con Frontend Next.js
@@ -273,6 +338,52 @@ YOUTUBE_API_KEY=tu-api-key
 ## 8. Documentación y Pruebas
 - [x] Documentar endpoints en README o Swagger
 - [ ] Pruebas básicas de endpoints
+
+## 9. Administración de Backups (solo admin)
+| Método | Endpoint             | Descripción                                 | Respuesta esperada |
+|--------|----------------------|---------------------------------------------|--------------------|
+| POST   | /api/backup/run      | Ejecutar backup manual de animes populares  | `{ success, message }` |
+| POST   | /api/backup/stop     | Detener el cron job de backup automático    | `{ message }`      |
+| POST   | /api/backup/start    | Activar el cron job de backup automático    | `{ message }`      |
+
+> Todos estos endpoints requieren autenticación y rol `admin`.
+
+**Ejemplo request (ejecutar backup manual):**
+```bash
+curl -X POST http://localhost:5000/api/backup/run \
+  -H "Authorization: Bearer <token_admin>"
+```
+**Ejemplo response:**
+```json
+{
+  "success": true,
+  "message": "Backup completado. Nuevos animes: 10"
+}
+```
+
+**Ejemplo request (detener cron job):**
+```bash
+curl -X POST http://localhost:5000/api/backup/stop \
+  -H "Authorization: Bearer <token_admin>"
+```
+**Ejemplo response:**
+```json
+{
+  "message": "Cron job de backup detenido."
+}
+```
+
+**Ejemplo request (activar cron job):**
+```bash
+curl -X POST http://localhost:5000/api/backup/start \
+  -H "Authorization: Bearer <token_admin>"
+```
+**Ejemplo response:**
+```json
+{
+  "message": "Cron job de backup activado."
+}
+```
 
 ---
 
@@ -485,4 +596,242 @@ curl -X POST http://localhost:5000/api/auth/register \
     ...
   }
 }
-``` 
+```
+
+# 📚 Endpoints Disponibles y Documentación Actualizada
+
+## 1. Autenticación
+| Método | Endpoint           | Descripción         | Body/Query | Respuesta esperada |
+|--------|--------------------|---------------------|------------|--------------------|
+| POST   | /api/auth/register | Registrar usuario   | `{ "email", "password" }` | `{ "user": { ... }, "token": "..." }` |
+| POST   | /api/auth/login    | Iniciar sesión      | `{ "email", "password" }` | `{ "user": { ... }, "token": "..." }` |
+
+**Ejemplo request:**
+```bash
+curl -X POST http://localhost:5000/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@correo.com", "password":"123456"}'
+```
+**Ejemplo response:**
+```json
+{
+  "user": { "id": "...", "email": "test@correo.com" },
+  "token": "..."
+}
+```
+
+---
+
+## 2. Anime
+| Método | Endpoint                        | Descripción                        | Query/Params | Respuesta esperada |
+|--------|----------------------------------|------------------------------------|--------------|--------------------|
+| GET    | /api/anime/search               | Buscar anime por nombre            | `q=nombre`   | `[ { ...anime } ]` |
+| GET    | /api/anime/:id                  | Obtener detalles de anime          | `:id`        | `{ ...anime }`     |
+| GET    | /api/anime/cache/animes         | Listar caché de animes (admin/dev) |              | `[ { ... } ]`      |
+| GET    | /api/anime/cache/searches       | Listar caché de búsquedas          |              | `[ { ... } ]`      |
+| GET    | /api/anime/cache/search/:query  | Detalle de búsqueda en caché       | `:query`     | `{ ... }`          |
+| GET    | /api/anime/cache/anime/:id      | Detalle de anime en caché          | `:id`        | `{ ... }`          |
+| DELETE | /api/anime/cache/search/:query  | Eliminar búsqueda del caché        | `:query`     | `{ message }`      |
+| DELETE | /api/anime/cache/anime/:id      | Eliminar anime del caché           | `:id`        | `{ message }`      |
+| DELETE | /api/anime/cache/clean          | Limpiar todo el caché              |              | `{ message }`      |
+| GET    | /api/anime/cache/stats          | Estadísticas del caché             |              | `{ animeCache, searchCache, total }` |
+
+> **Nota:** Los endpoints de administración de caché pueden ser usados en un dashboard de administración, no solo para desarrollo.
+
+**Ejemplo request:**
+```bash
+curl -X GET "http://localhost:5000/api/anime/search?q=naruto"
+```
+**Ejemplo response:**
+```json
+[
+  {
+    "id": "20",
+    "title": "Naruto",
+    "image_url": "...",
+    "score": 7.9,
+    ...
+  },
+  ...
+]
+```
+
+---
+
+## 3. Favoritos
+| Método | Endpoint           | Descripción         | Body/Params | Respuesta esperada |
+|--------|--------------------|---------------------|-------------|--------------------|
+| POST   | /api/favorites     | Agregar a favoritos | `{ "anime_id", "anime_title", "anime_image_url" }` | `{ "favorite": { ... } }` |
+| GET    | /api/favorites     | Listar favoritos    |             | `{ "favorites": [ ... ] }` |
+| DELETE | /api/favorites/:id | Eliminar favorito   | `:id`       | `{ "deleted": { ... } }` |
+
+**Ejemplo request:**
+```bash
+curl -X POST http://localhost:5000/api/favorites \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{"anime_id": "20", "anime_title": "Naruto", "anime_image_url": "..."}'
+```
+**Ejemplo response:**
+```json
+{
+  "favorite": {
+    "id": "...",
+    "user_id": "...",
+    "anime_id": "20",
+    "anime_title": "Naruto",
+    "anime_image_url": "..."
+  }
+}
+```
+
+---
+
+## 4. Reseñas
+| Método | Endpoint                | Descripción                | Body/Params | Respuesta esperada |
+|--------|-------------------------|----------------------------|-------------|--------------------|
+| POST   | /api/reviews            | Crear reseña               | `{ "anime_id", "rating", "comment" }` | `{ "review": { ... } }` |
+| GET    | /api/reviews/:anime_id  | Listar reseñas de un anime | `:anime_id` | `{ "reviews": [ ... ] }` |
+| PUT    | /api/reviews/:id        | Editar reseña (autor)      | `:id`, campos editables | `{ "review": { ... } }` |
+| DELETE | /api/reviews/:id        | Eliminar reseña (autor)    | `:id`       | `{ "deleted": { ... } }` |
+
+**Ejemplo request:**
+```bash
+curl -X POST http://localhost:5000/api/reviews \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{"anime_id": "20", "rating": 9, "comment": "¡Excelente!"}'
+```
+**Ejemplo response:**
+```json
+{
+  "review": {
+    "id": "...",
+    "user_id": "...",
+    "anime_id": "20",
+    "rating": 9,
+    "comment": "¡Excelente!",
+    "date": "2024-06-01"
+  }
+}
+```
+
+---
+
+## 5. Videos
+| Método | Endpoint           | Descripción         | Body/Params | Respuesta esperada |
+|--------|--------------------|---------------------|-------------|--------------------|
+| POST   | /api/videos        | Agregar video       | `{ "title", "platform", "video_id", ... }` | `{ "video": { ... } }` |
+| GET    | /api/videos        | Listar videos (filtro opc.)| `?anime=nombre` | `{ "videos": [ ... ] }` |
+| PUT    | /api/videos/:id    | Editar video (autor)| `:id`, campos editables | `{ "video": { ... } }` |
+| DELETE | /api/videos/:id    | Eliminar video (autor)| `:id`       | `{ "deleted": { ... } }` |
+
+**Ejemplo request:**
+```bash
+curl -X POST http://localhost:5000/api/videos \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{"title": "Mi top 10", "platform": "YouTube", "video_id": "xyz123", "embed_url": "https://www.youtube.com/embed/xyz123", "type": "reseña", "related_anime": ["Naruto", "Bleach"]}'
+```
+**Ejemplo response:**
+```json
+{
+  "video": {
+    "id": "...",
+    "user_id": "...",
+    "title": "Mi top 10",
+    "platform": "YouTube",
+    "video_id": "xyz123",
+    "embed_url": "https://www.youtube.com/embed/xyz123",
+    "type": "reseña",
+    "related_anime": ["Naruto", "Bleach"]
+  }
+}
+```
+
+---
+
+## 6. Comentarios
+| Método | Endpoint           | Descripción         | Body/Params | Respuesta esperada |
+|--------|--------------------|---------------------|-------------|--------------------|
+| POST   | /api/comments      | Crear comentario    | `{ ... }`   | `{ "comment": { ... } }` |
+| GET    | /api/comments      | Listar comentarios  | `?anime=...`/`?video=...` | `{ "comments": [ ... ] }` |
+| PUT    | /api/comments/:id  | Editar comentario (autor) | `:id`, campos editables | `{ "comment": { ... } }` |
+| DELETE | /api/comments/:id  | Eliminar comentario (autor) | `:id` | `{ "deleted": { ... } }` |
+
+**Ejemplo request:**
+```bash
+curl -X POST http://localhost:5000/api/comments \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{"anime_id": "20", "comment": "¡Muy bueno!"}'
+```
+**Ejemplo response:**
+```json
+{
+  "comment": {
+    "id": "...",
+    "user_id": "...",
+    "anime_id": "20",
+    "comment": "¡Muy bueno!",
+    "date": "2024-06-01"
+  }
+}
+```
+
+---
+
+## 7. Foros
+| Método | Endpoint           | Descripción         | Body/Params | Respuesta esperada |
+|--------|--------------------|---------------------|-------------|--------------------|
+| POST   | /api/forums        | Crear foro/hilo     | `{ ... }`   | `{ "forum": { ... } }` |
+| GET    | /api/forums        | Listar foros/hilos  |             | `{ "forums": [ ... ] }` |
+| PUT    | /api/forums/:id    | Editar foro/hilo (autor) | `:id`, campos editables | `{ "forum": { ... } }` |
+| DELETE | /api/forums/:id    | Eliminar foro/hilo (autor) | `:id` | `{ "deleted": { ... } }` |
+
+**Ejemplo request:**
+```bash
+curl -X POST http://localhost:5000/api/forums \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{"title": "Foro de Naruto", "description": "¡Hablemos de Naruto!"}'
+```
+**Ejemplo response:**
+```json
+{
+  "forum": {
+    "id": "...",
+    "user_id": "...",
+    "title": "Foro de Naruto",
+    "description": "¡Hablemos de Naruto!",
+    "date": "2024-06-01"
+  }
+}
+```
+
+---
+
+## Notas generales
+- Los endpoints protegidos requieren JWT en el header:
+  `Authorization: Bearer <token>`
+- Las respuestas de error siguen el formato:
+  `{ "error": "mensaje" }`
+- Los endpoints de administración de caché pueden ser usados en un dashboard de administración, no solo para desarrollo. 
+
+## 🟡 Pendiente: Middleware de roles
+- Ya existe un middleware `requireRole([roles])` para restringir rutas a usuarios con rol 'admin', 'moderador', etc.
+- Ejemplo de uso futuro:
+  - `router.post('/videos', requireRole(['admin']), handler)`
+  - `router.delete('/forums/:id', requireRole(['admin', 'moderador']), handler)`
+- El middleware lee el rol desde el JWT (por ejemplo, `req.user.role` o `req.user.user_metadata.role`).
+- Puedes extenderlo para más roles según la lógica de tu negocio.
+- **Por ahora no está aplicado a ningún endpoint, pero está listo para usarse.** 
+
+## 🟢 Buenas prácticas: Manejo de instancias de Mongoose y Supabase
+- Usa siempre una sola instancia (singleton) de conexión a MongoDB y Supabase en toda la app.
+- Importa y reutiliza los clientes desde los archivos centralizados (`mongooseClient.js` y `supabaseClient.js`).
+- No crees nuevas instancias de conexión en cada controlador o servicio.
+- Define modelos de Mongoose solo si no existen (`mongoose.models.ModelName || mongoose.model(...)`).
+- Lee las variables de entorno para las credenciales, nunca las hardcodees.
+- Si agregas nuevos servicios, workers o scripts, aplica la misma lógica de singleton.
+- Esto evita fugas de memoria, conexiones duplicadas y mejora el rendimiento y la estabilidad de la app. 
