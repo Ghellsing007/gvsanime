@@ -21,7 +21,8 @@ const SearchCache = mongoose.models.SearchCache || mongoose.model('SearchCache',
   query: { type: String, required: true, index: true },
   results: [Object],
   updatedAt: { type: Date, default: Date.now },
-  source: String
+  source: String,
+  animeIds: [String] // Relación explícita con los mal_id de los animes
 }));
 
 // Función para buscar anime con caché
@@ -30,24 +31,35 @@ export async function searchAnimeWithCache(query) {
   let cache = await SearchCache.findOne({ query: query.toLowerCase() });
   if (cache) {
     console.log(`Resultados de búsqueda encontrados en caché para: ${query}`);
-    return { source: cache.source, results: cache.results };
+    return { source: cache.source, results: cache.results, animeIds: cache.animeIds };
   }
 
   // 2. Si no está en caché, buscar en APIs externas (servicio unificado)
   console.log(`Buscando en APIs externas para: ${query}`);
   const { source, results } = await unifiedAnimeSearch(query);
 
-  // 3. Guardar en cache para futuras consultas
+  // 3. Guardar cada anime individualmente en AnimeCache solo si no existe
+  const animeIds = [];
+  for (const anime of results) {
+    animeIds.push(anime.mal_id);
+    const exists = await AnimeCache.findOne({ animeId: anime.mal_id });
+    if (!exists) {
+      await AnimeCache.create({ animeId: anime.mal_id, data: anime });
+    }
+  }
+
+  // 4. Guardar en cache de búsquedas para futuras consultas, incluyendo la relación de IDs
   if (results && results.length > 0) {
     await SearchCache.create({ 
       query: query.toLowerCase(), 
       results: results,
-      source: source
+      source: source,
+      animeIds: animeIds
     });
     console.log(`Resultados guardados en caché para: ${query}`);
   }
 
-  return { source, results };
+  return { source, results, animeIds };
 }
 
 // Función principal para obtener los datos completos de un anime
@@ -182,4 +194,43 @@ export async function clearSearchCache(query) {
     console.error('Error eliminando caché de búsqueda:', error);
     throw error;
   }
+}
+
+// --- Funciones de administración de caché ---
+
+// Listar todos los animes en caché
+export async function listAnimeCache() {
+  return await AnimeCache.find({}, { _id: 0 });
+}
+
+// Listar todas las búsquedas en caché
+export async function listSearchCache() {
+  return await SearchCache.find({}, { _id: 0 });
+}
+
+// Obtener detalles de un anime específico
+export async function getAnimeCacheById(animeId) {
+  return await AnimeCache.findOne({ animeId }, { _id: 0 });
+}
+
+// Obtener detalles de una búsqueda específica
+export async function getSearchCacheByQuery(query) {
+  return await SearchCache.findOne({ query: query.toLowerCase() }, { _id: 0 });
+}
+
+// Eliminar un anime del caché
+export async function deleteAnimeCacheById(animeId) {
+  return await AnimeCache.deleteOne({ animeId });
+}
+
+// Eliminar una búsqueda del caché
+export async function deleteSearchCacheByQuery(query) {
+  return await SearchCache.deleteOne({ query: query.toLowerCase() });
+}
+
+// Limpiar todo el caché (animes y búsquedas)
+export async function cleanAllCache() {
+  const animes = await AnimeCache.deleteMany({});
+  const searches = await SearchCache.deleteMany({});
+  return { animes: animes.deletedCount, searches: searches.deletedCount };
 } 

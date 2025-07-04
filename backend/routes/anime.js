@@ -1,6 +1,10 @@
 import express from 'express';
 import { getAnimeById, searchAnimeController } from '../controllers/animeController.js';
-import { cleanOldCache, getCacheStats, clearSearchCache } from '../services/anime/animeAggregator.js';
+import {
+  cleanOldCache, getCacheStats, clearSearchCache,
+  listAnimeCache, listSearchCache, getAnimeCacheById, getSearchCacheByQuery,
+  deleteAnimeCacheById, deleteSearchCacheByQuery, cleanAllCache
+} from '../services/anime/animeAggregator.js';
 
 const router = express.Router();
 
@@ -10,36 +14,90 @@ router.get('/search', searchAnimeController);
 // Ruta para obtener un anime por ID (público)
 router.get('/:id', getAnimeById);
 
-// Rutas para administrar el caché
-router.get('/cache/stats', async (req, res) => {
+// --- ADMINISTRACIÓN DE CACHÉ ---
+
+// Listar todo el caché de animes
+router.get('/cache/animes', async (req, res) => {
   try {
-    const stats = await getCacheStats();
-    res.json(stats);
+    const animes = await listAnimeCache();
+    res.json(animes);
   } catch (error) {
-    res.status(500).json({ error: 'Error obteniendo estadísticas del caché' });
+    res.status(500).json({ error: 'Error listando el caché de animes' });
   }
 });
 
+// Listar todo el caché de búsquedas
+router.get('/cache/searches', async (req, res) => {
+  try {
+    const searches = await listSearchCache();
+    res.json(searches);
+  } catch (error) {
+    res.status(500).json({ error: 'Error listando el caché de búsquedas' });
+  }
+});
+
+// Obtener detalles de una búsqueda específica
+router.get('/cache/search/:query', async (req, res) => {
+  try {
+    const search = await getSearchCacheByQuery(req.params.query);
+    if (!search) return res.status(404).json({ error: 'No se encontró esa búsqueda en caché' });
+    res.json(search);
+  } catch (error) {
+    res.status(500).json({ error: 'Error obteniendo la búsqueda en caché' });
+  }
+});
+
+// Obtener detalles de un anime específico
+router.get('/cache/anime/:id', async (req, res) => {
+  try {
+    const anime = await getAnimeCacheById(req.params.id);
+    if (!anime) return res.status(404).json({ error: 'No se encontró ese anime en caché' });
+    res.json(anime);
+  } catch (error) {
+    res.status(500).json({ error: 'Error obteniendo el anime en caché' });
+  }
+});
+
+// Eliminar una búsqueda del caché
+router.delete('/cache/search/:query', async (req, res) => {
+  try {
+    const result = await deleteSearchCacheByQuery(req.params.query);
+    if (result.deletedCount === 0) return res.status(404).json({ error: 'No se encontró esa búsqueda en caché' });
+    res.json({ message: 'Búsqueda eliminada del caché' });
+  } catch (error) {
+    res.status(500).json({ error: 'Error eliminando la búsqueda en caché' });
+  }
+});
+
+// Eliminar un anime del caché
+router.delete('/cache/anime/:id', async (req, res) => {
+  try {
+    const result = await deleteAnimeCacheById(req.params.id);
+    if (result.deletedCount === 0) return res.status(404).json({ error: 'No se encontró ese anime en caché' });
+    res.json({ message: 'Anime eliminado del caché' });
+  } catch (error) {
+    res.status(500).json({ error: 'Error eliminando el anime en caché' });
+  }
+});
+
+// Limpiar todo el caché (animes y búsquedas)
 router.delete('/cache/clean', async (req, res) => {
   try {
-    const result = await cleanOldCache();
-    res.json({ message: 'Caché limpiado exitosamente', deleted: result });
+    const result = await cleanAllCache();
+    res.json({ message: 'Caché de animes y búsquedas limpiado', ...result });
   } catch (error) {
     res.status(500).json({ error: 'Error limpiando el caché' });
   }
 });
 
-router.delete('/cache/search/:query', async (req, res) => {
+// Obtener estadísticas del caché
+router.get('/cache/stats', async (req, res) => {
   try {
-    const { query } = req.params;
-    const deleted = await clearSearchCache(query);
-    if (deleted) {
-      res.json({ message: `Caché de búsqueda eliminado para: ${query}` });
-    } else {
-      res.status(404).json({ error: 'No se encontró caché para esa búsqueda' });
-    }
+    const animeCount = await listAnimeCache();
+    const searchCount = await listSearchCache();
+    res.json({ animeCache: animeCount.length, searchCache: searchCount.length, total: animeCount.length + searchCount.length });
   } catch (error) {
-    res.status(500).json({ error: 'Error eliminando caché de búsqueda' });
+    res.status(500).json({ error: 'Error obteniendo estadísticas del caché' });
   }
 });
 
