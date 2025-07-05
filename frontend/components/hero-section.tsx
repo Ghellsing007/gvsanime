@@ -54,12 +54,12 @@ export default function HeroSection() {
   }, [])
 
   useEffect(() => {
-    if (!animes.length) return;
+    if (!animes.length || showTrailer) return;
     const interval = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % animes.length)
     }, 8000)
     return () => clearInterval(interval)
-  }, [animes.length])
+  }, [animes.length, showTrailer])
 
   if (loading) return <div>Cargando...</div>;
   if (error) return <div>Error: {error.message}</div>;
@@ -68,7 +68,7 @@ export default function HeroSection() {
   const anime = animes[currentSlide]
 
   // Debug: Mostrar el trailer en consola
-  console.log('🎬 Trailer del anime:', anime)
+  console.log('🎬 {anime.synopsis:', anime.synopsis)
 
   return (
     <section className="relative h-[500px] md:h-[600px] overflow-hidden rounded-xl mb-12">
