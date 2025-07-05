@@ -15,14 +15,24 @@ interface Anime {
   title: string
   images: {
     jpg: {
-      image_url: string
-      small_image_url: string
-      large_image_url: string
+      // snake_case (formato original de Jikan)
+      image_url?: string
+      small_image_url?: string
+      large_image_url?: string
+      // camelCase (formato normalizado por nuestro backend)
+      imageUrl?: string
+      smallImageUrl?: string
+      largeImageUrl?: string
     }
     webp: {
-      image_url: string
-      small_image_url: string
-      large_image_url: string
+      // snake_case (formato original de Jikan)
+      image_url?: string
+      small_image_url?: string
+      large_image_url?: string
+      // camelCase (formato normalizado por nuestro backend)
+      imageUrl?: string
+      smallImageUrl?: string
+      largeImageUrl?: string
     }
   }
   score: number
@@ -48,12 +58,13 @@ export default function AnimeList({ initialPage = 1, initialLimit = 12 }: AnimeL
   const [totalAnimes, setTotalAnimes] = useState(0)
   const searchParams = useSearchParams()
   const genero = searchParams.get("genero")
+  const season = searchParams.get("season")
 
   const fetchAnimes = async (pageNum: number, query = "") => {
     try {
       setLoading(true)
       const response = await api.get(
-        `/anime?page=${pageNum}&limit=${initialLimit}${genero ? `&genre=${encodeURIComponent(genero)}` : ""}${query ? `&q=${encodeURIComponent(query)}` : ""}`
+        `/anime?page=${pageNum}&limit=${initialLimit}${genero ? `&genre=${encodeURIComponent(genero)}` : ""}${season ? `&season=${encodeURIComponent(season)}` : ""}${query ? `&q=${encodeURIComponent(query)}` : ""}`
       )
       const data = response.data
       console.log('Respuesta de la API de anime:', data)

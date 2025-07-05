@@ -5,6 +5,7 @@
 | Característica                | Descripción                                                                 |
 |-------------------------------|-----------------------------------------------------------------------------|
 | Tipo de backend               | Personalizado, modular y orquestador (Express)                              |
+| **Data Source Manager**       | Sistema flexible para alternar entre Jikan, MongoDB y modo híbrido          |
 | Autenticación                 | Supabase Auth (email/password + JWT)                                        |
 | Base de datos principal       | Supabase PostgreSQL (usuarios, favoritos, comentarios)                      |
 | Backup / Cache externo        | MongoDB (anime + trailers desde APIs externas)                              |
@@ -13,6 +14,32 @@
 | Seguridad                     | JWT verificado con Supabase, middlewares, roles futuros                     |
 | Arquitectura                  | Monolito modular (preparado para microservicios)                            |
 | Expandible a futuro           | Cron jobs, workers, panel admin, moderación, notificaciones                 |
+
+---
+
+## 🎛️ Data Source Manager
+
+El sistema incluye un **Data Source Manager** que permite alternar fácilmente entre diferentes fuentes de datos para anime:
+
+### Configuración Rápida
+```bash
+# Solo Jikan (desarrollo)
+ANIME_DATA_SOURCE=jikan
+CACHE_ENABLED=false
+
+# Modo híbrido (producción)
+ANIME_DATA_SOURCE=hybrid
+CACHE_ENABLED=true
+MONGODB_URI=tu_uri
+
+# Emergencia (forzar Jikan)
+FORCE_JIKAN=true
+```
+
+### Documentación Completa
+- 📚 [Documentación Detallada](backend/DOCUMENTACION-DATA-SOURCE-MANAGER.md)
+- 🚀 [Guía Rápida](backend/README-DATA-SOURCE.md)
+- ⚙️ [Archivo de Configuración](backend/env.example)
 
 ---
 

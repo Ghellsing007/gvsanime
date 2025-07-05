@@ -1,10 +1,14 @@
 import express from 'express';
-import { getAnimeById, searchAnimeController, getGenresController, getExternalReviewsController, getRecommendationsController, getAllAnimeController } from '../controllers/animeController.js';
-import {
-  cleanOldCache, getCacheStats, clearSearchCache,
-  listAnimeCache, listSearchCache, getAnimeCacheById, getSearchCacheByQuery,
-  deleteAnimeCacheById, deleteSearchCacheByQuery, cleanAllCache
-} from '../services/anime/animeAggregator.js';
+import { 
+  getAnimeById, 
+  searchAnimeController, 
+  getGenresController, 
+  getExternalReviewsController, 
+  getRecommendationsController, 
+  getAllAnimeController,
+  getDataSourceInfoController,
+  clearCacheController
+} from '../controllers/animeController.js';
 
 const router = express.Router();
 
@@ -25,6 +29,14 @@ router.get('/recommendations', getRecommendationsController);
 
 // Ruta para obtener todos los animes paginados y con filtro opcional por nombre (público)
 router.get('/', getAllAnimeController);
+
+// --- GESTIÓN DE FUENTE DE DATOS ---
+
+// Obtener información de la fuente de datos actual
+router.get('/datasource/info', getDataSourceInfoController);
+
+// Limpiar cache de MongoDB
+router.delete('/datasource/cache', clearCacheController);
 
 // --- ADMINISTRACIÓN DE CACHÉ ---
 

@@ -8,6 +8,7 @@ import { Heart, Bookmark, Share2, Star, Calendar, Clock, Film, Users, ExternalLi
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
+import { getHeroImage, getCardImage } from "../lib/imageUtils"
 
 interface AnimeDetailsProps {
   id: string
@@ -92,7 +93,7 @@ export default function AnimeDetails({ id }: AnimeDetailsProps) {
       {/* Banner */}
       <div className="relative h-[300px] md:h-[400px] rounded-xl overflow-hidden mb-8">
         <Image
-          src={anime.images?.jpg?.imageUrl || "/placeholder.svg?height=500&width=1200"}
+          src={getHeroImage(anime.images)}
           alt={anime.title}
           fill
           className="object-cover"
@@ -108,7 +109,7 @@ export default function AnimeDetails({ id }: AnimeDetailsProps) {
           <div className="sticky top-24">
             <div className="relative rounded-lg overflow-hidden mb-4">
               <Image
-                src={anime.images?.webp?.image_url|| "/placeholder.svg?height=600&width=400"}
+                src={getCardImage(anime.images)}
                 alt={anime.title}
                 width={400}
                 height={600}

@@ -12,10 +12,20 @@ export function getAnimeImage(
 ): string {
   const { format = 'jpg', quality = 'medium', fallback = '/placeholder.svg' } = options;
 
-  if (!images) return fallback;
+  console.log('🖼️ getAnimeImage recibió:', { images, options });
+
+  if (!images) {
+    console.log('❌ No hay imágenes, retornando fallback');
+    return fallback;
+  }
 
   const formatImages = images[format];
-  if (!formatImages) return fallback;
+  console.log(`🖼️ Imágenes de formato ${format}:`, formatImages);
+  
+  if (!formatImages) {
+    console.log(`❌ No hay imágenes de formato ${format}, retornando fallback`);
+    return fallback;
+  }
 
   // Seleccionar calidad según el contexto
   let imageUrl: string | undefined;
@@ -56,14 +66,20 @@ export function getHeroImage(images: AnimeImages | undefined): string {
  * Prioriza WebP medium, fallback a JPG medium
  */
 export function getCardImage(images: AnimeImages | undefined): string {
+  console.log('🃏 getCardImage recibió:', images);
+  
   // Intentar WebP medium primero
   const webpMedium = getAnimeImage(images, { quality: 'medium', format: 'webp' });
+  console.log('🃏 WebP medium result:', webpMedium);
+  
   if (webpMedium !== '/placeholder.svg') {
     return webpMedium;
   }
   
   // Fallback a JPG medium
-  return getAnimeImage(images, { quality: 'medium', format: 'jpg' });
+  const jpgMedium = getAnimeImage(images, { quality: 'medium', format: 'jpg' });
+  console.log('🃏 JPG medium result:', jpgMedium);
+  return jpgMedium;
 }
 
 /**

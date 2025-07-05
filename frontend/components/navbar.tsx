@@ -84,7 +84,7 @@ export default function Navbar() {
   const navItems = [
     { name: "Inicio", href: "/", icon: <Home className="h-4 w-4 mr-2" /> },
     { name: "Explorar", href: "/explorar", icon: <Film className="h-4 w-4 mr-2" /> },
-    { name: "Temporadas", href: "/seasons", icon: <Calendar className="h-4 w-4 mr-2" /> },
+    { name: "Temporadas", href: "/explorar/seasons", icon: <Calendar className="h-4 w-4 mr-2" /> },
     { name: "Recomendaciones", href: "/recommendations", icon: <Compass className="h-4 w-4 mr-2" /> },
     { name: "Foros", href: "/forums", icon: <MessageSquare className="h-4 w-4 mr-2" /> },
     { name: "Perfil", href: "/profile", icon: <User className="h-4 w-4 mr-2" /> },

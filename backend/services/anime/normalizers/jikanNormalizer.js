@@ -48,19 +48,19 @@ export function normalizeJikanResults(results) {
  * Convierte snake_case a camelCase para el frontend
  */
 export function normalizeImages(jikanImages) {
-  if (!jikanImages) return null;
+  if (!jikanImages) return { jpg: {}, webp: {} };
 
   return {
     jpg: jikanImages.jpg ? {
-      imageUrl: jikanImages.jpg.image_url,
-      smallImageUrl: jikanImages.jpg.small_image_url,
-      largeImageUrl: jikanImages.jpg.large_image_url,
-    } : null,
+      imageUrl: jikanImages.jpg.image_url || null,
+      smallImageUrl: jikanImages.jpg.small_image_url || null,
+      largeImageUrl: jikanImages.jpg.large_image_url || null,
+    } : {},
     webp: jikanImages.webp ? {
-      imageUrl: jikanImages.webp.image_url,
-      smallImageUrl: jikanImages.webp.small_image_url,
-      largeImageUrl: jikanImages.webp.large_image_url,
-    } : null,
+      imageUrl: jikanImages.webp.image_url || null,
+      smallImageUrl: jikanImages.webp.small_image_url || null,
+      largeImageUrl: jikanImages.webp.large_image_url || null,
+    } : {},
   };
 }
 

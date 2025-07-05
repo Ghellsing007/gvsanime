@@ -9,6 +9,7 @@ import { getReviews, getUserReview, getFavoritesCount, isAnimeFavorite, getComme
 import { unifiedAnimeSearch } from './unifiedSearchService.js';
 import ReviewCache from './reviewCacheModel.js';
 import { normalizeJikanAnime, normalizeImages } from './normalizers/jikanNormalizer.js';
+import axios from 'axios';
 // Aquí puedes importar más servicios externos en el futuro
 
 // Modelo para el cache de anime en MongoDB
@@ -294,24 +295,33 @@ export async function getTopAnime() {
   const expiration = new Date(Date.now() - hours * 60 * 60 * 1000);
   let cache = await TopAnimeCache.findOne({ updatedAt: { $gte: expiration } });
   if (cache) {
-    return cache.animes;
+    // ✅ Siempre normalizar al leer del caché
+    return cache.animes.map(anime => ({
+      ...anime,
+      images: normalizeImages(anime.images) || anime.images
+    }));
   }
-  const response = await fetch('https://api.jikan.moe/v4/top/anime?limit=12');
-  if (!response.ok) throw new Error('Error obteniendo animes top');
-  const data = await response.json();
-  const animes = data.data.map(anime => ({
-    mal_id: anime.mal_id,
-    title: anime.title,
-    images: normalizeImages(anime.images) || anime.images,
-    score: anime.score,
-    episodes: anime.episodes,
-    genres: anime.genres || [], // Mantener estructura original de Jikan
-    year: anime.year,
-    season: anime.season,
-  }));
-  await TopAnimeCache.deleteMany({});
-  await TopAnimeCache.create({ animes });
-  return animes;
+  
+  try {
+    const response = await axios.get('https://api.jikan.moe/v4/top/anime?limit=12');
+    const data = response.data;
+    const animes = data.data.map(anime => ({
+      mal_id: anime.mal_id,
+      title: anime.title,
+      images: normalizeImages(anime.images) || anime.images,
+      score: anime.score,
+      episodes: anime.episodes,
+      genres: anime.genres || [], // Mantener estructura original de Jikan
+      year: anime.year,
+      season: anime.season,
+    }));
+    await TopAnimeCache.deleteMany({});
+    await TopAnimeCache.create({ animes });
+    return animes;
+  } catch (error) {
+    console.error('💥 Error en getTopAnime:', error);
+    throw error;
+  }
 }
 
 // Obtener animes recientes con cache configurable
@@ -320,11 +330,14 @@ export async function getRecentAnime() {
   const expiration = new Date(Date.now() - hours * 60 * 60 * 1000);
   let cache = await RecentAnimeCache.findOne({ updatedAt: { $gte: expiration } });
   if (cache) {
-    return cache.animes;
+    // ✅ Siempre normalizar al leer del caché
+    return cache.animes.map(anime => ({
+      ...anime,
+      images: normalizeImages(anime.images) || anime.images
+    }));
   }
-  const response = await fetch('https://api.jikan.moe/v4/seasons/now?limit=24');
-  if (!response.ok) throw new Error('Error obteniendo animes recientes');
-  const data = await response.json();
+  const response = await axios.get('https://api.jikan.moe/v4/seasons/now?limit=24');
+  const data = response.data;
   const animes = data.data.map(anime => ({
     mal_id: anime.mal_id,
     title: anime.title,
@@ -346,11 +359,14 @@ export async function getFeaturedAnime() {
   const expiration = new Date(Date.now() - hours * 60 * 60 * 1000);
   let cache = await FeaturedAnimeCache.findOne({ updatedAt: { $gte: expiration } });
   if (cache) {
-    return cache.animes;
+    // ✅ Siempre normalizar al leer del caché
+    return cache.animes.map(anime => ({
+      ...anime,
+      images: normalizeImages(anime.images) || anime.images
+    }));
   }
-  const response = await fetch('https://api.jikan.moe/v4/top/anime?limit=6');
-  if (!response.ok) throw new Error('Error obteniendo animes destacados');
-  const data = await response.json();
+  const response = await axios.get('https://api.jikan.moe/v4/top/anime?limit=6');
+  const data = response.data;
   const animes = data.data.map(anime => ({
     mal_id: anime.mal_id,
     title: anime.title,
@@ -374,9 +390,8 @@ export async function getFeaturedAnime() {
 
 // Obtener animes por temporada
 export async function getAnimeBySeason(year, season) {
-  const response = await fetch(`https://api.jikan.moe/v4/seasons/${year}/${season.toLowerCase()}?limit=24`);
-  if (!response.ok) throw new Error('Error obteniendo animes por temporada');
-  const data = await response.json();
+  const response = await axios.get(`https://api.jikan.moe/v4/seasons/${year}/${season.toLowerCase()}?limit=24`);
+  const data = response.data;
   return data.data.map(anime => ({
     mal_id: anime.mal_id,
     title: anime.title,
@@ -405,9 +420,8 @@ export async function getAnimeByGenre(genre) {
     // ...agrega más según la documentación de Jikan
   };
   const genreId = genreMap[genre] || 1;
-  const response = await fetch(`https://api.jikan.moe/v4/anime?genres=${genreId}&limit=24`);
-  if (!response.ok) throw new Error('Error obteniendo animes por género');
-  const data = await response.json();
+  const response = await axios.get(`https://api.jikan.moe/v4/anime?genres=${genreId}&limit=24`);
+  const data = response.data;
   return data.data.map(anime => ({
     mal_id: anime.mal_id,
     title: anime.title,
@@ -431,12 +445,8 @@ export async function getGenres() {
   }
   try {
     console.log('🌐 Solicitando géneros a Jikan...');
-    const response = await fetch('https://api.jikan.moe/v4/genres/anime');
-    if (!response.ok) {
-      console.error('❌ Error al obtener géneros desde Jikan:', response.status, response.statusText);
-      throw new Error('Error obteniendo géneros desde Jikan');
-    }
-    const data = await response.json();
+    const response = await axios.get('https://api.jikan.moe/v4/genres/anime');
+    const data = response.data;
     const genres = data.data.map(g => ({
       id: g.mal_id,
       name: g.name,
@@ -463,9 +473,8 @@ export async function getExternalReviews(animeId) {
     return cache.reviews;
   }
   // Consultar Jikan
-  const response = await fetch(`https://api.jikan.moe/v4/anime/${animeId}/reviews?limit=10`);
-  if (!response.ok) throw new Error('Error obteniendo reviews externas');
-  const data = await response.json();
+  const response = await axios.get(`https://api.jikan.moe/v4/anime/${animeId}/reviews?limit=10`);
+  const data = response.data;
   const reviews = data.data.map(r => ({
     user: r.user?.username,
     score: r.score,

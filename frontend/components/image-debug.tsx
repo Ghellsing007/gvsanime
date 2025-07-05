@@ -11,23 +11,39 @@ export default function ImageDebug() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    api.get('/anime/search?featured=true')
-      .then((res: any) => {
-        if (res.data.results && res.data.results.length > 0) {
-          const firstAnime = res.data.results[0]
-          setAnime(firstAnime)
-          console.log('🔍 Anime completo:', firstAnime)
-          debugImageUrls(firstAnime.images)
+    // Obtener un anime de ejemplo para debug
+    const fetchAnime = async () => {
+      try {
+        const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'
+        console.log('🔍 Haciendo petición a:', `${backendUrl}/anime/search?q=naruto&limit=1`)
+        
+        const response = await fetch(`${backendUrl}/anime/search?q=naruto&limit=1`)
+        const data = await response.json()
+        
+        console.log('📦 Respuesta completa del backend:', data)
+        
+        if (data.data && data.data.length > 0) {
+          const animeData = data.data[0]
+          console.log('🎬 Datos del anime:', animeData)
+          console.log('🖼️ Estructura de imágenes:', animeData.images)
+          setAnime(animeData)
+        } else {
+          console.log('❌ No se encontraron datos en la respuesta')
         }
-      })
-      .catch((err: any) => console.error('Error:', err))
-      .finally(() => setLoading(false))
+      } catch (error) {
+        console.error('💥 Error fetching anime:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchAnime()
   }, [])
 
   if (loading) return <div>Cargando...</div>
-  if (!anime) return <div>No se encontró anime</div>
+  if (!anime) return <div>No se pudo cargar el anime</div>
 
-  const images = anime.images as AnimeImages
+  const images = anime.images
 
   return (
     <div className="p-8 space-y-8">
@@ -41,9 +57,12 @@ export default function ImageDebug() {
           <div className="mb-4">
             <h3 className="font-medium">📷 JPG:</h3>
             <ul className="ml-4 space-y-1">
-              <li>Small: {images.jpg.smallImageUrl || 'No disponible'}</li>
-              <li>Medium: {images.jpg.imageUrl || 'No disponible'}</li>
-              <li>Large: {images.jpg.largeImageUrl || 'No disponible'}</li>
+              <li>Small (snake): {images.jpg.small_image_url || 'No disponible'}</li>
+              <li>Small (camel): {images.jpg.smallImageUrl || 'No disponible'}</li>
+              <li>Medium (snake): {images.jpg.image_url || 'No disponible'}</li>
+              <li>Medium (camel): {images.jpg.imageUrl || 'No disponible'}</li>
+              <li>Large (snake): {images.jpg.large_image_url || 'No disponible'}</li>
+              <li>Large (camel): {images.jpg.largeImageUrl || 'No disponible'}</li>
             </ul>
           </div>
         )}
@@ -52,16 +71,19 @@ export default function ImageDebug() {
           <div className="mb-4">
             <h3 className="font-medium">🖼️ WebP:</h3>
             <ul className="ml-4 space-y-1">
-              <li>Small: {images.webp.smallImageUrl || 'No disponible'}</li>
-              <li>Medium: {images.webp.imageUrl || 'No disponible'}</li>
-              <li>Large: {images.webp.largeImageUrl || 'No disponible'}</li>
+              <li>Small (snake): {images.webp.small_image_url || 'No disponible'}</li>
+              <li>Small (camel): {images.webp.smallImageUrl || 'No disponible'}</li>
+              <li>Medium (snake): {images.webp.image_url || 'No disponible'}</li>
+              <li>Medium (camel): {images.webp.imageUrl || 'No disponible'}</li>
+              <li>Large (snake): {images.webp.large_image_url || 'No disponible'}</li>
+              <li>Large (camel): {images.webp.largeImageUrl || 'No disponible'}</li>
             </ul>
           </div>
         )}
       </div>
 
       {/* Imágenes seleccionadas por las funciones */}
-      <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div>
           <h2 className="text-lg font-semibold mb-2">🎯 Hero Image (WebP Large → JPG Large):</h2>
           <p className="text-sm text-gray-600 mb-2">{getHeroImage(images)}</p>

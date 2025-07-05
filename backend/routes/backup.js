@@ -101,4 +101,46 @@ router.post('/start', requireRole(['admin']), (req, res) => {
   res.json({ message: 'Cron job de backup activado.' });
 });
 
+// Endpoint temporal para limpiar caché de anime
+router.delete('/clear-anime-cache', async (req, res) => {
+  try {
+    const mongoose = await import('../services/shared/mongooseClient.js');
+    
+    // Limpiar todas las colecciones de caché de anime
+    const collections = [
+      'animecaches',
+      'searchcaches', 
+      'topanimecaches',
+      'recentanimecaches',
+      'featuredanimecaches',
+      'genrecaches'
+    ];
+    
+    let deletedCount = 0;
+    for (const collectionName of collections) {
+      try {
+        const collection = mongoose.default.connection.collection(collectionName);
+        const result = await collection.deleteMany({});
+        deletedCount += result.deletedCount;
+        console.log(`✅ Limpiado ${result.deletedCount} documentos de ${collectionName}`);
+      } catch (error) {
+        console.log(`⚠️ No se pudo limpiar ${collectionName}:`, error.message);
+      }
+    }
+    
+    res.json({ 
+      success: true, 
+      message: `Caché limpiado exitosamente. ${deletedCount} documentos eliminados.`,
+      deletedCount 
+    });
+  } catch (error) {
+    console.error('Error limpiando caché:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Error al limpiar el caché',
+      details: error.message 
+    });
+  }
+});
+
 export default router; 
