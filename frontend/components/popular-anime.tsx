@@ -7,6 +7,7 @@ import AnimeCard from "@/components/anime-card"
 import { Button } from "@/components/ui/button"
 import { ChevronRight } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { RetryButton } from "@/components/ui/retry-button"
 import api from "../lib/api"
 import { Skeleton } from "@/components/ui/skeleton"
 
@@ -41,6 +42,7 @@ export default function PopularAnime() {
 
   const fetchAnimes = async (category: string) => {
     setLoading(true)
+    setError(null)
     try {
       let endpoint = '/anime/search?sort=top'
       
@@ -121,7 +123,24 @@ export default function PopularAnime() {
       </div>
     </section>
   );
-  if (error) return <div>Error: {error.message}</div>;
+  
+  if (error) {
+    return (
+      <section className="mb-12">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold">Popular Anime</h2>
+          <Link href="/explorar/popular">
+            <Button variant="ghost" className="gap-1 text-muted-foreground">
+              View All <ChevronRight className="h-4 w-4" />
+            </Button>
+          </Link>
+        </div>
+        <RetryButton onRetry={() => fetchAnimes(activeTab)} loading={loading}>
+          Error al cargar animes populares: {error.message}
+        </RetryButton>
+      </section>
+    )
+  }
 
   return (
     <section className="mb-12">

@@ -200,9 +200,14 @@ export async function getRecommendationsController(req, res) {
           };
           const genreId = genreMap[genero.toLowerCase()];
           if (genreId) {
-            const response = await axios.get(`https://api.jikan.moe/v4/anime?genres=${genreId}&limit=6`);
-            const data = response.data;
-            animesPorGenero = animesPorGenero.concat(data.data);
+            try {
+              const response = await axios.get(`https://api.jikan.moe/v4/anime?genres=${genreId}&limit=6`);
+              const data = response.data;
+              animesPorGenero = animesPorGenero.concat(data.data);
+            } catch (err) {
+              // Omitir el error de este género y continuar
+              continue;
+            }
           }
         }
         // Quitar duplicados por id

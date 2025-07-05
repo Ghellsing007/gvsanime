@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils"
 import { useMobile } from "@/hooks/use-mobile"
 import { SITE_NAME } from "../lib/siteConfig"
 import api from "@/lib/api"
+import AnimeSearchAutocomplete from "@/components/AnimeSearchAutocomplete"
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
@@ -85,7 +86,6 @@ export default function Navbar() {
     { name: "Inicio", href: "/", icon: <Home className="h-4 w-4 mr-2" /> },
     { name: "Explorar", href: "/explorar", icon: <Film className="h-4 w-4 mr-2" /> },
     { name: "Temporadas", href: "/explorar/seasons", icon: <Calendar className="h-4 w-4 mr-2" /> },
-    { name: "Recomendaciones", href: "/recommendations", icon: <Compass className="h-4 w-4 mr-2" /> },
     { name: "Foros", href: "/forums", icon: <MessageSquare className="h-4 w-4 mr-2" /> },
     { name: "Perfil", href: "/profile", icon: <User className="h-4 w-4 mr-2" /> },
   ]
@@ -123,54 +123,17 @@ export default function Navbar() {
           )}
 
           <div className="flex items-center gap-2">
-            <form onSubmit={handleSearch} className="hidden md:flex relative">
-              <Input
-                type="search"
+            <form onSubmit={handleSearch} className="hidden md:flex relative items-center">
+              <AnimeSearchAutocomplete
+                size="small"
                 placeholder="Buscar anime..."
-                className="w-[200px] lg:w-[300px]"
                 value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value)
-                  setShowSuggestions(true)
-                }}
-                onFocus={() => searchQuery && setShowSuggestions(true)}
-                onBlur={handleBlur}
-                autoComplete="off"
+                onChange={setSearchQuery}
+                className="mr-2"
               />
-              <Button type="submit" size="icon" variant="ghost" className="absolute right-0 top-0 h-full">
+              <Button type="submit" size="icon" variant="ghost" className="h-full">
                 <Search className="h-4 w-4" />
               </Button>
-              {/* Sugerencias de autocompletado */}
-              {showSuggestions && (searchQuery || loadingSuggestions) && (
-                <div className="absolute left-0 top-full mt-1 w-full bg-background border rounded shadow-lg z-50">
-                  {loadingSuggestions ? (
-                    <div className="p-2 text-sm text-muted-foreground">Buscando...</div>
-                  ) : suggestionError ? (
-                    <div className="p-2 text-sm text-destructive">{suggestionError}</div>
-                  ) : suggestions.length === 0 ? (
-                    <div className="p-2 text-sm text-muted-foreground">No se encontraron resultados</div>
-                  ) : (
-                    suggestions.map((anime) => (
-                      <Link
-                        key={anime.mal_id || anime.id}
-                        href={`/anime/${anime.mal_id || anime.id}`}
-                        className="flex items-center gap-2 px-3 py-2 hover:bg-primary/10 transition-colors cursor-pointer"
-                        onClick={() => setShowSuggestions(false)}
-                      >
-                        <img
-                          src={anime.images?.jpg?.imageUrl || "/placeholder.jpg"}
-                          alt={anime.title}
-                          className="w-10 h-14 object-cover rounded"
-                        />
-                        <div className="flex flex-col">
-                          <span className="font-medium text-sm line-clamp-1">{anime.title}</span>
-                          <span className="text-xs text-muted-foreground">{anime.year || "Sin año"}</span>
-                        </div>
-                      </Link>
-                    ))
-                  )}
-                </div>
-              )}
             </form>
 
             <DropdownMenu>

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, TrendingUp, Clock, ArrowRight } from 'lucide-react';
+import { Calendar, TrendingUp, Clock, ArrowRight, Plus } from 'lucide-react';
 import AnimeCard from '@/components/anime-card';
 import Link from 'next/link';
 
@@ -46,6 +46,10 @@ export default function SeasonsPage() {
   const [animes, setAnimes] = useState<Anime[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingAnimes, setLoadingAnimes] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [totalAnimes, setTotalAnimes] = useState(0);
 
   // Generar temporadas disponibles
   useEffect(() => {
@@ -83,17 +87,53 @@ export default function SeasonsPage() {
   const handleSeasonClick = async (season: Season) => {
     setSelectedSeason(season);
     setLoadingAnimes(true);
+    setCurrentPage(1);
+    setHasMore(true);
     
     try {
-      // Solo cargar los primeros 12 animes
-      const response = await fetch(`/api/anime?season=${season.year}-${season.season}&limit=12`);
+      // Cargar los primeros 12 animes
+      const response = await fetch(`/api/anime?season=${season.year}-${season.season}&limit=12&page=1`);
       const data = await response.json();
       setAnimes(data.data || []);
+      setTotalAnimes(data.pagination?.total || 0);
+      
+      // Verificar si hay más animes
+      const totalPages = data.pagination?.last_visible_page || 1;
+      setHasMore(totalPages > 1);
     } catch (error) {
       console.error('Error cargando animes de la temporada:', error);
       setAnimes([]);
+      setHasMore(false);
     } finally {
       setLoadingAnimes(false);
+    }
+  };
+
+  const loadMoreAnimes = async () => {
+    if (!selectedSeason || loadingMore) return;
+    
+    setLoadingMore(true);
+    const nextPage = currentPage + 1;
+    
+    try {
+      const response = await fetch(`/api/anime?season=${selectedSeason.year}-${selectedSeason.season}&limit=12&page=${nextPage}`);
+      const data = await response.json();
+      
+      if (data.data && data.data.length > 0) {
+        setAnimes(prev => [...prev, ...data.data]);
+        setCurrentPage(nextPage);
+        
+        // Verificar si hay más páginas
+        const totalPages = data.pagination?.last_visible_page || 1;
+        setHasMore(nextPage < totalPages);
+      } else {
+        setHasMore(false);
+      }
+    } catch (error) {
+      console.error('Error cargando más animes:', error);
+      setHasMore(false);
+    } finally {
+      setLoadingMore(false);
     }
   };
 
@@ -224,8 +264,31 @@ export default function SeasonsPage() {
               
               {/* Información sobre el límite */}
               <div className="text-center text-sm text-gray-500 mb-4">
-                Mostrando los primeros 12 animes de {selectedSeason.name}
+                Mostrando {animes.length} de {totalAnimes} animes de {selectedSeason.name}
               </div>
+
+              {/* Botón Ver más */}
+              {hasMore && (
+                <div className="text-center mb-6">
+                  <Button 
+                    onClick={loadMoreAnimes}
+                    disabled={loadingMore}
+                    className="gap-2"
+                  >
+                    {loadingMore ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        Cargando...
+                      </>
+                    ) : (
+                      <>
+                        <Plus className="h-4 w-4" />
+                        Ver más animes
+                      </>
+                    )}
+                  </Button>
+                </div>
+              )}
             </>
           ) : !loadingAnimes ? (
             <div className="text-center py-12">

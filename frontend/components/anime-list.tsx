@@ -7,8 +7,10 @@ import AnimeCard from "@/components/anime-card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Loader2, Search } from "lucide-react"
+import { RetryButton } from "@/components/ui/retry-button"
 import api from "@/lib/api"
 import { useSearchParams } from "next/navigation"
+import AnimeSearchAutocomplete from "@/components/AnimeSearchAutocomplete"
 
 interface Anime {
   mal_id: number
@@ -67,7 +69,6 @@ export default function AnimeList({ initialPage = 1, initialLimit = 12 }: AnimeL
         `/anime?page=${pageNum}&limit=${initialLimit}${genero ? `&genre=${encodeURIComponent(genero)}` : ""}${season ? `&season=${encodeURIComponent(season)}` : ""}${query ? `&q=${encodeURIComponent(query)}` : ""}`
       )
       const data = response.data
-      console.log('Respuesta de la API de anime:', data)
       setTotalAnimes(data.pagination.items.total)
       setHasMore(pageNum < data.pagination.last_visible_page)
       if (pageNum === 1) {
@@ -78,7 +79,6 @@ export default function AnimeList({ initialPage = 1, initialLimit = 12 }: AnimeL
       setError("")
     } catch (err) {
       setError("Error al cargar los animes. Por favor, inténtalo de nuevo más tarde.")
-      console.error(err)
     } finally {
       setLoading(false)
       setSearching(false)
@@ -111,12 +111,12 @@ export default function AnimeList({ initialPage = 1, initialLimit = 12 }: AnimeL
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
-        <form onSubmit={handleSearch} className="flex gap-2 max-w-xl mx-auto">
-          <Input
-            type="search"
+        <form onSubmit={handleSearch} className="flex gap-2 max-w-xl mx-auto items-center">
+          <AnimeSearchAutocomplete
+            size="large"
             placeholder="Buscar anime..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={setSearchQuery}
             className="flex-1"
           />
           <Button type="submit" disabled={searching}>
@@ -132,7 +132,13 @@ export default function AnimeList({ initialPage = 1, initialLimit = 12 }: AnimeL
         </p>
       )}
 
-      {error && <p className="text-center text-red-500 mb-6">{error}</p>}
+      {error && (
+        <div className="mb-6">
+          <RetryButton onRetry={() => fetchAnimes(1, searchQuery)} loading={loading}>
+            {error}
+          </RetryButton>
+        </div>
+      )}
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-6">
         {uniqueAnimes.map((anime) => (

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { ChevronRight } from "lucide-react"
 import { useEffect, useState } from "react"
 import { Skeleton } from "@/components/ui/skeleton"
+import { RetryButton } from "@/components/ui/retry-button"
 
 import api from "../lib/api"
 
@@ -14,15 +15,23 @@ export default function FeaturedAnime() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<Error | null>(null)
 
+  const fetchFeaturedAnime = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      const res = await api.get('/anime/search?featured=true')
+      // Adaptar la respuesta del backend a la estructura esperada
+      const results = res.data?.data || res.data?.results || [];
+      setAnimes(results)
+    } catch (err: any) {
+      setError(err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   useEffect(() => {
-    api.get('/anime/search?featured=true')
-      .then((res: any) => {
-        // Adaptar la respuesta del backend a la estructura esperada
-        const results = res.data?.data || res.data?.results || [];
-        setAnimes(results)
-      })
-      .catch((err: any) => setError(err))
-      .finally(() => setLoading(false))
+    fetchFeaturedAnime()
   }, [])
 
   const container = {
@@ -67,8 +76,32 @@ export default function FeaturedAnime() {
       </div>
     </section>
   );
-  if (error) return <div>Error: {error.message}</div>;
-  if (!animes || !animes.length) return <div>No hay animes destacados.</div>;
+  
+  if (error) {
+    return (
+      <section className="mb-12">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold">Featured Anime</h2>
+        </div>
+        <RetryButton onRetry={fetchFeaturedAnime} loading={loading}>
+          Error al cargar animes destacados: {error.message}
+        </RetryButton>
+      </section>
+    )
+  }
+  
+  if (!animes || !animes.length) {
+    return (
+      <section className="mb-12">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold">Featured Anime</h2>
+        </div>
+        <RetryButton onRetry={fetchFeaturedAnime} loading={loading}>
+          No hay animes destacados disponibles
+        </RetryButton>
+      </section>
+    )
+  }
 
   return (
     <section className="mb-12">

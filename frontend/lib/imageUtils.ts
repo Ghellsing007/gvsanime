@@ -12,18 +12,13 @@ export function getAnimeImage(
 ): string {
   const { format = 'jpg', quality = 'medium', fallback = '/placeholder.svg' } = options;
 
-  console.log('🖼️ getAnimeImage recibió:', { images, options });
-
   if (!images) {
-    console.log('❌ No hay imágenes, retornando fallback');
     return fallback;
   }
 
   const formatImages = images[format];
-  console.log(`🖼️ Imágenes de formato ${format}:`, formatImages);
   
   if (!formatImages) {
-    console.log(`❌ No hay imágenes de formato ${format}, retornando fallback`);
     return fallback;
   }
 
@@ -66,11 +61,9 @@ export function getHeroImage(images: AnimeImages | undefined): string {
  * Prioriza WebP medium, fallback a JPG medium
  */
 export function getCardImage(images: AnimeImages | undefined): string {
-  console.log('🃏 getCardImage recibió:', images);
   
   // Intentar WebP medium primero
   const webpMedium = getAnimeImage(images, { quality: 'medium', format: 'webp' });
-  console.log('🃏 WebP medium result:', webpMedium);
   
   if (webpMedium !== '/placeholder.svg') {
     return webpMedium;
@@ -78,7 +71,6 @@ export function getCardImage(images: AnimeImages | undefined): string {
   
   // Fallback a JPG medium
   const jpgMedium = getAnimeImage(images, { quality: 'medium', format: 'jpg' });
-  console.log('🃏 JPG medium result:', jpgMedium);
   return jpgMedium;
 }
 
@@ -117,33 +109,9 @@ export function hasImage(images: AnimeImages | undefined): boolean {
  */
 export function debugImageUrls(images: AnimeImages | undefined): void {
   if (!images) {
-    console.log('❌ No hay imágenes disponibles');
     return;
   }
 
-  console.log('🖼️ URLs de imágenes disponibles:');
-  
-  if (images.jpg) {
-    console.log('📷 JPG:');
-    console.log('  - Small (snake):', images.jpg.small_image_url);
-    console.log('  - Small (camel):', images.jpg.smallImageUrl);
-    console.log('  - Medium (snake):', images.jpg.image_url);
-    console.log('  - Medium (camel):', images.jpg.imageUrl);
-    console.log('  - Large (snake):', images.jpg.large_image_url);
-    console.log('  - Large (camel):', images.jpg.largeImageUrl);
-  }
-  
-  if (images.webp) {
-    console.log('🖼️ WebP:');
-    console.log('  - Small (snake):', images.webp.small_image_url);
-    console.log('  - Small (camel):', images.webp.smallImageUrl);
-    console.log('  - Medium (snake):', images.webp.image_url);
-    console.log('  - Medium (camel):', images.webp.imageUrl);
-    console.log('  - Large (snake):', images.webp.large_image_url);
-    console.log('  - Large (camel):', images.webp.largeImageUrl);
-  }
-  
   // Mostrar qué imagen se seleccionaría para hero
   const heroImage = getHeroImage(images);
-  console.log('🎯 Hero image seleccionada:', heroImage);
 } 
