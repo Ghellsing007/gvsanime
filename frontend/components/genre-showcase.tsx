@@ -1,49 +1,30 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import Link from "next/link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { ChevronRight } from "lucide-react"
-import { useState, useEffect } from "react"
-
-// Mock data
-const genreData = [
-  {
-    id: "action",
-    name: "Action",
-    description: "Fast-paced and full of excitement with battles, fights, and physical feats.",
-    image: "/placeholder.svg?height=300&width=500",
-    count: 3240,
-  },
-  {
-    id: "romance",
-    name: "Romance",
-    description: "Focused on the romantic relationships between characters.",
-    image: "/placeholder.svg?height=300&width=500",
-    count: 1850,
-  },
-  {
-    id: "fantasy",
-    name: "Fantasy",
-    description: "Set in fictional universes often inspired by mythology and folklore.",
-    image: "/placeholder.svg?height=300&width=500",
-    count: 2760,
-  },
-  {
-    id: "sci-fi",
-    name: "Sci-Fi",
-    description: "Centered around futuristic technology, space exploration, and scientific concepts.",
-    image: "/placeholder.svg?height=300&width=500",
-    count: 1420,
-  },
-]
+import api from "../lib/api"
 
 export default function GenreShowcase() {
-  const [mounted, setMounted] = useState(false)
+  const [genres, setGenres] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
 
   useEffect(() => {
-    setMounted(true)
+    api.get('/anime/genres')
+      .then(res => {
+        const allGenres = res.data?.genres || []
+        // Mostrar solo los primeros 8 géneros más populares
+        const limitedGenres = allGenres
+          .sort((a: any, b: any) => b.count - a.count) // Ordenar por popularidad
+          .slice(0, 8) // Limitar a 8 géneros
+        setGenres(limitedGenres)
+      })
+      .catch(() => setError("No se pudieron cargar los géneros"))
+      .finally(() => setLoading(false))
   }, [])
 
   const container = {
@@ -61,13 +42,18 @@ export default function GenreShowcase() {
     show: { opacity: 1, y: 0 },
   }
 
+  if (loading) return <div>Cargando géneros...</div>
+  if (error) return <div>{error}</div>
+
   return (
     <section className="mb-12">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold">Explore Genres</h2>
-        <Button variant="ghost" className="gap-1 text-muted-foreground">
-          View All <ChevronRight className="h-4 w-4" />
-        </Button>
+        <Link href="/explorar/generos">
+          <Button variant="ghost" className="gap-1 text-muted-foreground">
+            View All <ChevronRight className="h-4 w-4" />
+          </Button>
+        </Link>
       </div>
 
       <motion.div
@@ -77,24 +63,27 @@ export default function GenreShowcase() {
         whileInView="show"
         viewport={{ once: true, margin: "-100px" }}
       >
-        {genreData.map((genre) => (
-          <motion.div key={genre.id} variants={item}>
-            <Link href={`/genres/${genre.id}`}>
+        {genres.map((genre, index) => (
+          <motion.div key={genre.id || genre.mal_id} variants={item}>
+            <Link href={`/explorar?genero=${encodeURIComponent(genre.name)}`}>
               <div className="group relative rounded-lg overflow-hidden">
                 <div className="aspect-[16/9] relative">
                   <Image
-                    src={genre.image || "/placeholder.svg"}
+                    src={genre.image || "/placeholder.jpg"}
                     alt={genre.name}
                     fill
+                    priority={index === 0}
                     className="object-cover transition-transform duration-300 group-hover:scale-105"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/50 to-transparent" />
                 </div>
                 <div className="absolute bottom-0 left-0 right-0 p-4">
                   <h3 className="text-xl font-bold mb-1">{genre.name}</h3>
-                  <p className="text-sm text-muted-foreground mb-2">{genre.description}</p>
+                  <p className="text-sm text-muted-foreground mb-2">
+                    {genre.description || `Explora animes del género ${genre.name}`}
+                  </p>
                   <div className="text-xs font-medium bg-primary/20 text-primary-foreground px-2 py-1 rounded-full inline-block">
-                    {mounted ? genre.count.toLocaleString() : genre.count} anime
+                    {genre.count?.toLocaleString() || 0} anime
                   </div>
                 </div>
               </div>

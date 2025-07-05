@@ -27,7 +27,8 @@ export default function AnimeDetails({ id }: AnimeDetailsProps) {
         // Añadimos un pequeño retraso para respetar los límites de la API
         await new Promise((resolve) => setTimeout(resolve, 1000))
 
-        const response = await fetch(`/api/anime/${id}`)
+        const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'
+        const response = await fetch(`${backendUrl}/anime/${id}`)
 
         if (!response.ok) {
           throw new Error("Error al obtener datos del anime")

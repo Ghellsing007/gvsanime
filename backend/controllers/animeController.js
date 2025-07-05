@@ -93,7 +93,8 @@ export async function getGenresController(req, res) {
     const genres = await getGenres();
     res.json({ genres });
   } catch (err) {
-    res.status(500).json({ error: 'Error al obtener géneros' });
+    console.error('💥 Error en getGenresController:', err);
+    res.status(500).json({ error: 'Error al obtener géneros', details: err.message });
   }
 }
 

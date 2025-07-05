@@ -5,21 +5,20 @@ import { motion } from "framer-motion"
 import Link from "next/link"
 import AnimeCard from "@/components/anime-card"
 import { Button } from "@/components/ui/button"
-import { ChevronRight } from "lucide-react"
+import { ArrowLeft, Search, Filter } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import api from "../lib/api"
+import api from "../../../lib/api"
 
-// Datos mock como fallback (ya no se usan, pero mantenemos por si acaso)
-
-export default function PopularAnime() {
+export default function AllPopularAnimePage() {
   const [activeTab, setActiveTab] = useState("all")
   const [animes, setAnimes] = useState<any[]>([])
+  const [filteredAnimes, setFilteredAnimes] = useState<any[]>([])
   const [genres, setGenres] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<Error | null>(null)
+  const [error, setError] = useState("")
+  const [searchTerm, setSearchTerm] = useState("")
 
   const fetchGenres = async () => {
-    // Usar directamente los 15 géneros más populares
     const popularGenres = [
       { id: 1, name: 'Action' },
       { id: 2, name: 'Adventure' },
@@ -44,7 +43,6 @@ export default function PopularAnime() {
       let endpoint = '/anime/search?sort=top'
       
       if (category !== 'all') {
-        // Mapear el nombre del género a su ID para la API
         const genreMap: { [key: string]: number } = {
           'Action': 1,
           'Adventure': 2,
@@ -71,11 +69,10 @@ export default function PopularAnime() {
       
       const res = await api.get(endpoint)
       const results = res.data?.data || res.data?.results || [];
-      // Limitar a solo 12 animes para la página principal
-      const limitedResults = results.slice(0, 12);
-      setAnimes(limitedResults)
+      setAnimes(results)
+      setFilteredAnimes(results)
     } catch (err: any) {
-      setError(err)
+      setError(err.message)
     } finally {
       setLoading(false)
     }
@@ -86,12 +83,24 @@ export default function PopularAnime() {
     fetchAnimes(activeTab)
   }, [activeTab])
 
+  // Filtrar animes basado en el término de búsqueda
+  useEffect(() => {
+    if (searchTerm.trim() === "") {
+      setFilteredAnimes(animes)
+    } else {
+      const filtered = animes.filter(anime =>
+        anime.title.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+      setFilteredAnimes(filtered)
+    }
+  }, [searchTerm, animes])
+
   const container = {
     hidden: { opacity: 0 },
     show: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.1,
+        staggerChildren: 0.05,
       },
     },
   }
@@ -101,38 +110,69 @@ export default function PopularAnime() {
     show: { opacity: 1, y: 0 },
   }
 
-  if (loading) return <div>Cargando animes populares...</div>;
-  if (error) return <div>Error: {error.message}</div>;
+  if (loading) return <div className="container mx-auto px-4 py-8">Cargando animes populares...</div>
+  if (error) return <div className="container mx-auto px-4 py-8">Error: {error}</div>
 
   return (
-    <section className="mb-12">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">Popular Anime</h2>
-        <Link href="/explorar/popular">
-          <Button variant="ghost" className="gap-1 text-muted-foreground">
-            View All <ChevronRight className="h-4 w-4" />
+    <div className="container mx-auto px-4 py-8">
+      {/* Header */}
+      <div className="mb-8">
+        <Link href="/">
+          <Button variant="ghost" className="gap-2 mb-4">
+            <ArrowLeft className="h-4 w-4" />
+            Volver al inicio
           </Button>
         </Link>
+        
+        <h1 className="text-4xl font-bold mb-4">Animes Populares</h1>
+        <p className="text-muted-foreground mb-6">
+          Descubre los animes más populares y mejor valorados. Filtra por género o busca por título.
+        </p>
+
+        {/* Barra de búsqueda */}
+        <div className="relative max-w-md mb-8">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+          <input
+            type="text"
+            placeholder="Buscar animes..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 border border-input rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+          />
+        </div>
       </div>
 
-      <Tabs defaultValue="all" onValueChange={setActiveTab}>
-        <TabsList className="mb-6 overflow-x-auto flex justify-center">
-          <TabsTrigger value="all">All</TabsTrigger>
+      {/* Filtros por género */}
+      <Tabs defaultValue="all" onValueChange={setActiveTab} className="mb-8">
+        <TabsList className="overflow-x-auto flex justify-start">
+          <TabsTrigger value="all">Todos</TabsTrigger>
           {genres.map((genre) => (
             <TabsTrigger key={genre.id} value={genre.name}>
               {genre.name}
             </TabsTrigger>
           ))}
         </TabsList>
+      </Tabs>
 
+      {/* Estadísticas */}
+      <div className="mb-8 p-4 bg-muted rounded-lg">
+        <p className="text-sm text-muted-foreground">
+          Mostrando {filteredAnimes.length} de {animes.length} animes
+          {searchTerm && ` para "${searchTerm}"`}
+          {activeTab !== 'all' && ` en ${activeTab}`}
+        </p>
+      </div>
+
+      {/* Grid de animes */}
+      <Tabs value={activeTab} className="w-full">
         <TabsContent value="all">
           <motion.div
-            className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4"
+            className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4"
             variants={container}
             initial="hidden"
-            animate={activeTab === "all" ? "show" : "hidden"}
+            animate="show"
           >
-            {animes.map((anime) => (
+            {filteredAnimes.map((anime) => (
               <motion.div key={anime.mal_id || anime.id} variants={item}>
                 <AnimeCard
                   id={anime.mal_id || anime.id}
@@ -152,12 +192,12 @@ export default function PopularAnime() {
         {genres.map((genre) => (
           <TabsContent key={genre.id} value={genre.name}>
             <motion.div
-              className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4"
+              className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4"
               variants={container}
               initial="hidden"
-              animate={activeTab === genre.name ? "show" : "hidden"}
+              animate="show"
             >
-              {animes.map((anime) => (
+              {filteredAnimes.map((anime) => (
                 <motion.div key={anime.mal_id || anime.id} variants={item}>
                   <AnimeCard
                     id={anime.mal_id || anime.id}
@@ -175,7 +215,25 @@ export default function PopularAnime() {
           </TabsContent>
         ))}
       </Tabs>
-    </section>
-  )
-}
 
+      {/* Mensaje si no hay resultados */}
+      {filteredAnimes.length === 0 && (searchTerm || activeTab !== 'all') && (
+        <div className="text-center py-12">
+          <p className="text-muted-foreground">
+            No se encontraron animes que coincidan con los filtros aplicados
+          </p>
+          <Button 
+            variant="outline" 
+            onClick={() => {
+              setSearchTerm("")
+              setActiveTab("all")
+            }}
+            className="mt-4"
+          >
+            Limpiar filtros
+          </Button>
+        </div>
+      )}
+    </div>
+  )
+} 

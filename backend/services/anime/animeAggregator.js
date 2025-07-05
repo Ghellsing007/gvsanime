@@ -291,7 +291,7 @@ export async function getTopAnime() {
   if (cache) {
     return cache.animes;
   }
-  const response = await fetch('https://api.jikan.moe/v4/top/anime?limit=24');
+  const response = await fetch('https://api.jikan.moe/v4/top/anime?limit=12');
   if (!response.ok) throw new Error('Error obteniendo animes top');
   const data = await response.json();
   const animes = data.data.map(anime => ({
@@ -417,27 +417,36 @@ export async function getAnimeByGenre(genre) {
 
 // Obtener la lista de géneros (con cache en MongoDB y tiempo configurable)
 export async function getGenres() {
-  // Permitir controlar el tiempo de expiración por variable de entorno (por defecto 24h)
   const hours = parseInt(process.env.GENRES_CACHE_HOURS || '24', 10);
   const expiration = new Date(Date.now() - hours * 60 * 60 * 1000);
   let cache = await GenreCache.findOne({ updatedAt: { $gte: expiration } });
   if (cache) {
+    console.log('✅ Géneros obtenidos del caché');
     return cache.genres;
   }
-  // 2. Si no está en cache, obtener desde Jikan
-  const response = await fetch('https://api.jikan.moe/v4/genres/anime');
-  if (!response.ok) throw new Error('Error obteniendo géneros desde Jikan');
-  const data = await response.json();
-  const genres = data.data.map(g => ({
-    id: g.mal_id,
-    name: g.name,
-    count: g.count,
-    description: g.description,
-  }));
-  // 3. Guardar en cache
-  await GenreCache.deleteMany({}); // Limpiar cache anterior
-  await GenreCache.create({ genres });
-  return genres;
+  try {
+    console.log('🌐 Solicitando géneros a Jikan...');
+    const response = await fetch('https://api.jikan.moe/v4/genres/anime');
+    if (!response.ok) {
+      console.error('❌ Error al obtener géneros desde Jikan:', response.status, response.statusText);
+      throw new Error('Error obteniendo géneros desde Jikan');
+    }
+    const data = await response.json();
+    const genres = data.data.map(g => ({
+      id: g.mal_id,
+      name: g.name,
+      count: g.count,
+      description: g.description,
+    }));
+    console.log('📝 Géneros transformados:', genres.length);
+    await GenreCache.deleteMany({});
+    await GenreCache.create({ genres });
+    console.log('💾 Géneros guardados en MongoDB');
+    return genres;
+  } catch (err) {
+    console.error('💥 Error en getGenres:', err);
+    throw err;
+  }
 }
 
 // Obtener reviews externas de Jikan con cache configurable

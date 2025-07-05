@@ -11,11 +11,11 @@ const router = express.Router();
 // Ruta para buscar animes por nombre (público)
 router.get('/search', searchAnimeController);
 
-// Ruta para obtener un anime por ID (público)
-router.get('/:id', getAnimeById);
-
 // Ruta para obtener la lista de géneros (público)
 router.get('/genres', getGenresController);
+
+// Ruta para obtener un anime por ID (público)
+router.get('/:id', getAnimeById);
 
 // Ruta para obtener reviews externas de Jikan (público)
 router.get('/reviews/:animeId', getExternalReviewsController);
