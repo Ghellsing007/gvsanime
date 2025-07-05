@@ -7,14 +7,24 @@
 
 export interface AnimeImages {
   jpg?: {
+    // snake_case (formato original de Jikan)
     image_url?: string;
     small_image_url?: string;
     large_image_url?: string;
+    // camelCase (formato normalizado por nuestro backend)
+    imageUrl?: string;
+    smallImageUrl?: string;
+    largeImageUrl?: string;
   };
   webp?: {
+    // snake_case (formato original de Jikan)
     image_url?: string;
     small_image_url?: string;
     large_image_url?: string;
+    // camelCase (formato normalizado por nuestro backend)
+    imageUrl?: string;
+    smallImageUrl?: string;
+    largeImageUrl?: string;
   };
 }
 

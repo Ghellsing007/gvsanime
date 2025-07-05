@@ -108,7 +108,7 @@ export default function AnimeDetails({ id }: AnimeDetailsProps) {
           <div className="sticky top-24">
             <div className="relative rounded-lg overflow-hidden mb-4">
               <Image
-                src={anime.images?.webp?.imageUrl|| "/placeholder.svg?height=600&width=400"}
+                src={anime.images?.webp?.image_url|| "/placeholder.svg?height=600&width=400"}
                 alt={anime.title}
                 width={400}
                 height={600}

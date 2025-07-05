@@ -22,14 +22,14 @@ export function getAnimeImage(
   
   switch (quality) {
     case 'small':
-      imageUrl = formatImages.small_image_url;
+      imageUrl = formatImages.smallImageUrl || formatImages.small_image_url;
       break;
     case 'large':
-      imageUrl = formatImages.large_image_url;
+      imageUrl = formatImages.largeImageUrl || formatImages.large_image_url;
       break;
     case 'medium':
     default:
-      imageUrl = formatImages.image_url;
+      imageUrl = formatImages.imageUrl || formatImages.image_url;
       break;
   }
 
@@ -93,7 +93,7 @@ export function getWebPImage(images: AnimeImages | undefined, quality: 'small' |
  */
 export function hasImage(images: AnimeImages | undefined): boolean {
   if (!images) return false;
-  return !!(images.jpg?.image_url || images.webp?.image_url);
+  return !!(images.jpg?.imageUrl || images.jpg?.image_url || images.webp?.imageUrl || images.webp?.image_url);
 }
 
 /**
@@ -109,16 +109,22 @@ export function debugImageUrls(images: AnimeImages | undefined): void {
   
   if (images.jpg) {
     console.log('📷 JPG:');
-    console.log('  - Small:', images.jpg.small_image_url);
-    console.log('  - Medium:', images.jpg.image_url);
-    console.log('  - Large:', images.jpg.large_image_url);
+    console.log('  - Small (snake):', images.jpg.small_image_url);
+    console.log('  - Small (camel):', images.jpg.smallImageUrl);
+    console.log('  - Medium (snake):', images.jpg.image_url);
+    console.log('  - Medium (camel):', images.jpg.imageUrl);
+    console.log('  - Large (snake):', images.jpg.large_image_url);
+    console.log('  - Large (camel):', images.jpg.largeImageUrl);
   }
   
   if (images.webp) {
     console.log('🖼️ WebP:');
-    console.log('  - Small:', images.webp.small_image_url);
-    console.log('  - Medium:', images.webp.image_url);
-    console.log('  - Large:', images.webp.large_image_url);
+    console.log('  - Small (snake):', images.webp.small_image_url);
+    console.log('  - Small (camel):', images.webp.smallImageUrl);
+    console.log('  - Medium (snake):', images.webp.image_url);
+    console.log('  - Medium (camel):', images.webp.imageUrl);
+    console.log('  - Large (snake):', images.webp.large_image_url);
+    console.log('  - Large (camel):', images.webp.largeImageUrl);
   }
   
   // Mostrar qué imagen se seleccionaría para hero

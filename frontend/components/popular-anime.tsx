@@ -135,7 +135,7 @@ export default function PopularAnime() {
       </div>
 
       <Tabs defaultValue="all" onValueChange={setActiveTab}>
-        <TabsList className="mb-6 overflow-x-auto flex justify-center">
+        <TabsList className="mb-6 items-center justify-center">
           <TabsTrigger value="all">All</TabsTrigger>
           {genres.map((genre) => (
             <TabsTrigger key={genre.id} value={genre.name}>

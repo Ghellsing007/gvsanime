@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Loader2, Search } from "lucide-react"
 import api from "@/lib/api"
+import { useSearchParams } from "next/navigation"
 
 interface Anime {
   mal_id: number
@@ -45,12 +46,14 @@ export default function AnimeList({ initialPage = 1, initialLimit = 12 }: AnimeL
   const [searchQuery, setSearchQuery] = useState("")
   const [searching, setSearching] = useState(false)
   const [totalAnimes, setTotalAnimes] = useState(0)
+  const searchParams = useSearchParams()
+  const genero = searchParams.get("genero")
 
   const fetchAnimes = async (pageNum: number, query = "") => {
     try {
       setLoading(true)
       const response = await api.get(
-        `/anime?page=${pageNum}&limit=${initialLimit}${query ? `&q=${encodeURIComponent(query)}` : ""}`
+        `/anime?page=${pageNum}&limit=${initialLimit}${genero ? `&genre=${encodeURIComponent(genero)}` : ""}${query ? `&q=${encodeURIComponent(query)}` : ""}`
       )
       const data = response.data
       console.log('Respuesta de la API de anime:', data)
@@ -89,6 +92,11 @@ export default function AnimeList({ initialPage = 1, initialLimit = 12 }: AnimeL
     fetchAnimes(1, searchQuery)
   }
 
+  // Eliminar duplicados y nulos antes de renderizar
+  const uniqueAnimes = Array.from(
+    new Map(animes.filter(Boolean).map(a => [a.mal_id, a])).values()
+  );
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
@@ -116,12 +124,12 @@ export default function AnimeList({ initialPage = 1, initialLimit = 12 }: AnimeL
       {error && <p className="text-center text-red-500 mb-6">{error}</p>}
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-6">
-        {animes.map((anime) => (
+        {uniqueAnimes.map((anime) => (
           <AnimeCard
             key={anime.mal_id}
             id={anime.mal_id}
             title={anime.title}
-            image={anime.images}
+            images={anime.images}
             score={anime.score}
             episodes={anime.episodes}
             genres={anime.genres.map((g) => g.name)}

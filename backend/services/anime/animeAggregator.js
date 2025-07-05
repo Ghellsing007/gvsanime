@@ -8,7 +8,7 @@ import { getAnimeById, searchAnime } from './jikanService.js';
 import { getReviews, getUserReview, getFavoritesCount, isAnimeFavorite, getComments, getForums } from './animeUtils.js';
 import { unifiedAnimeSearch } from './unifiedSearchService.js';
 import ReviewCache from './reviewCacheModel.js';
-import { normalizeJikanAnime } from './normalizers/jikanNormalizer.js';
+import { normalizeJikanAnime, normalizeImages } from './normalizers/jikanNormalizer.js';
 // Aquí puedes importar más servicios externos en el futuro
 
 // Modelo para el cache de anime en MongoDB
@@ -64,9 +64,14 @@ export async function searchAnimeWithCache(query) {
   console.log(`Buscando en APIs externas para: ${query}`);
   const { source, results } = await unifiedAnimeSearch(query);
 
-  // 3. Guardar cada anime individualmente en AnimeCache solo si no existe
+  // 3. Normalizar imágenes y guardar cada anime individualmente en AnimeCache solo si no existe
   const animeIds = [];
-  for (const anime of results) {
+  const normalizedResults = results.map(anime => ({
+    ...anime,
+    images: normalizeImages(anime.images) || anime.images
+  }));
+  
+  for (const anime of normalizedResults) {
     animeIds.push(anime.mal_id);
     const exists = await AnimeCache.findOne({ animeId: anime.mal_id });
     if (!exists) {
@@ -75,17 +80,17 @@ export async function searchAnimeWithCache(query) {
   }
 
   // 4. Guardar en cache de búsquedas para futuras consultas, incluyendo la relación de IDs
-  if (results && results.length > 0) {
+  if (normalizedResults && normalizedResults.length > 0) {
     await SearchCache.create({ 
       query: query.toLowerCase(), 
-      results: results,
+      results: normalizedResults,
       source: source,
       animeIds: animeIds
     });
     console.log(`Resultados guardados en caché para: ${query}`);
   }
 
-  return { source, results, animeIds };
+  return { source, results: normalizedResults, animeIds };
 }
 
 // Función principal para obtener los datos completos de un anime
@@ -148,8 +153,8 @@ export function mergeAnimeData(jikanData, anilistData = null, kitsuData = null) 
     // Sinopsis
     synopsis: jikanData?.synopsis || anilistData?.description || kitsuData?.attributes?.synopsis || '',
     background: jikanData?.background || '',
-    // Imágenes
-    images: jikanData?.images || {},
+    // Imágenes (normalizadas a camelCase)
+    images: normalizeImages(jikanData?.images) || {},
     coverImage: jikanData?.images?.jpg?.image_url || anilistData?.coverImage?.large || kitsuData?.attributes?.posterImage?.original || '',
     // Géneros (mantener estructura original de Jikan para compatibilidad)
     genres: jikanData?.genres || [],
@@ -297,7 +302,7 @@ export async function getTopAnime() {
   const animes = data.data.map(anime => ({
     mal_id: anime.mal_id,
     title: anime.title,
-    images: anime.images,
+    images: normalizeImages(anime.images) || anime.images,
     score: anime.score,
     episodes: anime.episodes,
     genres: anime.genres || [], // Mantener estructura original de Jikan
@@ -323,7 +328,7 @@ export async function getRecentAnime() {
   const animes = data.data.map(anime => ({
     mal_id: anime.mal_id,
     title: anime.title,
-    images: anime.images,
+    images: normalizeImages(anime.images) || anime.images,
     score: anime.score,
     episodes: anime.episodes,
     genres: anime.genres || [], // Mantener estructura original de Jikan
@@ -349,7 +354,7 @@ export async function getFeaturedAnime() {
   const animes = data.data.map(anime => ({
     mal_id: anime.mal_id,
     title: anime.title,
-    images: anime.images,
+    images: normalizeImages(anime.images) || anime.images,
     score: anime.score,
     episodes: anime.episodes,
     genres: anime.genres || [], // Mantener estructura original de Jikan
@@ -375,7 +380,7 @@ export async function getAnimeBySeason(year, season) {
   return data.data.map(anime => ({
     mal_id: anime.mal_id,
     title: anime.title,
-    images: anime.images,
+    images: normalizeImages(anime.images) || anime.images,
     score: anime.score,
     episodes: anime.episodes,
     genres: anime.genres || [], // Mantener estructura original de Jikan
@@ -406,7 +411,7 @@ export async function getAnimeByGenre(genre) {
   return data.data.map(anime => ({
     mal_id: anime.mal_id,
     title: anime.title,
-    images: anime.images,
+    images: normalizeImages(anime.images) || anime.images,
     score: anime.score,
     episodes: anime.episodes,
     genres: anime.genres || [], // Mantener estructura original de Jikan

@@ -172,14 +172,18 @@ export async function getAllAnimeController(req, res) {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 12;
     const q = req.query.q || '';
+    const genre = req.query.genre;
     const AnimeCache = mongoose.models.AnimeCache || mongoose.model('AnimeCache', new mongoose.Schema({
       animeId: String,
       data: Object,
       updatedAt: { type: Date, default: Date.now }
     }));
-    const filter = q
+    let filter = q
       ? { 'data.title': { $regex: q, $options: 'i' } }
       : {};
+    if (genre) {
+      filter['data.genres.name'] = genre;
+    }
     const total = await AnimeCache.countDocuments(filter);
     const animes = await AnimeCache.find(filter)
       .sort({ 'data.title': 1 })
