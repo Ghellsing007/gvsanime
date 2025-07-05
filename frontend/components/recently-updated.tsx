@@ -6,6 +6,7 @@ import AnimeCard from "@/components/anime-card"
 import { Button } from "@/components/ui/button"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import api from "../lib/api"
+import { Skeleton } from "@/components/ui/skeleton"
 
 // Datos mock como fallback (ya no se usan, pero mantenemos por si acaso)
 
@@ -37,7 +38,26 @@ export default function RecentlyUpdated() {
     }
   }
 
-  if (loading) return <div>Cargando animes recientes...</div>;
+  if (loading) return (
+    <section className="mb-12">
+      <div className="flex justify-between items-center mb-6">
+        <Skeleton className="h-8 w-48 rounded" />
+        <div className="flex items-center gap-2">
+          <Skeleton className="h-10 w-10 rounded-full" />
+          <Skeleton className="h-10 w-10 rounded-full" />
+        </div>
+      </div>
+      <div className="flex overflow-x-auto space-x-4 pb-4 scrollbar-hide">
+        {[...Array(8)].map((_, i) => (
+          <div key={i} className="min-w-[200px] md:min-w-[220px]">
+            <Skeleton className="aspect-[3/4] w-full rounded-md mb-2" />
+            <Skeleton className="h-5 w-3/4 mb-1 rounded" />
+            <Skeleton className="h-4 w-1/2 rounded" />
+          </div>
+        ))}
+      </div>
+    </section>
+  );
   if (error) return <div>Error: {error.message}</div>;
 
   return (

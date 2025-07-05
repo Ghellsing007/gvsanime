@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { ChevronRight } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import api from "../lib/api"
+import { Skeleton } from "@/components/ui/skeleton"
 
 // Datos mock como fallback (ya no se usan, pero mantenemos por si acaso)
 
@@ -101,7 +102,25 @@ export default function PopularAnime() {
     show: { opacity: 1, y: 0 },
   }
 
-  if (loading) return <div>Cargando animes populares...</div>;
+  if (loading) return (
+    <section className="mb-12">
+      <div className="flex justify-between items-center mb-6">
+        <Skeleton className="h-8 w-48 rounded" />
+        <Skeleton className="h-8 w-24 rounded" />
+      </div>
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        {[...Array(6)].map((_, i) => (
+          <div key={i} className="group relative rounded-lg overflow-hidden border bg-card">
+            <Skeleton className="aspect-[3/4] w-full rounded-lg mb-2" />
+            <div className="p-2">
+              <Skeleton className="h-6 w-3/4 mb-1 rounded" />
+              <Skeleton className="h-4 w-1/2 rounded" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
   if (error) return <div>Error: {error.message}</div>;
 
   return (

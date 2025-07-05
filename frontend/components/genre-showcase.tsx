@@ -7,6 +7,7 @@ import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { ChevronRight } from "lucide-react"
 import api from "../lib/api"
+import { Skeleton } from "@/components/ui/skeleton"
 
 export default function GenreShowcase() {
   const [genres, setGenres] = useState<any[]>([])
@@ -42,7 +43,26 @@ export default function GenreShowcase() {
     show: { opacity: 1, y: 0 },
   }
 
-  if (loading) return <div>Cargando géneros...</div>
+  if (loading) return (
+    <section className="mb-12">
+      <div className="flex justify-between items-center mb-6">
+        <Skeleton className="h-8 w-48 rounded" />
+        <Skeleton className="h-8 w-24 rounded" />
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {[...Array(4)].map((_, i) => (
+          <div key={i} className="group relative rounded-lg overflow-hidden">
+            <Skeleton className="aspect-[16/9] w-full rounded-lg mb-2" />
+            <div className="p-4">
+              <Skeleton className="h-6 w-2/3 mb-2 rounded" />
+              <Skeleton className="h-4 w-1/2 mb-2 rounded" />
+              <Skeleton className="h-4 w-1/3 rounded-full" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  )
   if (error) return <div>{error}</div>
 
   return (

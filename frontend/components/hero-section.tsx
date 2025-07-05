@@ -10,6 +10,7 @@ import { getHeroImage, debugImageUrls } from "../lib/imageUtils"
 import type { AnimeImages } from "../lib/types"
 import { Slot } from "@radix-ui/react-slot"
 import { useRouter } from "next/navigation"
+import { Skeleton } from "@/components/ui/skeleton"
 
 type Anime = {
   mal_id?: number;
@@ -57,7 +58,29 @@ export default function HeroSection() {
     return () => clearInterval(interval)
   }, [animes.length, showTrailer])
 
-  if (loading) return <div>Cargando...</div>;
+  if (loading) return (
+    <section className="relative h-[500px] md:h-[600px] overflow-hidden rounded-xl mb-12">
+      <Skeleton className="absolute inset-0 w-full h-full rounded-xl" />
+      <div className="relative z-20 h-full flex flex-col justify-center px-6 md:px-12 max-w-3xl">
+        <Skeleton className="h-12 w-2/3 mb-4 rounded" />
+        <div className="flex items-center mb-4 space-x-2">
+          <Skeleton className="h-6 w-16 rounded" />
+          <Skeleton className="h-6 w-16 rounded" />
+          <Skeleton className="h-6 w-16 rounded" />
+        </div>
+        <Skeleton className="h-6 w-1/2 mb-6 rounded" />
+        <div className="flex space-x-4">
+          <Skeleton className="h-10 w-32 rounded" />
+          <Skeleton className="h-10 w-32 rounded" />
+        </div>
+      </div>
+      <div className="absolute bottom-6 left-0 right-0 z-20 flex justify-center space-x-2">
+        {[...Array(5)].map((_, i) => (
+          <Skeleton key={i} className="w-6 h-3 rounded-full" />
+        ))}
+      </div>
+    </section>
+  );
   if (error) return <div>Error: {error.message}</div>;
   if (!animes.length) return <div>No hay animes destacados.</div>;
 

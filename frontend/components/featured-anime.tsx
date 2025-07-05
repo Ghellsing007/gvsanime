@@ -5,6 +5,7 @@ import AnimeCard from "@/components/anime-card"
 import { Button } from "@/components/ui/button"
 import { ChevronRight } from "lucide-react"
 import { useEffect, useState } from "react"
+import { Skeleton } from "@/components/ui/skeleton"
 
 import api from "../lib/api"
 
@@ -39,7 +40,33 @@ export default function FeaturedAnime() {
     show: { opacity: 1, y: 0 },
   }
 
-  if (loading) return <div>Cargando...</div>;
+  if (loading) return (
+    <section className="mb-12">
+      <div className="flex justify-between items-center mb-6">
+        <Skeleton className="h-8 w-48 rounded" />
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {[...Array(3)].map((_, i) => (
+          <div key={i} className="relative rounded-lg overflow-visible">
+            <Skeleton className="aspect-video w-full rounded-lg mb-2" />
+            <div className="absolute bottom-0 left-0 right-0 p-4">
+              <Skeleton className="h-8 w-2/3 mb-2 rounded" />
+              <div className="flex gap-1 mb-2">
+                <Skeleton className="h-4 w-12 rounded" />
+                <Skeleton className="h-4 w-12 rounded" />
+                <Skeleton className="h-4 w-12 rounded" />
+              </div>
+              <div className="flex items-center space-x-3">
+                <Skeleton className="h-4 w-16 rounded" />
+                <Skeleton className="h-4 w-16 rounded" />
+                <Skeleton className="h-4 w-16 rounded" />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
   if (error) return <div>Error: {error.message}</div>;
   if (!animes || !animes.length) return <div>No hay animes destacados.</div>;
 
