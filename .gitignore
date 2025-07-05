@@ -1,6 +1,18 @@
-scripts/
+# Ignorar todo excepto backend y frontend
+*
+!backend/
+!frontend/
+!.gitignore
+!README.md
 
-env.exaple*
+# Mantener estructura de backend y frontend
+!backend/**
+!frontend/**
+
+# Pero ignorar archivos grandes dentro de backend
+backend/api anime/
+backend/*.json
+backend/backup/
 
 # Dependencias
 node_modules/
