@@ -23,32 +23,64 @@ export async function searchAnimeController(req, res) {
   const season = req.query.season;
   const genre = req.query.genre;
   const featured = req.query.featured;
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 12;
+  
   try {
     if (featured === 'true' || sort === 'featured') {
       const results = await getFeaturedAnime();
-      return res.json({ source: 'jikan', results });
+      return res.json({ 
+        pagination: { current_page: page, items: { count: results.length } },
+        data: results 
+      });
     }
     if (sort === 'top') {
       const results = await getTopAnime();
-      return res.json({ source: 'jikan', results });
+      return res.json({ 
+        pagination: { current_page: page, items: { count: results.length } },
+        data: results 
+      });
     }
     if (sort === 'recent') {
       const results = await getRecentAnime();
-      return res.json({ source: 'jikan', results });
+      return res.json({ 
+        pagination: { current_page: page, items: { count: results.length } },
+        data: results 
+      });
     }
     if (season) {
       // season: "2024-Spring"
       const [year, seasonName] = season.split('-');
       const results = await getAnimeBySeason(year, seasonName);
-      return res.json({ source: 'jikan', results });
+      return res.json({ 
+        pagination: { current_page: page, items: { count: results.length } },
+        data: results 
+      });
     }
     if (genre) {
       const results = await getAnimeByGenre(genre);
-      return res.json({ source: 'jikan', results });
+      return res.json({ 
+        pagination: { current_page: page, items: { count: results.length } },
+        data: results 
+      });
     }
     if (!query) return res.status(400).json({ error: 'Falta el parámetro de búsqueda' });
+    
     const results = await searchAnimeWithCache(query);
-    res.json(results);
+    
+    // Aplicar paginación si es necesario
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+    const paginatedResults = results.results ? results.results.slice(startIndex, endIndex) : [];
+    
+    res.json({
+      pagination: { 
+        current_page: page, 
+        items: { count: results.results ? results.results.length : 0 },
+        has_next_page: endIndex < (results.results ? results.results.length : 0)
+      },
+      data: paginatedResults
+    });
   } catch (err) {
     console.error('Error en búsqueda:', err);
     res.status(500).json({ error: 'Error al buscar animes' });

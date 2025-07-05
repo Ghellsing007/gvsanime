@@ -144,29 +144,43 @@ export function mergeAnimeData(jikanData, anilistData = null, kitsuData = null) 
     kitsu_id: kitsuData?.id || null,
     // Título (prioridad: Jikan > Anilist > Kitsu)
     title: jikanData?.title || anilistData?.title?.romaji || kitsuData?.attributes?.canonicalTitle || '',
+    title_japanese: jikanData?.title_japanese || anilistData?.title?.native || '',
     // Sinopsis
     synopsis: jikanData?.synopsis || anilistData?.description || kitsuData?.attributes?.synopsis || '',
+    background: jikanData?.background || '',
     // Imágenes
+    images: jikanData?.images || {},
     coverImage: jikanData?.images?.jpg?.image_url || anilistData?.coverImage?.large || kitsuData?.attributes?.posterImage?.original || '',
-    // Géneros (fusiona y elimina duplicados)
-    genres: Array.from(new Set([
-      ...(jikanData?.genres?.map(g => g.name) || []),
-      ...(anilistData?.genres || []),
-      ...(kitsuData?.attributes?.genres || [])
-    ])),
-    // Otros campos relevantes (puedes expandir según tus necesidades)
+    // Géneros (mantener estructura original de Jikan para compatibilidad)
+    genres: jikanData?.genres || [],
+    // Otros campos relevantes
     episodes: jikanData?.episodes || anilistData?.episodes || kitsuData?.attributes?.episodeCount || null,
     score: jikanData?.score || anilistData?.averageScore || null,
+    scored_by: jikanData?.scored_by || 0,
+    popularity: jikanData?.popularity || null,
+    rank: jikanData?.rank || null,
+    members: jikanData?.members || 0,
+    favorites: jikanData?.favorites || 0,
+    type: jikanData?.type || null,
+    status: jikanData?.status || null,
+    aired: jikanData?.aired || {},
+    season: jikanData?.season || null,
+    year: jikanData?.year || null,
+    studios: jikanData?.studios || [],
+    source: jikanData?.source || null,
+    duration: jikanData?.duration || null,
+    rating: jikanData?.rating || null,
     trailer: jikanData?.trailer ? {
-      youtubeId: jikanData.trailer.youtube_id || '',
+      youtube_id: jikanData.trailer.youtube_id || '',
       url: jikanData.trailer.url || '',
-      embedUrl: jikanData.trailer.embed_url || ''
+      embed_url: jikanData.trailer.embed_url || ''
     } : (anilistData?.trailer ? {
-      youtubeId: '',
+      youtube_id: '',
       url: anilistData.trailer,
-      embedUrl: ''
-    } : { youtubeId: '', url: '', embedUrl: '' }),
-    // ...agrega más campos fusionados aquí
+      embed_url: ''
+    } : { youtube_id: '', url: '', embed_url: '' }),
+    relations: jikanData?.relations || [],
+    external: jikanData?.external || []
   };
   return merged;
 }
@@ -281,12 +295,12 @@ export async function getTopAnime() {
   if (!response.ok) throw new Error('Error obteniendo animes top');
   const data = await response.json();
   const animes = data.data.map(anime => ({
-    id: anime.mal_id,
+    mal_id: anime.mal_id,
     title: anime.title,
     images: anime.images,
     score: anime.score,
     episodes: anime.episodes,
-    genres: anime.genres?.map(g => g.name),
+    genres: anime.genres || [], // Mantener estructura original de Jikan
     year: anime.year,
     season: anime.season,
   }));
@@ -307,12 +321,12 @@ export async function getRecentAnime() {
   if (!response.ok) throw new Error('Error obteniendo animes recientes');
   const data = await response.json();
   const animes = data.data.map(anime => ({
-    id: anime.mal_id,
+    mal_id: anime.mal_id,
     title: anime.title,
     images: anime.images,
     score: anime.score,
     episodes: anime.episodes,
-    genres: anime.genres?.map(g => g.name),
+    genres: anime.genres || [], // Mantener estructura original de Jikan
     year: anime.year,
     season: anime.season,
   }));
@@ -333,19 +347,19 @@ export async function getFeaturedAnime() {
   if (!response.ok) throw new Error('Error obteniendo animes destacados');
   const data = await response.json();
   const animes = data.data.map(anime => ({
-    id: anime.mal_id,
+    mal_id: anime.mal_id,
     title: anime.title,
     images: anime.images,
     score: anime.score,
     episodes: anime.episodes,
-    genres: anime.genres?.map(g => g.name),
+    genres: anime.genres || [], // Mantener estructura original de Jikan
     year: anime.year,
     season: anime.season,
     trailer: anime.trailer ? {
-      youtubeId: anime.trailer.youtube_id || '',
+      youtube_id: anime.trailer.youtube_id || '',
       url: anime.trailer.url || '',
-      embedUrl: anime.trailer.embed_url || ''
-    } : { youtubeId: '', url: '', embedUrl: '' },
+      embed_url: anime.trailer.embed_url || ''
+    } : { youtube_id: '', url: '', embed_url: '' },
     synopsis: anime.synopsis,
   }));
   await FeaturedAnimeCache.deleteMany({});
@@ -359,12 +373,12 @@ export async function getAnimeBySeason(year, season) {
   if (!response.ok) throw new Error('Error obteniendo animes por temporada');
   const data = await response.json();
   return data.data.map(anime => ({
-    id: anime.mal_id,
+    mal_id: anime.mal_id,
     title: anime.title,
     images: anime.images,
     score: anime.score,
     episodes: anime.episodes,
-    genres: anime.genres?.map(g => g.name),
+    genres: anime.genres || [], // Mantener estructura original de Jikan
     year: anime.year,
     season: anime.season,
   }));
@@ -390,12 +404,12 @@ export async function getAnimeByGenre(genre) {
   if (!response.ok) throw new Error('Error obteniendo animes por género');
   const data = await response.json();
   return data.data.map(anime => ({
-    id: anime.mal_id,
+    mal_id: anime.mal_id,
     title: anime.title,
     images: anime.images,
     score: anime.score,
     episodes: anime.episodes,
-    genres: anime.genres?.map(g => g.name),
+    genres: anime.genres || [], // Mantener estructura original de Jikan
     year: anime.year,
     season: anime.season,
   }));

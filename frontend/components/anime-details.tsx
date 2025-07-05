@@ -33,8 +33,8 @@ export default function AnimeDetails({ id }: AnimeDetailsProps) {
           throw new Error("Error al obtener datos del anime")
         }
 
-        const { data } = await response.json()
-        setAnime(data)
+        const animeData = await response.json()
+        setAnime(animeData)
       } catch (err) {
         console.error(err)
         setError("No se pudo cargar la información del anime. Por favor, inténtalo de nuevo más tarde.")

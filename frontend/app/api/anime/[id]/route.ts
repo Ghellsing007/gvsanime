@@ -4,8 +4,11 @@ export async function GET(request: Request, { params }: { params: { id: string }
   try {
     const id = params.id
 
-    // Realizamos la petición a la API de Jikan para obtener un anime específico
-    const response = await fetch(`https://api.jikan.moe/v4/anime/${id}`, {
+    // Obtenemos la URL del backend desde las variables de entorno
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'
+    
+    // Realizamos la petición a nuestro backend que tiene caché en MongoDB
+    const response = await fetch(`${backendUrl}/anime/${id}`, {
       cache: "no-store",
     })
 
@@ -15,7 +18,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
 
     const data = await response.json()
 
-    // Devolvemos los datos
+    // Devolvemos los datos tal como los devuelve nuestro backend
     return NextResponse.json(data)
   } catch (error) {
     console.error("Error en la API:", error)

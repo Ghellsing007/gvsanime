@@ -5,6 +5,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { ChevronRight } from "lucide-react"
+import { useState, useEffect } from "react"
 
 // Mock data
 const genreData = [
@@ -39,6 +40,12 @@ const genreData = [
 ]
 
 export default function GenreShowcase() {
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
   const container = {
     hidden: { opacity: 0 },
     show: {
@@ -87,7 +94,7 @@ export default function GenreShowcase() {
                   <h3 className="text-xl font-bold mb-1">{genre.name}</h3>
                   <p className="text-sm text-muted-foreground mb-2">{genre.description}</p>
                   <div className="text-xs font-medium bg-primary/20 text-primary-foreground px-2 py-1 rounded-full inline-block">
-                    {genre.count.toLocaleString()} anime
+                    {mounted ? genre.count.toLocaleString() : genre.count} anime
                   </div>
                 </div>
               </div>

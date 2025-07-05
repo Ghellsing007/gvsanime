@@ -10,12 +10,13 @@ interface AnimePageProps {
 
 export async function generateMetadata({ params }: AnimePageProps): Promise<Metadata> {
   try {
-    const response = await fetch(`https://api.jikan.moe/v4/anime/${params.id}`)
-    const { data } = await response.json()
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'
+    const response = await fetch(`${backendUrl}/anime/${params.id}`)
+    const animeData = await response.json()
 
     return {
-      title: `${data.title} - ${SITE_NAME}`,
-      description: data.synopsis?.substring(0, 160) || `Detalles del anime en ${SITE_NAME}`,
+      title: `${animeData.title} - ${SITE_NAME}`,
+      description: animeData.synopsis?.substring(0, 160) || `Detalles del anime en ${SITE_NAME}`,
     }
   } catch (error) {
     return {

@@ -18,7 +18,7 @@ interface AnimeCardProps {
   images?: AnimeImages
   score?: number
   episodes?: number
-  genres?: string[]
+  genres?: string[] | Array<{mal_id: number, name: string}>
   year?: number
   season?: string
   variant?: "default" | "compact" | "featured"
@@ -38,6 +38,17 @@ export default function AnimeCard({
   const [isHovered, setIsHovered] = useState(false)
   const [isFavorite, setIsFavorite] = useState(false)
   const [isBookmarked, setIsBookmarked] = useState(false)
+
+  // Función helper para obtener el nombre del género
+  const getGenreName = (genre: string | {mal_id: number, name: string}) => {
+    return typeof genre === 'string' ? genre : genre.name;
+  }
+
+  // Función helper para obtener géneros como strings
+  const getGenreNames = () => {
+    if (!genres || !Array.isArray(genres)) return [];
+    return genres.map(getGenreName);
+  }
 
   const toggleFavorite = (e: React.MouseEvent) => {
     e.preventDefault()
@@ -99,9 +110,9 @@ export default function AnimeCard({
               <div>
                 <h3 className="text-xl font-bold mb-2">{title}</h3>
                 <div className="flex flex-wrap gap-1 mb-2">
-                  {genres.slice(0, 3).map((genre) => (
-                    <span key={genre} className="text-xs bg-primary/20 px-2 py-0.5 rounded">
-                      {genre}
+                  {getGenreNames().slice(0, 3).map((genreName, index) => (
+                    <span key={`${genreName}-${index}`} className="text-xs bg-primary/20 px-2 py-0.5 rounded">
+                      {genreName}
                     </span>
                   ))}
                 </div>
@@ -227,15 +238,15 @@ export default function AnimeCard({
             )}
             {episodes && <div className="text-xs text-muted-foreground">{episodes} eps</div>}
           </div>
-          {genres.length > 0 && (
+          {getGenreNames().length > 0 && (
             <div className="flex flex-wrap gap-1 mt-2">
-              {genres.slice(0, 2).map((genre) => (
-                <span key={genre} className="text-xs bg-muted px-1.5 py-0.5 rounded">
-                  {genre}
+              {getGenreNames().slice(0, 2).map((genreName, index) => (
+                <span key={`${genreName}-${index}`} className="text-xs bg-muted px-1.5 py-0.5 rounded">
+                  {genreName}
                 </span>
               ))}
-              {genres.length > 2 && (
-                <span className="text-xs bg-muted px-1.5 py-0.5 rounded">+{genres.length - 2}</span>
+              {getGenreNames().length > 2 && (
+                <span className="text-xs bg-muted px-1.5 py-0.5 rounded">+{getGenreNames().length - 2}</span>
               )}
             </div>
           )}

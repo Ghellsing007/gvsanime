@@ -8,15 +8,18 @@ export async function GET(request: Request) {
     const limit = searchParams.get("limit") || "12"
     const q = searchParams.get("q") || ""
 
-    // Construimos la URL de la API de Jikan
-    let apiUrl = `https://api.jikan.moe/v4/anime?page=${page}&limit=${limit}`
+    // Obtenemos la URL del backend desde las variables de entorno
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'
+    
+    // Construimos la URL de nuestro backend
+    let apiUrl = `${backendUrl}/anime/search?page=${page}&limit=${limit}`
 
     // Añadimos el parámetro de búsqueda si existe
     if (q) {
       apiUrl += `&q=${encodeURIComponent(q)}`
     }
 
-    // Realizamos la petición a la API
+    // Realizamos la petición a nuestro backend que tiene caché en MongoDB
     const response = await fetch(apiUrl, { cache: "no-store" })
 
     if (!response.ok) {
@@ -25,7 +28,7 @@ export async function GET(request: Request) {
 
     const data = await response.json()
 
-    // Devolvemos los datos
+    // Devolvemos los datos tal como los devuelve nuestro backend
     return NextResponse.json(data)
   } catch (error) {
     console.error("Error en la API:", error)

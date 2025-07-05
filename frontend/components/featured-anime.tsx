@@ -15,7 +15,11 @@ export default function FeaturedAnime() {
 
   useEffect(() => {
     api.get('/anime/search?featured=true')
-      .then((res: any) => setAnimes(res.data.results))
+      .then((res: any) => {
+        // Adaptar la respuesta del backend a la estructura esperada
+        const results = res.data?.data || res.data?.results || [];
+        setAnimes(results)
+      })
       .catch((err: any) => setError(err))
       .finally(() => setLoading(false))
   }, [])
@@ -37,7 +41,7 @@ export default function FeaturedAnime() {
 
   if (loading) return <div>Cargando...</div>;
   if (error) return <div>Error: {error.message}</div>;
-  if (!animes.length) return <div>No hay animes destacados.</div>;
+  if (!animes || !animes.length) return <div>No hay animes destacados.</div>;
 
   return (
     <section className="mb-12">
@@ -56,9 +60,9 @@ export default function FeaturedAnime() {
         viewport={{ once: true, margin: "-100px" }}
       >
         {animes.map((anime) => (
-          <motion.div key={anime.id} variants={item}>
+          <motion.div key={anime.mal_id || anime.id} variants={item}>
             <AnimeCard
-              id={anime.id}
+              id={anime.mal_id || anime.id}
               title={anime.title}
               images={anime.images}
               score={anime.score}
