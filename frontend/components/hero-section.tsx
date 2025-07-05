@@ -12,18 +12,21 @@ import { Slot } from "@radix-ui/react-slot"
 import { useRouter } from "next/navigation"
 
 type Anime = {
-  mal_id: number;
+  mal_id?: number;
+  id?: number;
   title: string;
   images?: AnimeImages;
   score?: number;
   rating?: number;
-  genres?: Array<{mal_id: number, name: string}>;
+  genres?: Array<{mal_id: number, name: string}> | string[];
   synopsis?: string;
   description?: string;
   trailer?: {
-    youtube_id: string;
+    youtube_id?: string;
+    youtubeId?: string;
     url: string;
-    embed_url: string;
+    embed_url?: string;
+    embedUrl?: string;
   };
 };
 
@@ -63,7 +66,7 @@ export default function HeroSection() {
   return (
     <section className="relative h-[500px] md:h-[600px] overflow-hidden rounded-xl mb-12">
       {/* Modal para el tráiler */}
-      {showTrailer && anime.trailer?.embed_url && (
+      {showTrailer && (anime.trailer?.embed_url || anime.trailer?.embedUrl) && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80">
           <div className="relative w-full max-w-2xl p-4">
             <button
@@ -75,7 +78,7 @@ export default function HeroSection() {
             </button>
             <div className="aspect-w-16 aspect-h-9 w-full">
               <iframe
-                src={anime.trailer.embed_url}
+                src={anime.trailer.embed_url || anime.trailer.embedUrl}
                 title={`${anime.title} trailer`}
                 frameBorder="0"
                 allow="autoplay; encrypted-media"
@@ -89,7 +92,7 @@ export default function HeroSection() {
       <div className="absolute inset-0 bg-gradient-to-r from-background/90 via-background/50 to-background/20 z-10" />
 
       <motion.div
-        key={anime.mal_id}
+        key={anime.mal_id || anime.id}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
@@ -101,7 +104,7 @@ export default function HeroSection() {
 
       <div className="relative z-20 h-full flex flex-col justify-center px-6 md:px-12 max-w-3xl">
         <motion.div
-          key={`text-${anime.mal_id}`}
+          key={`text-${anime.mal_id || anime.id}`}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
@@ -111,23 +114,27 @@ export default function HeroSection() {
             <div className="bg-primary/90 text-primary-foreground px-2 py-1 rounded text-sm font-medium">
               {anime.score || anime.rating} ★
             </div>
-            {anime.genres?.map((genre) => (
-              <div key={genre.mal_id} className="bg-background/50 backdrop-blur-sm px-2 py-1 rounded text-sm">
-                {genre.name}
-              </div>
-            ))}
+            {anime.genres?.map((genre, index) => {
+              const genreName = typeof genre === 'string' ? genre : genre.name;
+              const genreKey = typeof genre === 'string' ? `${genre}-${index}` : genre.mal_id;
+              return (
+                <div key={genreKey} className="bg-background/50 backdrop-blur-sm px-2 py-1 rounded text-sm">
+                  {genreName}
+                </div>
+              );
+            })}
           </div>
           <p className="text-lg mb-6 max-w-2xl"></p>
           <div className="flex space-x-4">
             <Button 
               className="gap-2" 
               onClick={() => setShowTrailer(true)}
-              disabled={!anime.trailer?.embed_url}
+              disabled={!(anime.trailer?.embed_url || anime.trailer?.embedUrl)}
             >
               <Play className="h-4 w-4" />
               Ver Tráiler
             </Button>
-            <Button variant="outline" className="gap-2" onClick={() => router.push(`/anime/${anime.mal_id}`)} >
+            <Button variant="outline" className="gap-2" onClick={() => router.push(`/anime/${anime.mal_id || anime.id}`)} >
               <Info className="h-4 w-4" />
               More Info
             </Button>
@@ -138,7 +145,7 @@ export default function HeroSection() {
       <div className="absolute bottom-6 left-0 right-0 z-20 flex justify-center space-x-2">
         {animes.map((anime, index) => (
           <button
-            key={`slide-${anime.mal_id}-${index}`}
+            key={`slide-${anime.mal_id || anime.id}-${index}`}
             onClick={() => setCurrentSlide(index)}
             className={`w-3 h-3 rounded-full transition-all ${
               currentSlide === index ? "bg-primary w-6" : "bg-background/50"
