@@ -86,7 +86,7 @@ export default function AnimeCard({
     return (
       <Link href={`/anime/${id}`}>
         <motion.div
-          className="relative rounded-lg overflow-hidden"
+          className="relative rounded-lg overflow-visible"
           whileHover={{ y: -5 }}
           transition={{ duration: 0.2 }}
         >
@@ -130,8 +130,8 @@ export default function AnimeCard({
                         <Heart className={`h-4 w-4 ${isFavorite ? "fill-red-500 text-red-500" : ""}`} />
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent>
-                      <p>{isFavorite ? "Remove from favorites" : "Add to favorites"}</p>
+                    <TooltipContent className="px-2 py-1 text-xs">
+                      <p>{isFavorite ? "Unfav" : "Fav"}</p>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
@@ -148,8 +148,8 @@ export default function AnimeCard({
                         <Bookmark className={`h-4 w-4 ${isBookmarked ? "fill-primary text-primary" : ""}`} />
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent>
-                      <p>{isBookmarked ? "Remove from watchlist" : "Add to watchlist"}</p>
+                    <TooltipContent className="px-2 py-1 text-xs">
+                      <p>{isBookmarked ? "Unwatch" : "Watch"}</p>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
@@ -191,8 +191,8 @@ export default function AnimeCard({
                     <Heart className={`h-4 w-4 ${isFavorite ? "fill-red-500 text-red-500" : ""}`} />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>
-                  <p>{isFavorite ? "Remove from favorites" : "Add to favorites"}</p>
+                <TooltipContent className="px-2 py-1 text-xs">
+                  <p>{isFavorite ? "Unfav" : "Fav"}</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
@@ -209,8 +209,8 @@ export default function AnimeCard({
                     <Bookmark className={`h-4 w-4 ${isBookmarked ? "fill-primary text-primary" : ""}`} />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>
-                  <p>{isBookmarked ? "Remove from watchlist" : "Add to watchlist"}</p>
+                <TooltipContent className="px-2 py-1 text-xs">
+                  <p>{isBookmarked ? "Unwatch" : "Watch"}</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>

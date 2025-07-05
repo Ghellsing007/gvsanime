@@ -7,7 +7,6 @@ import { ChevronRight } from "lucide-react"
 import { useEffect, useState } from "react"
 
 import api from "../lib/api"
-import type { AnimeImages } from "../lib/types"
 
 export default function FeaturedAnime() {
   const [animes, setAnimes] = useState<any[]>([])
@@ -44,9 +43,9 @@ export default function FeaturedAnime() {
     <section className="mb-12">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold">Featured Anime</h2>
-        <Button variant="ghost" className="gap-1 text-muted-foreground">
+        {/* <Button variant="ghost" className="gap-1 text-muted-foreground">
           View All <ChevronRight className="h-4 w-4" />
-        </Button>
+        </Button> */}
       </div>
 
       <motion.div

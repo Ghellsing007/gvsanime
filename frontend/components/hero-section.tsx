@@ -9,6 +9,7 @@ import api from "../lib/api"
 import { getHeroImage, debugImageUrls } from "../lib/imageUtils"
 import type { AnimeImages } from "../lib/types"
 import { Slot } from "@radix-ui/react-slot"
+import { useRouter } from "next/navigation"
 
 type Anime = {
   id: number | string;
@@ -32,22 +33,12 @@ export default function HeroSection() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<Error | null>(null)
   const [showTrailer, setShowTrailer] = useState(false)
+  const router = useRouter();
 
   useEffect(() => {
     api.get('/anime/search?featured=true')
       .then((res: any) => {
         setAnimes(res.data.results)
-        
-        // Debug: Mostrar información de imágenes del primer anime
-        if (res.data.results && res.data.results.length > 0) {
-          const firstAnime = res.data.results[0]
-          console.log('🔍 Debug del primer anime:', firstAnime.title)
-          console.log('📄 Estructura completa del anime:', firstAnime)
-          console.log('🖼️ Propiedad images:', firstAnime.images)
-          console.log('📷 JPG completo:', firstAnime.images?.jpg)
-          console.log('🖼️ WebP completo:', firstAnime.images?.webp)
-          debugImageUrls(firstAnime.images)
-        }
       })
       .catch((err: any) => setError(err))
       .finally(() => setLoading(false))
@@ -66,9 +57,6 @@ export default function HeroSection() {
   if (!animes.length) return <div>No hay animes destacados.</div>;
 
   const anime = animes[currentSlide]
-
-  // Debug: Mostrar el trailer en consola
-  console.log('🎬 {anime.synopsis:', anime.synopsis)
 
   return (
     <section className="relative h-[500px] md:h-[600px] overflow-hidden rounded-xl mb-12">
@@ -133,7 +121,7 @@ export default function HeroSection() {
               <Play className="h-4 w-4" />
               Ver Tráiler
             </Button>
-            <Button variant="outline" className="gap-2">
+            <Button  variant="outline" className="gap-2" onClick={() => router.push(`/anime/${anime.id}`)} >
               <Info className="h-4 w-4" />
               More Info
             </Button>
