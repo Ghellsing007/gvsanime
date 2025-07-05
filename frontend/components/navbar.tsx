@@ -17,8 +17,13 @@ export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [isScrolled, setIsScrolled] = useState(false)
+  const [mounted, setMounted] = useState(false)
   const { theme, setTheme } = useTheme()
   const isMobile = useMobile()
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const toggleMenu = () => setIsOpen(!isOpen)
 
@@ -95,7 +100,7 @@ export default function Navbar() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon">
-                  {theme === "light" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+                  {mounted && theme === "light" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
                   <span className="sr-only">Cambiar tema</span>
                 </Button>
               </DropdownMenuTrigger>

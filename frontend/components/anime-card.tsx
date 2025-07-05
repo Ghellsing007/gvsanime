@@ -9,11 +9,13 @@ import { motion } from "framer-motion"
 import { Heart, Star, Bookmark, Eye } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { getCardImage } from "../lib/imageUtils"
+import type { AnimeImages } from "../lib/types"
 
 interface AnimeCardProps {
   id: number
   title: string
-  image: string
+  images?: AnimeImages
   score?: number
   episodes?: number
   genres?: string[]
@@ -25,7 +27,7 @@ interface AnimeCardProps {
 export default function AnimeCard({
   id,
   title,
-  image,
+  images,
   score,
   episodes,
   genres = [],
@@ -59,7 +61,7 @@ export default function AnimeCard({
         >
           <div className="aspect-[3/4] relative">
             <Image
-              src={image || "/placeholder.svg"}
+              src={getCardImage(images)}
               alt={title}
               fill
               className="object-cover transition-transform duration-300 group-hover:scale-105"
@@ -89,7 +91,7 @@ export default function AnimeCard({
           transition={{ duration: 0.2 }}
         >
           <div className="aspect-video relative">
-            <Image src={image || "/placeholder.svg"} alt={title} fill className="object-cover" />
+            <Image src={getCardImage(images)} alt={title} fill className="object-cover" />
             <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/40 to-transparent" />
           </div>
           <div className="absolute bottom-0 left-0 right-0 p-4">
@@ -171,7 +173,7 @@ export default function AnimeCard({
       >
         <div className="aspect-[3/4] relative">
           <Image
-            src={image || "/placeholder.svg"}
+            src={getCardImage(images)}
             alt={title}
             fill
             className="object-cover transition-transform duration-300 group-hover:scale-105"

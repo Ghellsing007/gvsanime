@@ -8,6 +8,7 @@ import { getAnimeById, searchAnime } from './jikanService.js';
 import { getReviews, getUserReview, getFavoritesCount, isAnimeFavorite, getComments, getForums } from './animeUtils.js';
 import { unifiedAnimeSearch } from './unifiedSearchService.js';
 import ReviewCache from './reviewCacheModel.js';
+import { normalizeJikanAnime } from './normalizers/jikanNormalizer.js';
 // Aquí puedes importar más servicios externos en el futuro
 
 // Modelo para el cache de anime en MongoDB
@@ -156,7 +157,15 @@ export function mergeAnimeData(jikanData, anilistData = null, kitsuData = null) 
     // Otros campos relevantes (puedes expandir según tus necesidades)
     episodes: jikanData?.episodes || anilistData?.episodes || kitsuData?.attributes?.episodeCount || null,
     score: jikanData?.score || anilistData?.averageScore || null,
-    trailerUrl: jikanData?.trailer?.url || anilistData?.trailer || '',
+    trailer: jikanData?.trailer ? {
+      youtubeId: jikanData.trailer.youtube_id || '',
+      url: jikanData.trailer.url || '',
+      embedUrl: jikanData.trailer.embed_url || ''
+    } : (anilistData?.trailer ? {
+      youtubeId: '',
+      url: anilistData.trailer,
+      embedUrl: ''
+    } : { youtubeId: '', url: '', embedUrl: '' }),
     // ...agrega más campos fusionados aquí
   };
   return merged;
@@ -274,7 +283,7 @@ export async function getTopAnime() {
   const animes = data.data.map(anime => ({
     id: anime.mal_id,
     title: anime.title,
-    image: anime.images?.jpg?.image_url,
+    images: anime.images,
     score: anime.score,
     episodes: anime.episodes,
     genres: anime.genres?.map(g => g.name),
@@ -300,7 +309,7 @@ export async function getRecentAnime() {
   const animes = data.data.map(anime => ({
     id: anime.mal_id,
     title: anime.title,
-    image: anime.images?.jpg?.image_url,
+    images: anime.images,
     score: anime.score,
     episodes: anime.episodes,
     genres: anime.genres?.map(g => g.name),
@@ -326,12 +335,18 @@ export async function getFeaturedAnime() {
   const animes = data.data.map(anime => ({
     id: anime.mal_id,
     title: anime.title,
-    image: anime.images?.jpg?.image_url,
+    images: anime.images,
     score: anime.score,
     episodes: anime.episodes,
     genres: anime.genres?.map(g => g.name),
     year: anime.year,
     season: anime.season,
+    trailer: anime.trailer ? {
+      youtubeId: anime.trailer.youtube_id || '',
+      url: anime.trailer.url || '',
+      embedUrl: anime.trailer.embed_url || ''
+    } : { youtubeId: '', url: '', embedUrl: '' },
+    synopsis: anime.synopsis,
   }));
   await FeaturedAnimeCache.deleteMany({});
   await FeaturedAnimeCache.create({ animes });
@@ -346,7 +361,7 @@ export async function getAnimeBySeason(year, season) {
   return data.data.map(anime => ({
     id: anime.mal_id,
     title: anime.title,
-    image: anime.images?.jpg?.image_url,
+    images: anime.images,
     score: anime.score,
     episodes: anime.episodes,
     genres: anime.genres?.map(g => g.name),
@@ -377,7 +392,7 @@ export async function getAnimeByGenre(genre) {
   return data.data.map(anime => ({
     id: anime.mal_id,
     title: anime.title,
-    image: anime.images?.jpg?.image_url,
+    images: anime.images,
     score: anime.score,
     episodes: anime.episodes,
     genres: anime.genres?.map(g => g.name),

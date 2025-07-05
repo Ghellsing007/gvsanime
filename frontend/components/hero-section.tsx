@@ -6,16 +6,24 @@ import { Button } from "@/components/ui/button"
 import { motion } from "framer-motion"
 import { Play, Info } from "lucide-react"
 import api from "../lib/api"
+import { getHeroImage, debugImageUrls } from "../lib/imageUtils"
+import type { AnimeImages } from "../lib/types"
+import { Slot } from "@radix-ui/react-slot"
 
 type Anime = {
   id: number | string;
   title: string;
-  image?: string;
+  images?: AnimeImages;
   score?: number;
   rating?: number;
   genres?: string[];
   synopsis?: string;
   description?: string;
+  trailer: {
+    youtubeId: string;
+    url: string;
+    embedUrl: string;
+  };
 };
 
 export default function HeroSection() {
@@ -23,10 +31,24 @@ export default function HeroSection() {
   const [currentSlide, setCurrentSlide] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<Error | null>(null)
+  const [showTrailer, setShowTrailer] = useState(false)
 
   useEffect(() => {
     api.get('/anime/search?featured=true')
-      .then((res: any) => setAnimes(res.data.results))
+      .then((res: any) => {
+        setAnimes(res.data.results)
+        
+        // Debug: Mostrar información de imágenes del primer anime
+        if (res.data.results && res.data.results.length > 0) {
+          const firstAnime = res.data.results[0]
+          console.log('🔍 Debug del primer anime:', firstAnime.title)
+          console.log('📄 Estructura completa del anime:', firstAnime)
+          console.log('🖼️ Propiedad images:', firstAnime.images)
+          console.log('📷 JPG completo:', firstAnime.images?.jpg)
+          console.log('🖼️ WebP completo:', firstAnime.images?.webp)
+          debugImageUrls(firstAnime.images)
+        }
+      })
       .catch((err: any) => setError(err))
       .finally(() => setLoading(false))
   }, [])
@@ -45,8 +67,35 @@ export default function HeroSection() {
 
   const anime = animes[currentSlide]
 
+  // Debug: Mostrar el trailer en consola
+  console.log('🎬 Trailer del anime:', anime)
+
   return (
     <section className="relative h-[500px] md:h-[600px] overflow-hidden rounded-xl mb-12">
+      {/* Modal para el tráiler */}
+      {showTrailer && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80">
+          <div className="relative w-full max-w-2xl p-4">
+            <button
+              className="absolute top-2 right-2 text-white text-2xl"
+              onClick={() => setShowTrailer(false)}
+              aria-label="Cerrar"
+            >
+              ×
+            </button>
+            <div className="aspect-w-16 aspect-h-9 w-full">
+              <iframe
+                src={anime.trailer?.embedUrl}
+                title={`${anime.title} trailer`}
+                frameBorder="0"
+                allow="autoplay; encrypted-media"
+                allowFullScreen
+                className="w-full h-96 rounded-lg shadow-lg"
+              />
+            </div>
+          </div>
+        </div>
+      )}
       <div className="absolute inset-0 bg-gradient-to-r from-background/90 via-background/50 to-background/20 z-10" />
 
       <motion.div
@@ -57,7 +106,7 @@ export default function HeroSection() {
         transition={{ duration: 1 }}
         className="absolute inset-0"
       >
-        <Image src={anime.image || "/placeholder.svg"} alt={anime.title} fill className="object-cover" priority />
+        <Image src={getHeroImage(anime.images)} alt={anime.title} fill className="object-cover" priority />
       </motion.div>
 
       <div className="relative z-20 h-full flex flex-col justify-center px-6 md:px-12 max-w-3xl">
@@ -78,11 +127,11 @@ export default function HeroSection() {
               </div>
             ))}
           </div>
-          <p className="text-lg mb-6 max-w-2xl">{anime.synopsis || anime.description}</p>
+          <p className="text-lg mb-6 max-w-2xl"></p>
           <div className="flex space-x-4">
-            <Button className="gap-2">
+            <Button className="gap-2" onClick={() => setShowTrailer(true)}>
               <Play className="h-4 w-4" />
-              Watch Trailer
+              Ver Tráiler
             </Button>
             <Button variant="outline" className="gap-2">
               <Info className="h-4 w-4" />

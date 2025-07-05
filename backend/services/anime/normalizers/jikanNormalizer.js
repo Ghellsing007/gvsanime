@@ -5,7 +5,7 @@ export function normalizeJikanResults(results) {
   return results.map(anime => ({
     mal_id: anime.mal_id,
     url: anime.url,
-    images: anime.images,
+    images: normalizeImages(anime.images),
     trailer: anime.trailer,
     approved: anime.approved,
     titles: anime.titles,
@@ -41,4 +41,42 @@ export function normalizeJikanResults(results) {
     demographics: anime.demographics
     // Si Jikan agrega más campos en el futuro, aquí los puedes añadir explícitamente
   }));
+}
+
+/**
+ * Normaliza las imágenes de Jikan a una estructura consistente
+ * Convierte snake_case a camelCase para el frontend
+ */
+export function normalizeImages(jikanImages) {
+  if (!jikanImages) return null;
+
+  return {
+    jpg: jikanImages.jpg ? {
+      imageUrl: jikanImages.jpg.image_url,
+      smallImageUrl: jikanImages.jpg.small_image_url,
+      largeImageUrl: jikanImages.jpg.large_image_url,
+    } : null,
+    webp: jikanImages.webp ? {
+      imageUrl: jikanImages.webp.image_url,
+      smallImageUrl: jikanImages.webp.small_image_url,
+      largeImageUrl: jikanImages.webp.large_image_url,
+    } : null,
+  };
+}
+
+/**
+ * Normaliza un solo anime de Jikan
+ */
+export function normalizeJikanAnime(anime) {
+  return {
+    id: anime.mal_id,
+    title: anime.title,
+    images: normalizeImages(anime.images),
+    score: anime.score,
+    episodes: anime.episodes,
+    genres: anime.genres?.map(g => g.name),
+    year: anime.year,
+    season: anime.season,
+    // Agregar más campos según necesites
+  };
 } 
