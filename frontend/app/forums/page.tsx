@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Loader2, MessageSquare, Plus, Search, Users, Eye } from "lucide-react"
 import { RetryButton } from "@/components/ui/retry-button"
+import { ForumBreadcrumb } from "@/components/ui/forum-breadcrumb"
 import api from "@/lib/api"
 import Link from "next/link"
 
@@ -118,6 +119,9 @@ export default function ForumsPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
+      {/* Breadcrumb */}
+      <ForumBreadcrumb items={[{ label: "Foros" }]} />
+      
       {/* Header */}
       <div className="flex justify-between items-center mb-8">
         <div>

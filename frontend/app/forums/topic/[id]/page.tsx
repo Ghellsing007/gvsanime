@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Loader2, ArrowLeft, MessageSquare, Heart, Edit, Trash2, Send, Users, Eye } from "lucide-react"
 import { RetryButton } from "@/components/ui/retry-button"
+import { ForumBreadcrumb } from "@/components/ui/forum-breadcrumb"
 import api from "@/lib/api"
 import Link from "next/link"
 import { useParams, useRouter } from "next/navigation"
@@ -162,6 +163,14 @@ export default function TopicPage() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
+      {/* Breadcrumb */}
+      <ForumBreadcrumb 
+        items={[
+          { label: "Foros", href: "/forums" },
+          { label: topic?.title || "Tema" }
+        ]} 
+      />
+      
       {/* Header */}
       <div className="flex items-center gap-4 mb-8">
         <Button variant="ghost" asChild>
