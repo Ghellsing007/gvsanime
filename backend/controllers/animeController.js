@@ -3,6 +3,7 @@ import { searchAnime } from '../services/anime/jikanService.js';
 import Favorite from '../services/anime/favoriteModel.js';
 import Watchlist from '../services/anime/watchlistModel.js';
 import Rating from '../services/anime/ratingModel.js';
+import mongoose from '../services/shared/mongooseClient.js';
 
 // Controlador para obtener un anime por ID (usando el orquestador)
 export async function getAnimeById(req, res) {
@@ -162,6 +163,40 @@ export async function getRecommendationsController(req, res) {
   } catch (err) {
     console.error('Error en recomendaciones:', err);
     res.status(500).json({ error: 'Error al obtener recomendaciones' });
+  }
+}
+
+// Controlador para obtener todos los animes paginados y con filtro opcional por nombre
+export async function getAllAnimeController(req, res) {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 12;
+    const q = req.query.q || '';
+    const AnimeCache = mongoose.models.AnimeCache || mongoose.model('AnimeCache', new mongoose.Schema({
+      animeId: String,
+      data: Object,
+      updatedAt: { type: Date, default: Date.now }
+    }));
+    const filter = q
+      ? { 'data.title': { $regex: q, $options: 'i' } }
+      : {};
+    const total = await AnimeCache.countDocuments(filter);
+    const animes = await AnimeCache.find(filter)
+      .sort({ 'data.title': 1 })
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .lean();
+    res.json({
+      data: animes.map(a => a.data),
+      pagination: {
+        current_page: page,
+        items: { total },
+        last_visible_page: Math.ceil(total / limit),
+        has_next_page: page * limit < total
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Error al obtener la lista de animes', details: err.message });
   }
 }
 

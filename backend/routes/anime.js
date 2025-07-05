@@ -1,5 +1,5 @@
 import express from 'express';
-import { getAnimeById, searchAnimeController, getGenresController, getExternalReviewsController, getRecommendationsController } from '../controllers/animeController.js';
+import { getAnimeById, searchAnimeController, getGenresController, getExternalReviewsController, getRecommendationsController, getAllAnimeController } from '../controllers/animeController.js';
 import {
   cleanOldCache, getCacheStats, clearSearchCache,
   listAnimeCache, listSearchCache, getAnimeCacheById, getSearchCacheByQuery,
@@ -22,6 +22,9 @@ router.get('/reviews/:animeId', getExternalReviewsController);
 
 // Ruta para recomendaciones de anime (pública/personalizada)
 router.get('/recommendations', getRecommendationsController);
+
+// Ruta para obtener todos los animes paginados y con filtro opcional por nombre (público)
+router.get('/', getAllAnimeController);
 
 // --- ADMINISTRACIÓN DE CACHÉ ---
 

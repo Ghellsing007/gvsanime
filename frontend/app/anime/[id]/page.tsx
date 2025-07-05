@@ -26,7 +26,7 @@ export async function generateMetadata({ params }: AnimePageProps): Promise<Meta
   }
 }
 
-export default function AnimePage({ params }: AnimePageProps) {
+export default async function AnimePage({ params }: AnimePageProps) {
   return <AnimeDetails id={params.id} />
 }
 

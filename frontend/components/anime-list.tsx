@@ -7,6 +7,7 @@ import AnimeCard from "@/components/anime-card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Loader2, Search } from "lucide-react"
+import api from "@/lib/api"
 
 interface Anime {
   mal_id: number
@@ -48,25 +49,18 @@ export default function AnimeList({ initialPage = 1, initialLimit = 12 }: AnimeL
   const fetchAnimes = async (pageNum: number, query = "") => {
     try {
       setLoading(true)
-      const response = await fetch(
-        `/api/anime?page=${pageNum}&limit=${initialLimit}${query ? `&q=${encodeURIComponent(query)}` : ""}`,
+      const response = await api.get(
+        `/anime?page=${pageNum}&limit=${initialLimit}${query ? `&q=${encodeURIComponent(query)}` : ""}`
       )
-
-      if (!response.ok) {
-        throw new Error("Error al obtener datos")
-      }
-
-      const data = await response.json()
-
+      const data = response.data
+      console.log('Respuesta de la API de anime:', data)
       setTotalAnimes(data.pagination.items.total)
       setHasMore(pageNum < data.pagination.last_visible_page)
-
       if (pageNum === 1) {
         setAnimes(data.data)
       } else {
         setAnimes((prev) => [...prev, ...data.data])
       }
-
       setError("")
     } catch (err) {
       setError("Error al cargar los animes. Por favor, inténtalo de nuevo más tarde.")
@@ -127,7 +121,7 @@ export default function AnimeList({ initialPage = 1, initialLimit = 12 }: AnimeL
             key={anime.mal_id}
             id={anime.mal_id}
             title={anime.title}
-            image={anime.images.jpg.image_url}
+            image={anime.images}
             score={anime.score}
             episodes={anime.episodes}
             genres={anime.genres.map((g) => g.name)}

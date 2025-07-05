@@ -92,7 +92,7 @@ export default function AnimeDetails({ id }: AnimeDetailsProps) {
       {/* Banner */}
       <div className="relative h-[300px] md:h-[400px] rounded-xl overflow-hidden mb-8">
         <Image
-          src={anime.images?.jpg?.large_image_url || "/placeholder.svg?height=500&width=1200"}
+          src={anime.images?.jpg?.imageUrl || "/placeholder.svg?height=500&width=1200"}
           alt={anime.title}
           fill
           className="object-cover"
@@ -108,7 +108,7 @@ export default function AnimeDetails({ id }: AnimeDetailsProps) {
           <div className="sticky top-24">
             <div className="relative rounded-lg overflow-hidden mb-4">
               <Image
-                src={anime.images?.jpg?.large_image_url || "/placeholder.svg?height=600&width=400"}
+                src={anime.images?.webp?.imageUrl|| "/placeholder.svg?height=600&width=400"}
                 alt={anime.title}
                 width={400}
                 height={600}
