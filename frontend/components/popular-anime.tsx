@@ -1,186 +1,79 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import AnimeCard from "@/components/anime-card"
 import { Button } from "@/components/ui/button"
 import { ChevronRight } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import api from "../lib/api"
 
-// Mock data
-const popularAnimeData = {
-  all: [
-    {
-      id: 1,
-      title: "Fullmetal Alchemist: Brotherhood",
-      image: "/placeholder.svg?height=400&width=300",
-      score: 9.1,
-      episodes: 64,
-      genres: ["Action", "Adventure", "Drama", "Fantasy"],
-      year: 2009,
-    },
-    {
-      id: 2,
-      title: "Steins;Gate",
-      image: "/placeholder.svg?height=400&width=300",
-      score: 9.0,
-      episodes: 24,
-      genres: ["Sci-Fi", "Thriller", "Drama"],
-      year: 2011,
-    },
-    {
-      id: 3,
-      title: "Gintama",
-      image: "/placeholder.svg?height=400&width=300",
-      score: 8.9,
-      episodes: 367,
-      genres: ["Action", "Comedy", "Sci-Fi"],
-      year: 2006,
-    },
-    {
-      id: 4,
-      title: "Hunter x Hunter (2011)",
-      image: "/placeholder.svg?height=400&width=300",
-      score: 9.0,
-      episodes: 148,
-      genres: ["Action", "Adventure", "Fantasy"],
-      year: 2011,
-    },
-    {
-      id: 5,
-      title: "Legend of the Galactic Heroes",
-      image: "/placeholder.svg?height=400&width=300",
-      score: 8.9,
-      episodes: 110,
-      genres: ["Drama", "Sci-Fi", "Space"],
-      year: 1988,
-    },
-    {
-      id: 6,
-      title: "Monster",
-      image: "/placeholder.svg?height=400&width=300",
-      score: 8.8,
-      episodes: 74,
-      genres: ["Drama", "Horror", "Mystery", "Psychological", "Thriller"],
-      year: 2004,
-    },
-  ],
-  action: [
-    {
-      id: 7,
-      title: "One Punch Man",
-      image: "/placeholder.svg?height=400&width=300",
-      score: 8.7,
-      episodes: 12,
-      genres: ["Action", "Comedy", "Sci-Fi", "Supernatural"],
-      year: 2015,
-    },
-    {
-      id: 8,
-      title: "Mob Psycho 100",
-      image: "/placeholder.svg?height=400&width=300",
-      score: 8.7,
-      episodes: 12,
-      genres: ["Action", "Comedy", "Supernatural"],
-      year: 2016,
-    },
-    {
-      id: 9,
-      title: "Vinland Saga",
-      image: "/placeholder.svg?height=400&width=300",
-      score: 8.8,
-      episodes: 24,
-      genres: ["Action", "Adventure", "Drama", "Historical"],
-      year: 2019,
-    },
-    {
-      id: 10,
-      title: "Berserk",
-      image: "/placeholder.svg?height=400&width=300",
-      score: 8.7,
-      episodes: 25,
-      genres: ["Action", "Adventure", "Drama", "Fantasy", "Horror"],
-      year: 1997,
-    },
-    {
-      id: 11,
-      title: "Fate/Zero",
-      image: "/placeholder.svg?height=400&width=300",
-      score: 8.5,
-      episodes: 13,
-      genres: ["Action", "Fantasy", "Supernatural"],
-      year: 2011,
-    },
-    {
-      id: 12,
-      title: "Samurai Champloo",
-      image: "/placeholder.svg?height=400&width=300",
-      score: 8.5,
-      episodes: 26,
-      genres: ["Action", "Adventure", "Comedy", "Historical"],
-      year: 2004,
-    },
-  ],
-  romance: [
-    {
-      id: 13,
-      title: "Your Lie in April",
-      image: "/placeholder.svg?height=400&width=300",
-      score: 8.7,
-      episodes: 22,
-      genres: ["Drama", "Music", "Romance", "School"],
-      year: 2014,
-    },
-    {
-      id: 14,
-      title: "Clannad: After Story",
-      image: "/placeholder.svg?height=400&width=300",
-      score: 8.9,
-      episodes: 24,
-      genres: ["Drama", "Romance", "Slice of Life", "Supernatural"],
-      year: 2008,
-    },
-    {
-      id: 15,
-      title: "Fruits Basket (2019)",
-      image: "/placeholder.svg?height=400&width=300",
-      score: 8.6,
-      episodes: 25,
-      genres: ["Comedy", "Drama", "Romance", "Slice of Life", "Supernatural"],
-      year: 2019,
-    },
-    {
-      id: 16,
-      title: "Toradora!",
-      image: "/placeholder.svg?height=400&width=300",
-      score: 8.4,
-      episodes: 25,
-      genres: ["Comedy", "Drama", "Romance", "School", "Slice of Life"],
-      year: 2008,
-    },
-    {
-      id: 17,
-      title: "Kaguya-sama: Love is War",
-      image: "/placeholder.svg?height=400&width=300",
-      score: 8.7,
-      episodes: 12,
-      genres: ["Comedy", "Psychological", "Romance", "School"],
-      year: 2019,
-    },
-    {
-      id: 18,
-      title: "Horimiya",
-      image: "/placeholder.svg?height=400&width=300",
-      score: 8.3,
-      episodes: 13,
-      genres: ["Comedy", "Romance", "School", "Slice of Life"],
-      year: 2021,
-    },
-  ],
-}
+// Datos mock como fallback (ya no se usan, pero mantenemos por si acaso)
 
 export default function PopularAnime() {
   const [activeTab, setActiveTab] = useState("all")
+  const [animes, setAnimes] = useState<any[]>([])
+  const [genres, setGenres] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<Error | null>(null)
+
+  const fetchGenres = async () => {
+    // Usar directamente los 10 géneros más populares
+    const popularGenres = [
+      { id: 1, name: 'Action' },
+      { id: 2, name: 'Adventure' },
+      { id: 4, name: 'Comedy' },
+      { id: 8, name: 'Drama' },
+      { id: 10, name: 'Fantasy' },
+      { id: 14, name: 'Horror' },
+      { id: 22, name: 'Romance' },
+      { id: 24, name: 'Sci-Fi' },
+      { id: 27, name: 'Shounen' },
+      { id: 25, name: 'Slice of Life' }
+    ];
+    setGenres(popularGenres)
+  }
+
+  const fetchAnimes = async (category: string) => {
+    setLoading(true)
+    try {
+      let endpoint = '/anime/search?sort=top'
+      
+      if (category !== 'all') {
+        // Mapear el nombre del género a su ID para la API
+        const genreMap: { [key: string]: number } = {
+          'Action': 1,
+          'Adventure': 2,
+          'Comedy': 4,
+          'Drama': 8,
+          'Fantasy': 10,
+          'Horror': 14,
+          'Romance': 22,
+          'Sci-Fi': 24,
+          'Shounen': 27,
+          'Slice of Life': 25
+        };
+        
+        const genreId = genreMap[category];
+        if (genreId) {
+          endpoint = `/anime/search?genre=${category}`
+        }
+      }
+      
+      const res = await api.get(endpoint)
+      const results = res.data?.data || res.data?.results || [];
+      setAnimes(results)
+    } catch (err: any) {
+      setError(err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchGenres()
+    fetchAnimes(activeTab)
+  }, [activeTab])
 
   const container = {
     hidden: { opacity: 0 },
@@ -197,6 +90,9 @@ export default function PopularAnime() {
     show: { opacity: 1, y: 0 },
   }
 
+  if (loading) return <div>Cargando animes populares...</div>;
+  if (error) return <div>Error: {error.message}</div>;
+
   return (
     <section className="mb-12">
       <div className="flex justify-between items-center mb-6">
@@ -207,30 +103,58 @@ export default function PopularAnime() {
       </div>
 
       <Tabs defaultValue="all" onValueChange={setActiveTab}>
-        <TabsList className="mb-6">
+        <TabsList className="mb-6 overflow-x-auto">
           <TabsTrigger value="all">All</TabsTrigger>
-          <TabsTrigger value="action">Action</TabsTrigger>
-          <TabsTrigger value="romance">Romance</TabsTrigger>
+          {genres.map((genre) => (
+            <TabsTrigger key={genre.id} value={genre.name}>
+              {genre.name}
+            </TabsTrigger>
+          ))}
         </TabsList>
 
-        {Object.entries(popularAnimeData).map(([category, animes]) => (
-          <TabsContent key={category} value={category}>
+        <TabsContent value="all">
+          <motion.div
+            className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4"
+            variants={container}
+            initial="hidden"
+            animate={activeTab === "all" ? "show" : "hidden"}
+          >
+            {animes.map((anime) => (
+              <motion.div key={anime.mal_id || anime.id} variants={item}>
+                <AnimeCard
+                  id={anime.mal_id || anime.id}
+                  title={anime.title}
+                  images={anime.images}
+                  score={anime.score}
+                  episodes={anime.episodes}
+                  genres={anime.genres}
+                  year={anime.year}
+                  season={anime.season}
+                />
+              </motion.div>
+            ))}
+          </motion.div>
+        </TabsContent>
+
+        {genres.map((genre) => (
+          <TabsContent key={genre.id} value={genre.name}>
             <motion.div
               className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4"
               variants={container}
               initial="hidden"
-              animate={activeTab === category ? "show" : "hidden"}
+              animate={activeTab === genre.name ? "show" : "hidden"}
             >
               {animes.map((anime) => (
-                <motion.div key={anime.id} variants={item}>
+                <motion.div key={anime.mal_id || anime.id} variants={item}>
                   <AnimeCard
-                    id={anime.id}
+                    id={anime.mal_id || anime.id}
                     title={anime.title}
-                    image={anime.image}
+                    images={anime.images}
                     score={anime.score}
                     episodes={anime.episodes}
                     genres={anime.genres}
                     year={anime.year}
+                    season={anime.season}
                   />
                 </motion.div>
               ))}
