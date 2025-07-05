@@ -36,6 +36,8 @@ interface Anime {
   episodes: number;
   status: string;
   type: string;
+  year?: number;
+  season?: string;
 }
 
 export default function SeasonsPage() {
