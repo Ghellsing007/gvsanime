@@ -4,42 +4,23 @@ import { motion } from "framer-motion"
 import AnimeCard from "@/components/anime-card"
 import { Button } from "@/components/ui/button"
 import { ChevronRight } from "lucide-react"
+import { useEffect, useState } from "react"
 
-// Mock data
-const featuredAnimeData = [
-  {
-    id: 1,
-    title: "Demon Slayer: Kimetsu no Yaiba",
-    image: "/placeholder.svg?height=400&width=600",
-    score: 8.9,
-    episodes: 26,
-    genres: ["Action", "Fantasy", "Historical"],
-    year: 2019,
-    season: "Spring",
-  },
-  {
-    id: 2,
-    title: "Attack on Titan: The Final Season",
-    image: "/placeholder.svg?height=400&width=600",
-    score: 9.1,
-    episodes: 16,
-    genres: ["Action", "Drama", "Fantasy"],
-    year: 2020,
-    season: "Winter",
-  },
-  {
-    id: 3,
-    title: "Jujutsu Kaisen",
-    image: "/placeholder.svg?height=400&width=600",
-    score: 8.7,
-    episodes: 24,
-    genres: ["Action", "Fantasy", "School"],
-    year: 2020,
-    season: "Fall",
-  },
-]
+import api from "../lib/api"
+import type { AnimeImages } from "../lib/types"
 
 export default function FeaturedAnime() {
+  const [animes, setAnimes] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<Error | null>(null)
+
+  useEffect(() => {
+    api.get('/anime/search?featured=true')
+      .then((res: any) => setAnimes(res.data.results))
+      .catch((err: any) => setError(err))
+      .finally(() => setLoading(false))
+  }, [])
+
   const container = {
     hidden: { opacity: 0 },
     show: {
@@ -54,6 +35,10 @@ export default function FeaturedAnime() {
     hidden: { opacity: 0, y: 20 },
     show: { opacity: 1, y: 0 },
   }
+
+  if (loading) return <div>Cargando...</div>;
+  if (error) return <div>Error: {error.message}</div>;
+  if (!animes.length) return <div>No hay animes destacados.</div>;
 
   return (
     <section className="mb-12">
@@ -71,12 +56,12 @@ export default function FeaturedAnime() {
         whileInView="show"
         viewport={{ once: true, margin: "-100px" }}
       >
-        {featuredAnimeData.map((anime) => (
+        {animes.map((anime) => (
           <motion.div key={anime.id} variants={item}>
             <AnimeCard
               id={anime.id}
               title={anime.title}
-              image={anime.image}
+              images={anime.images}
               score={anime.score}
               episodes={anime.episodes}
               genres={anime.genres}
