@@ -650,51 +650,92 @@ export default function AdminDashboard() {
 
         {/* Sistema */}
         <TabsContent value="system" className="space-y-4">
-          <CDNStatus />
-          
-          {stats.cdn.memoryUsage && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Database className="h-5 w-5" />
-                  Uso de Recursos del Sistema
+                  Estado del Sistema
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="text-center">
                     <div className="text-2xl font-bold text-blue-600">
-                      {formatBytes(stats.cdn.memoryUsage.heapUsed)}
+                      {stats.cdn.isLoaded ? 'Activo' : 'Inactivo'}
                     </div>
-                    <div className="text-sm text-muted-foreground">Heap Usado</div>
+                    <div className="text-sm text-muted-foreground">CDN</div>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-green-600">
-                      {formatBytes(stats.cdn.memoryUsage.rss)}
+                      {formatNumber(stats.cdn.totalAnimes)}
                     </div>
-                    <div className="text-sm text-muted-foreground">RSS</div>
+                    <div className="text-sm text-muted-foreground">Animes Cargados</div>
                   </div>
                 </div>
                 
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span>Heap Total</span>
-                    <span className="font-medium">{formatBytes(stats.cdn.memoryUsage.heapTotal)}</span>
+                    <span>Estado CDN</span>
+                    <Badge variant={stats.cdn.isLoaded ? "default" : "destructive"}>
+                      {stats.cdn.isLoaded ? 'Listo' : 'Error'}
+                    </Badge>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span>External</span>
-                    <span className="font-medium">{formatBytes(stats.cdn.memoryUsage.external)}</span>
+                    <span>Última actualización</span>
+                    <span className="font-medium">
+                      {stats.cdn.lastLoadTime ? formatDate(new Date(stats.cdn.lastLoadTime).toISOString()) : 'N/A'}
+                    </span>
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span>Array Buffers</span>
-                    <span className="font-medium">{formatBytes(stats.cdn.memoryUsage.arrayBuffers)}</span>
+                  {stats.cdn.loadError && (
+                    <div className="p-2 bg-red-50 border border-red-200 rounded text-red-700 text-xs">
+                      Error: {stats.cdn.loadError}
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Activity className="h-5 w-5" />
+                  Información del Servidor
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm">Modo de datos</span>
+                    <Badge variant="outline">CDN Optimizado</Badge>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm">Fuente principal</span>
+                    <span className="font-medium">CDN JSON</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm">Fallback</span>
+                    <span className="font-medium">Jikan API</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm">Usuarios</span>
+                    <span className="font-medium">Supabase</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm">Interacciones</span>
+                    <span className="font-medium">MongoDB</span>
                   </div>
                 </div>
               </CardContent>
             </Card>
-          )}
+          </div>
         </TabsContent>
       </Tabs>
+
+      {/* Sección CDN Status al final del dashboard */}
+      <div className="mt-8">
+        <CDNStatus />
+      </div>
     </div>
   )
 } 

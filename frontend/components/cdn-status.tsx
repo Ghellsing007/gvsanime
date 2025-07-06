@@ -12,7 +12,8 @@ import {
   AlertCircle, 
   Clock,
   HardDrive,
-  Activity
+  Activity,
+  Info
 } from "lucide-react"
 import api from "@/lib/api"
 
@@ -113,17 +114,17 @@ export default function CDNStatus() {
 
   if (loading) {
     return (
-      <Card>
+      <Card className="border-2 border-dashed border-muted-foreground/25">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-lg">
             <Database className="h-5 w-5" />
-            Estado del CDN
+            Monitoreo del CDN
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-center py-8">
             <RefreshCw className="h-6 w-6 animate-spin" />
-            <span className="ml-2">Cargando estadísticas...</span>
+            <span className="ml-2">Cargando estadísticas del CDN...</span>
           </div>
         </CardContent>
       </Card>
@@ -131,34 +132,32 @@ export default function CDNStatus() {
   }
 
   return (
-    <Card>
+    <Card className="border-2 border-dashed border-muted-foreground/25">
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-lg">
             <Database className="h-5 w-5" />
-            Estado del CDN
-          </CardTitle>
-          <div className="flex items-center gap-2">
+            Monitoreo del CDN
             <Badge 
               variant={stats?.loadError ? "destructive" : stats?.isLoaded ? "default" : "secondary"}
-              className="flex items-center gap-1"
+              className="flex items-center gap-1 ml-2"
             >
               {getStatusIcon()}
               {getStatusText()}
             </Badge>
-            <Button 
-              size="sm" 
-              variant="outline" 
-              onClick={forceReload}
-              disabled={refreshing}
-            >
-              <RefreshCw className={`h-4 w-4 mr-1 ${refreshing ? 'animate-spin' : ''}`} />
-              Recargar
-            </Button>
-          </div>
+          </CardTitle>
+          <Button 
+            size="sm" 
+            variant="outline" 
+            onClick={forceReload}
+            disabled={refreshing}
+          >
+            <RefreshCw className={`h-4 w-4 mr-1 ${refreshing ? 'animate-spin' : ''}`} />
+            Recargar Datos
+          </Button>
         </div>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-6">
         {error && (
           <div className="p-3 bg-red-50 border border-red-200 rounded-md">
             <p className="text-red-700 text-sm">{error}</p>
@@ -167,30 +166,30 @@ export default function CDNStatus() {
 
         {stats && (
           <>
-            {/* Estadísticas principales */}
+            {/* Estadísticas principales en grid */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="text-center">
+              <div className="text-center p-3 bg-blue-50 rounded-lg">
                 <div className="text-2xl font-bold text-blue-600">
                   {stats.totalAnimes?.toLocaleString() || 0}
                 </div>
                 <div className="text-sm text-muted-foreground">Total Animes</div>
               </div>
               
-              <div className="text-center">
+              <div className="text-center p-3 bg-green-50 rounded-lg">
                 <div className="text-2xl font-bold text-green-600">
                   {stats.isLoaded ? 'Sí' : 'No'}
                 </div>
                 <div className="text-sm text-muted-foreground">Cargado</div>
               </div>
               
-              <div className="text-center">
-                <div className="text-2xl font-bold text-purple-600">
+              <div className="text-center p-3 bg-purple-50 rounded-lg">
+                <div className="text-lg font-bold text-purple-600">
                   {stats.lastLoadTime ? formatDate(stats.lastLoadTime) : 'N/A'}
                 </div>
                 <div className="text-sm text-muted-foreground">Última Carga</div>
               </div>
               
-              <div className="text-center">
+              <div className="text-center p-3 bg-orange-50 rounded-lg">
                 <div className="text-2xl font-bold text-orange-600">
                   {stats.memoryUsage ? formatBytes(stats.memoryUsage.heapUsed) : 'N/A'}
                 </div>
@@ -198,23 +197,29 @@ export default function CDNStatus() {
               </div>
             </div>
 
-            {/* Uso de memoria */}
+            {/* Uso de memoria detallado */}
             {stats.memoryUsage && (
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <span>Uso de Memoria</span>
-                  <span className="text-muted-foreground">
-                    {formatBytes(stats.memoryUsage.heapUsed)} / {formatBytes(stats.memoryUsage.heapTotal)}
-                  </span>
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <HardDrive className="h-4 w-4 text-muted-foreground" />
+                  <span className="font-medium">Uso de Memoria del Sistema</span>
                 </div>
-                <Progress 
-                  value={(stats.memoryUsage.heapUsed / stats.memoryUsage.heapTotal) * 100} 
-                  className="h-2"
-                />
-                <div className="grid grid-cols-3 gap-2 text-xs text-muted-foreground">
-                  <div>Heap: {formatBytes(stats.memoryUsage.heapUsed)}</div>
-                  <div>RSS: {formatBytes(stats.memoryUsage.rss)}</div>
-                  <div>External: {formatBytes(stats.memoryUsage.external)}</div>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span>Heap Memory</span>
+                    <span className="text-muted-foreground">
+                      {formatBytes(stats.memoryUsage.heapUsed)} / {formatBytes(stats.memoryUsage.heapTotal)}
+                    </span>
+                  </div>
+                  <Progress 
+                    value={(stats.memoryUsage.heapUsed / stats.memoryUsage.heapTotal) * 100} 
+                    className="h-2"
+                  />
+                  <div className="grid grid-cols-3 gap-2 text-xs text-muted-foreground">
+                    <div>Heap: {formatBytes(stats.memoryUsage.heapUsed)}</div>
+                    <div>RSS: {formatBytes(stats.memoryUsage.rss)}</div>
+                    <div>External: {formatBytes(stats.memoryUsage.external)}</div>
+                  </div>
                 </div>
               </div>
             )}
@@ -231,10 +236,16 @@ export default function CDNStatus() {
             )}
 
             {/* Información adicional */}
-            <div className="text-xs text-muted-foreground space-y-1">
-              <div>• Los datos se recargan automáticamente cada 6 horas</div>
-              <div>• El CDN contiene 28,000+ animes precargados en memoria</div>
-              <div>• Acceso instantáneo a todos los datos</div>
+            <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">
+              <div className="flex items-start gap-2">
+                <Info className="h-4 w-4 text-blue-600 mt-0.5" />
+                <div className="text-xs text-blue-700 space-y-1">
+                  <div>• <strong>28,816 animes</strong> precargados en memoria para acceso instantáneo</div>
+                  <div>• <strong>Recarga automática</strong> cada 6 horas para mantener datos actualizados</div>
+                  <div>• <strong>Fallback automático</strong> a Jikan API si el CDN no está disponible</div>
+                  <div>• <strong>Optimización de rendimiento</strong>: búsquedas en ~46ms, acceso por ID en ~1ms</div>
+                </div>
+              </div>
             </div>
           </>
         )}

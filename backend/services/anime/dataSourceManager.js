@@ -1,6 +1,6 @@
 // dataSourceManager.js
-// Gestor centralizado de fuentes de datos para anime
-// Permite alternar fácilmente entre MongoDB (cache), Jikan (API externa) y CDN (JSON)
+// Gestor optimizado para CDN + Supabase + MongoDB (solo interacciones)
+// Prioriza CDN para datos de anime, MongoDB solo para interacciones de usuario
 
 import mongoose from '../../services/shared/mongooseClient.js';
 import { getAnimeById, searchAnime, getAllAnimes } from './jikanService.js';
@@ -20,61 +20,39 @@ import { normalizeImages } from './normalizers/jikanNormalizer.js';
 import axios from 'axios';
 
 // Configuración de fuente de datos desde variables de entorno
-const DATA_SOURCE = process.env.ANIME_DATA_SOURCE || 'hybrid'; // 'mongodb', 'jikan', 'cdn', 'hybrid'
+const DATA_SOURCE = process.env.ANIME_DATA_SOURCE || 'cdn'; // 'cdn', 'jikan', 'hybrid'
 const FORCE_JIKAN = process.env.FORCE_JIKAN === 'true';
 const CACHE_ENABLED = process.env.CACHE_ENABLED !== 'false'; // true por defecto
 
-// Modelos de MongoDB para cache
-const AnimeCache = mongoose.models.AnimeCache || mongoose.model('AnimeCache', new mongoose.Schema({
+// Modelos de MongoDB solo para interacciones de usuario
+const Favorite = mongoose.models.Favorite || mongoose.model('Favorite', new mongoose.Schema({
+  userId: String,
   animeId: String,
-  data: Object,
-  updatedAt: { type: Date, default: Date.now }
+  createdAt: { type: Date, default: Date.now }
 }));
 
-const SearchCache = mongoose.models.SearchCache || mongoose.model('SearchCache', new mongoose.Schema({
-  query: { type: String, required: true, index: true },
-  results: [Object],
-  updatedAt: { type: Date, default: Date.now },
-  source: String,
-  animeIds: [String]
+const Watchlist = mongoose.models.Watchlist || mongoose.model('Watchlist', new mongoose.Schema({
+  userId: String,
+  animeId: String,
+  createdAt: { type: Date, default: Date.now }
 }));
 
-const TopAnimeCache = mongoose.models.TopAnimeCache || mongoose.model('TopAnimeCache', new mongoose.Schema({
-  animes: [Object],
-  updatedAt: { type: Date, default: Date.now }
+const Rating = mongoose.models.Rating || mongoose.model('Rating', new mongoose.Schema({
+  userId: String,
+  animeId: String,
+  rating: Number,
+  createdAt: { type: Date, default: Date.now }
 }));
 
-const RecentAnimeCache = mongoose.models.RecentAnimeCache || mongoose.model('RecentAnimeCache', new mongoose.Schema({
-  animes: [Object],
-  updatedAt: { type: Date, default: Date.now }
-}));
-
-const FeaturedAnimeCache = mongoose.models.FeaturedAnimeCache || mongoose.model('FeaturedAnimeCache', new mongoose.Schema({
-  animes: [Object],
-  updatedAt: { type: Date, default: Date.now }
-}));
-
-const GenreCache = mongoose.models.GenreCache || mongoose.model('GenreCache', new mongoose.Schema({
-  genres: [Object],
-  updatedAt: { type: Date, default: Date.now }
-}));
-
-// Función para determinar qué fuente usar
+// Función para determinar qué fuente usar (optimizada para CDN)
 function getDataSource() {
   // Leer variables de entorno dinámicamente
-  const currentDataSource = process.env.ANIME_DATA_SOURCE || 'hybrid';
+  const currentDataSource = process.env.ANIME_DATA_SOURCE || 'cdn';
   const currentForceJikan = process.env.FORCE_JIKAN === 'true';
-  const currentCacheEnabled = process.env.CACHE_ENABLED !== 'false';
   
   // Si FORCE_JIKAN está activado, usar solo Jikan
   if (currentForceJikan) {
     console.log('🔧 FORCE_JIKAN activado, usando solo Jikan');
-    return 'jikan';
-  }
-  
-  // Si CACHE_ENABLED está desactivado, usar solo Jikan
-  if (!currentCacheEnabled) {
-    console.log('🔧 CACHE_ENABLED=false, usando solo Jikan');
     return 'jikan';
   }
   
@@ -84,68 +62,52 @@ function getDataSource() {
     return 'jikan';
   }
   
-  if (currentDataSource === 'mongodb') {
-    console.log('🔧 ANIME_DATA_SOURCE=mongodb, usando solo MongoDB');
-    return 'mongodb';
+  if (currentDataSource === 'hybrid') {
+    console.log('🔧 ANIME_DATA_SOURCE=hybrid, usando CDN + Jikan fallback');
+    return 'hybrid';
   }
   
-  if (currentDataSource === 'cdn') {
-    console.log('🔧 ANIME_DATA_SOURCE=cdn, usando solo CDN JSON');
-    return 'cdn';
-  }
-  
-  // Por defecto usar hybrid
-  console.log('🔧 Usando modo hybrid (MongoDB + Jikan + CDN)');
-  return 'hybrid';
+  // Por defecto usar CDN
+  console.log('🔧 Usando CDN como fuente principal');
+  return 'cdn';
 }
 
-// Función para obtener anime por ID
+// Función para obtener anime por ID (optimizada para CDN)
 export async function getAnimeByIdManager(animeId, userId = null) {
   const source = getDataSource();
   console.log(`🔍 Obteniendo anime ${animeId} desde: ${source}`);
 
   try {
     switch (source) {
-      case 'mongodb':
-        return await getAnimeFromMongoDB(animeId);
-      
       case 'jikan':
         return await getAnimeFromJikanWithSupabase(animeId, userId);
       
-      case 'cdn':
-        return await getAnimeFromCDN(animeId, userId);
-      
       case 'hybrid':
-      default:
         return await getAnimeHybrid(animeId, userId);
+      
+      case 'cdn':
+      default:
+        return await getAnimeFromCDN(animeId, userId);
     }
   } catch (error) {
     console.error(`❌ Error obteniendo anime ${animeId}:`, error.message);
     
-    // Fallback: intentar con otras fuentes
-    if (source === 'mongodb') {
-      console.log('🔄 Fallback a CDN...');
-      try {
-        return await getAnimeFromCDN(animeId, userId);
-      } catch (cdnError) {
-        console.log('🔄 Fallback a Jikan...');
-        return await getAnimeFromJikanWithSupabase(animeId, userId);
-      }
-    } else if (source === 'jikan') {
-      console.log('🔄 Fallback a CDN...');
-      try {
-        return await getAnimeFromCDN(animeId, userId);
-      } catch (cdnError) {
-        console.log('🔄 Fallback a MongoDB...');
-        return await getAnimeFromMongoDB(animeId);
-      }
-    } else if (source === 'cdn') {
+    // Fallback: CDN -> Jikan
+    if (source === 'cdn') {
       console.log('🔄 Fallback a Jikan...');
       try {
         return await getAnimeFromJikanWithSupabase(animeId, userId);
       } catch (jikanError) {
-        console.log('🔄 Fallback a MongoDB...');
-        return await getAnimeFromMongoDB(animeId);
+        console.error('❌ Fallback a Jikan también falló:', jikanError.message);
+        throw error;
+      }
+    } else if (source === 'hybrid') {
+      console.log('🔄 Fallback a Jikan...');
+      try {
+        return await getAnimeFromJikanWithSupabase(animeId, userId);
+      } catch (jikanError) {
+        console.error('❌ Fallback a Jikan también falló:', jikanError.message);
+        throw error;
       }
     }
     
@@ -153,53 +115,42 @@ export async function getAnimeByIdManager(animeId, userId = null) {
   }
 }
 
-// Función para buscar anime
+// Función para buscar anime (optimizada para CDN)
 export async function searchAnimeManager(query, page = 1, limit = 12) {
   const source = getDataSource();
   console.log(`🔍 Buscando "${query}" desde: ${source}`);
 
   try {
     switch (source) {
-      case 'mongodb':
-        return await searchAnimeFromMongoDB(query, page, limit);
-      
       case 'jikan':
         return await searchAnimeFromJikanOnly(query, page, limit);
       
-      case 'cdn':
-        return await searchAnimeFromCDN(query, page, limit);
-      
       case 'hybrid':
-      default:
         return await searchAnimeHybrid(query, page, limit);
+      
+      case 'cdn':
+      default:
+        return await searchAnimeFromCDN(query, page, limit);
     }
   } catch (error) {
     console.error(`❌ Error buscando "${query}":`, error.message);
     
-    // Fallback
-    if (source === 'mongodb') {
-      console.log('🔄 Fallback a CDN...');
-      try {
-        return await searchAnimeFromCDN(query, page, limit);
-      } catch (cdnError) {
-        console.log('🔄 Fallback a Jikan...');
-        return await searchAnimeFromJikanOnly(query, page, limit);
-      }
-    } else if (source === 'jikan') {
-      console.log('🔄 Fallback a CDN...');
-      try {
-        return await searchAnimeFromCDN(query, page, limit);
-      } catch (cdnError) {
-        console.log('🔄 Fallback a MongoDB...');
-        return await searchAnimeFromMongoDB(query, page, limit);
-      }
-    } else if (source === 'cdn') {
+    // Fallback: CDN -> Jikan
+    if (source === 'cdn') {
       console.log('🔄 Fallback a Jikan...');
       try {
         return await searchAnimeFromJikanOnly(query, page, limit);
       } catch (jikanError) {
-        console.log('🔄 Fallback a MongoDB...');
-        return await searchAnimeFromMongoDB(query, page, limit);
+        console.error('❌ Fallback a Jikan también falló:', jikanError.message);
+        throw error;
+      }
+    } else if (source === 'hybrid') {
+      console.log('🔄 Fallback a Jikan...');
+      try {
+        return await searchAnimeFromJikanOnly(query, page, limit);
+      } catch (jikanError) {
+        console.error('❌ Fallback a Jikan también falló:', jikanError.message);
+        throw error;
       }
     }
     
@@ -207,80 +158,107 @@ export async function searchAnimeManager(query, page = 1, limit = 12) {
   }
 }
 
-// Función para obtener animes top
+// Función para obtener animes top (optimizada para CDN)
 export async function getTopAnimeManager() {
   const source = getDataSource();
-  console.log(`🏆 Obteniendo top anime desde: ${source}`);
+  console.log(`🔍 Obteniendo animes top desde: ${source}`);
 
   try {
     switch (source) {
-      case 'mongodb':
-        return await getTopAnimeFromMongoDB();
-      
       case 'jikan':
         return await getTopAnimeFromJikan();
       
-      case 'cdn':
-        return await getTopAnimeFromCDN();
-      
       case 'hybrid':
-      default:
         return await getTopAnimeHybrid();
+      
+      case 'cdn':
+      default:
+        return await getTopAnimeFromCDN();
     }
   } catch (error) {
-    console.error('❌ Error obteniendo top anime:', error.message);
+    console.error('❌ Error obteniendo animes top:', error.message);
+    
+    // Fallback: CDN -> Jikan
+    if (source === 'cdn') {
+      console.log('🔄 Fallback a Jikan...');
+      try {
+        return await getTopAnimeFromJikan();
+      } catch (jikanError) {
+        console.error('❌ Fallback a Jikan también falló:', jikanError.message);
+        throw error;
+      }
+    }
+    
     throw error;
   }
 }
 
-// Función para obtener animes recientes
+// Función para obtener animes recientes (optimizada para CDN)
 export async function getRecentAnimeManager() {
   const source = getDataSource();
-  console.log(`🆕 Obteniendo animes recientes desde: ${source}`);
+  console.log(`🔍 Obteniendo animes recientes desde: ${source}`);
 
   try {
     switch (source) {
-      case 'mongodb':
-        return await getRecentAnimeFromMongoDB();
-      
       case 'jikan':
         return await getRecentAnimeFromJikan();
       
-      case 'cdn':
-        return await getRecentAnimeFromCDN();
-      
       case 'hybrid':
-      default:
         return await getRecentAnimeHybrid();
+      
+      case 'cdn':
+      default:
+        return await getRecentAnimeFromCDN();
     }
   } catch (error) {
     console.error('❌ Error obteniendo animes recientes:', error.message);
+    
+    // Fallback: CDN -> Jikan
+    if (source === 'cdn') {
+      console.log('🔄 Fallback a Jikan...');
+      try {
+        return await getRecentAnimeFromJikan();
+      } catch (jikanError) {
+        console.error('❌ Fallback a Jikan también falló:', jikanError.message);
+        throw error;
+      }
+    }
+    
     throw error;
   }
 }
 
-// Función para obtener animes destacados
+// Función para obtener animes destacados (optimizada para CDN)
 export async function getFeaturedAnimeManager() {
   const source = getDataSource();
-  console.log(`⭐ Obteniendo animes destacados desde: ${source}`);
+  console.log(`🔍 Obteniendo animes destacados desde: ${source}`);
 
   try {
     switch (source) {
-      case 'mongodb':
-        return await getFeaturedAnimeFromMongoDB();
-      
       case 'jikan':
         return await getFeaturedAnimeFromJikan();
       
-      case 'cdn':
-        return await getFeaturedAnimeFromCDN();
-      
       case 'hybrid':
-      default:
         return await getFeaturedAnimeHybrid();
+      
+      case 'cdn':
+      default:
+        return await getFeaturedAnimeFromCDN();
     }
   } catch (error) {
     console.error('❌ Error obteniendo animes destacados:', error.message);
+    
+    // Fallback: CDN -> Jikan
+    if (source === 'cdn') {
+      console.log('🔄 Fallback a Jikan...');
+      try {
+        return await getFeaturedAnimeFromJikan();
+      } catch (jikanError) {
+        console.error('❌ Fallback a Jikan también falló:', jikanError.message);
+        throw error;
+      }
+    }
+    
     throw error;
   }
 }

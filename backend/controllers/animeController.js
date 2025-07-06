@@ -17,7 +17,7 @@ import Rating from '../services/anime/ratingModel.js';
 import mongoose from '../services/shared/mongooseClient.js';
 import axios from 'axios';
 
-// Controlador para obtener un anime por ID (usando el gestor de fuentes de datos)
+// Controlador para obtener un anime por ID (usando CDN + interacciones de MongoDB)
 export async function getAnimeById(req, res) {
   const animeId = req.params.id;
   const userId = req.user?.id || null; // Si el usuario está autenticado
@@ -30,7 +30,24 @@ export async function getAnimeById(req, res) {
   });
   
   try {
+    // Obtener datos del anime desde CDN
     const animeData = await getAnimeByIdManager(animeId, userId);
+    
+    // Si el usuario está autenticado, agregar sus interacciones
+    if (userId) {
+      const [userFavorite, userWatchlist, userRating] = await Promise.all([
+        Favorite.findOne({ userId, animeId }),
+        Watchlist.findOne({ userId, animeId }),
+        Rating.findOne({ userId, animeId })
+      ]);
+      
+      animeData.userInteractions = {
+        isFavorite: !!userFavorite,
+        inWatchlist: !!userWatchlist,
+        userRating: userRating?.rating || null
+      };
+    }
+    
     res.json(animeData);
   } catch (err) {
     console.error('Error obteniendo anime:', err);
@@ -38,7 +55,7 @@ export async function getAnimeById(req, res) {
   }
 }
 
-// Controlador para buscar animes por nombre o filtros
+// Controlador para buscar animes por nombre o filtros (usando CDN)
 export async function searchAnimeController(req, res) {
   const query = req.query.q;
   const sort = req.query.sort;
@@ -102,32 +119,40 @@ export async function searchAnimeController(req, res) {
       }
     }
     if (genre) {
-      // Por ahora, para géneros específicos usamos Jikan directamente
-      const genreMap = {
-        'action': 1, 'adventure': 2, 'cars': 3, 'comedy': 4, 'dementia': 5,
-        'demons': 6, 'mystery': 7, 'drama': 8, 'ecchi': 9, 'fantasy': 10,
-        'game': 11, 'hentai': 12, 'historical': 13, 'horror': 14, 'kids': 15,
-        'magic': 16, 'martial-arts': 17, 'mecha': 18, 'music': 19, 'parody': 20,
-        'samurai': 21, 'romance': 22, 'school': 23, 'sci-fi': 24, 'shoujo': 25,
-        'shoujo-ai': 26, 'shounen': 27, 'shounen-ai': 28, 'space': 29, 'sports': 30,
-        'super-power': 31, 'vampire': 32, 'yaoi': 33, 'yuri': 34, 'harem': 35,
-        'slice-of-life': 36, 'supernatural': 37, 'military': 38, 'police': 39,
-        'psychological': 40, 'thriller': 41, 'seinen': 42, 'josei': 43
-      };
-      const genreId = genreMap[genre.toLowerCase()];
-      if (!genreId) {
-        return res.status(400).json({ error: 'Género no válido' });
+      // Usar CDN para géneros
+      try {
+        const { getAnimesByGenre } = await import('../services/anime/cdnAnimeService.js');
+        const results = await getAnimesByGenre(genre, page, limit);
+        return res.json(results);
+      } catch (error) {
+        console.error('Error obteniendo género desde CDN:', error.message);
+        // Fallback a Jikan si falla el CDN
+        const genreMap = {
+          'action': 1, 'adventure': 2, 'cars': 3, 'comedy': 4, 'dementia': 5,
+          'demons': 6, 'mystery': 7, 'drama': 8, 'ecchi': 9, 'fantasy': 10,
+          'game': 11, 'hentai': 12, 'historical': 13, 'horror': 14, 'kids': 15,
+          'magic': 16, 'martial-arts': 17, 'mecha': 18, 'music': 19, 'parody': 20,
+          'samurai': 21, 'romance': 22, 'school': 23, 'sci-fi': 24, 'shoujo': 25,
+          'shoujo-ai': 26, 'shounen': 27, 'shounen-ai': 28, 'space': 29, 'sports': 30,
+          'super-power': 31, 'vampire': 32, 'yaoi': 33, 'yuri': 34, 'harem': 35,
+          'slice-of-life': 36, 'supernatural': 37, 'military': 38, 'police': 39,
+          'psychological': 40, 'thriller': 41, 'seinen': 42, 'josei': 43
+        };
+        const genreId = genreMap[genre.toLowerCase()];
+        if (!genreId) {
+          return res.status(400).json({ error: 'Género no válido' });
+        }
+        const response = await axios.get(`https://api.jikan.moe/v4/anime?genres=${genreId}&limit=24`);
+        const data = response.data;
+        const results = data.data.map(anime => ({
+          ...anime,
+          images: normalizeImages(anime.images) || anime.images
+        }));
+        return res.json({ 
+          pagination: { current_page: page, items: { count: results.length } },
+          data: results 
+        });
       }
-      const response = await axios.get(`https://api.jikan.moe/v4/anime?genres=${genreId}&limit=24`);
-      const data = response.data;
-      const results = data.data.map(anime => ({
-        ...anime,
-        images: normalizeImages(anime.images) || anime.images
-      }));
-      return res.json({ 
-        pagination: { current_page: page, items: { count: results.length } },
-        data: results 
-      });
     }
     if (!query) return res.status(400).json({ error: 'Falta el parámetro de búsqueda' });
     
@@ -139,7 +164,7 @@ export async function searchAnimeController(req, res) {
   }
 }
 
-// Controlador para obtener la lista de géneros
+// Controlador para obtener la lista de géneros (usando CDN)
 export async function getGenresController(req, res) {
   // Headers para evitar cache
   res.set({
@@ -149,21 +174,28 @@ export async function getGenresController(req, res) {
   });
   
   try {
-    // Por ahora usamos Jikan directamente para géneros
-    const response = await axios.get('https://api.jikan.moe/v4/genres/anime');
-    const data = response.data;
+    // Usar CDN para géneros
+    const { getGenresFromCDN } = await import('../services/anime/cdnAnimeService.js');
+    const genres = await getGenresFromCDN();
     
-    // Enriquecer géneros con imágenes y descripciones
-    const enrichedGenres = enrichGenresWithImages(data.data);
-    
-    res.json({ genres: enrichedGenres });
+    if (genres && genres.length > 0) {
+      // Enriquecer géneros con imágenes y descripciones
+      const enrichedGenres = enrichGenresWithImages(genres);
+      res.json({ genres: enrichedGenres });
+    } else {
+      // Fallback a Jikan si no hay géneros en CDN
+      const response = await axios.get('https://api.jikan.moe/v4/genres/anime');
+      const data = response.data;
+      const enrichedGenres = enrichGenresWithImages(data.data);
+      res.json({ genres: enrichedGenres });
+    }
   } catch (err) {
     console.error('💥 Error en getGenresController:', err);
     res.status(500).json({ error: 'Error al obtener géneros', details: err.message });
   }
 }
 
-// Controlador para obtener reviews externas de Jikan
+// Controlador para obtener reviews externas de Jikan (mantener Jikan para reviews)
 export async function getExternalReviewsController(req, res) {
   try {
     const { animeId } = req.params;
@@ -175,77 +207,91 @@ export async function getExternalReviewsController(req, res) {
   }
 }
 
-// Controlador para recomendaciones de anime
+// Controlador para recomendaciones de anime (usando CDN + interacciones de MongoDB)
 export async function getRecommendationsController(req, res) {
   try {
     let recommendations = [];
     const user = req.user;
+    
     if (user) {
-      // Obtener favoritos, watchlist y ratings del usuario
+      // Obtener favoritos, watchlist y ratings del usuario desde MongoDB
       const [favoritos, watchlist, ratings] = await Promise.all([
         Favorite.find({ userId: user.id }),
         Watchlist.find({ userId: user.id }),
         Rating.find({ userId: user.id })
       ]);
+      
       // Extraer géneros de todos los animes
       const generos = new Set();
       favoritos.forEach(a => a.genres?.forEach(g => generos.add(g)));
       watchlist.forEach(a => a.genres?.forEach(g => generos.add(g)));
       ratings.forEach(a => a.genres?.forEach(g => generos.add(g)));
-      // Si hay géneros favoritos, recomendar animes por esos géneros
+      
+      // Si hay géneros favoritos, recomendar animes por esos géneros desde CDN
       if (generos.size > 0) {
-        let animesPorGenero = [];
-        for (const genero of generos) {
-          // Usar Jikan directamente para recomendaciones por género
-          const genreMap = {
-            'action': 1, 'adventure': 2, 'cars': 3, 'comedy': 4, 'dementia': 5,
-            'demons': 6, 'mystery': 7, 'drama': 8, 'ecchi': 9, 'fantasy': 10,
-            'game': 11, 'hentai': 12, 'historical': 13, 'horror': 14, 'kids': 15,
-            'magic': 16, 'martial-arts': 17, 'mecha': 18, 'music': 19, 'parody': 20,
-            'samurai': 21, 'romance': 22, 'school': 23, 'sci-fi': 24, 'shoujo': 25,
-            'shoujo-ai': 26, 'shounen': 27, 'shounen-ai': 28, 'space': 29, 'sports': 30,
-            'super-power': 31, 'vampire': 32, 'yaoi': 33, 'yuri': 34, 'harem': 35,
-            'slice-of-life': 36, 'supernatural': 37, 'military': 38, 'police': 39,
-            'psychological': 40, 'thriller': 41, 'seinen': 42, 'josei': 43
-          };
-          const genreId = genreMap[genero.toLowerCase()];
-          if (genreId) {
-            try {
-              const response = await axios.get(`https://api.jikan.moe/v4/anime?genres=${genreId}&limit=6`);
+        try {
+          const { getAnimesByGenre } = await import('../services/anime/cdnAnimeService.js');
+          let animesPorGenero = [];
+          
+          for (const genero of generos) {
+            const animes = await getAnimesByGenre(genero, 1, 5);
+            if (animes.data) {
+              animesPorGenero.push(...animes.data);
+            }
+          }
+          
+          // Mezclar y limitar recomendaciones
+          recommendations = animesPorGenero
+            .sort(() => Math.random() - 0.5)
+            .slice(0, 10);
+        } catch (error) {
+          console.error('Error obteniendo recomendaciones desde CDN:', error);
+          // Fallback a Jikan
+          for (const genero of generos) {
+            const genreMap = {
+              'action': 1, 'adventure': 2, 'cars': 3, 'comedy': 4, 'dementia': 5,
+              'demons': 6, 'mystery': 7, 'drama': 8, 'ecchi': 9, 'fantasy': 10,
+              'game': 11, 'hentai': 12, 'historical': 13, 'horror': 14, 'kids': 15,
+              'magic': 16, 'martial-arts': 17, 'mecha': 18, 'music': 19, 'parody': 20,
+              'samurai': 21, 'romance': 22, 'school': 23, 'sci-fi': 24, 'shoujo': 25,
+              'shoujo-ai': 26, 'shounen': 27, 'shounen-ai': 28, 'space': 29, 'sports': 30,
+              'super-power': 31, 'vampire': 32, 'yaoi': 33, 'yuri': 34, 'harem': 35,
+              'slice-of-life': 36, 'supernatural': 37, 'military': 38, 'police': 39,
+              'psychological': 40, 'thriller': 41, 'seinen': 42, 'josei': 43
+            };
+            const genreId = genreMap[genero.toLowerCase()];
+            if (genreId) {
+              const response = await axios.get(`https://api.jikan.moe/v4/anime?genres=${genreId}&limit=5`);
               const data = response.data;
-              animesPorGenero = animesPorGenero.concat(data.data);
-            } catch (err) {
-              // Omitir el error de este género y continuar
-              continue;
+              const results = data.data.map(anime => ({
+                ...anime,
+                images: normalizeImages(anime.images) || anime.images
+              }));
+              recommendations.push(...results);
             }
           }
         }
-        // Quitar duplicados por id
-        const vistos = new Set();
-        recommendations = animesPorGenero.filter(a => {
-          if (vistos.has(a.mal_id)) return false;
-          vistos.add(a.mal_id);
-          return true;
-        });
       }
     }
-    // Si no hay usuario o no hay recomendaciones personalizadas, mezclar populares, destacados y recientes
-    if (!recommendations || recommendations.length === 0) {
-      const [top, featured, recent] = await Promise.all([
-        getTopAnimeManager(),
-        getFeaturedAnimeManager(),
-        getRecentAnimeManager()
-      ]);
-      // Mezclar y quitar duplicados
-      const todos = [...top, ...featured, ...recent];
-      const vistos = new Set();
-      recommendations = todos.filter(a => {
-        if (vistos.has(a.mal_id)) return false;
-        vistos.add(a.mal_id);
-        return true;
-      });
+    
+    // Si no hay recomendaciones personalizadas, usar populares desde CDN
+    if (recommendations.length === 0) {
+      try {
+        const { getTopAnimesFromCDN } = await import('../services/anime/cdnAnimeService.js');
+        recommendations = await getTopAnimesFromCDN(10);
+      } catch (error) {
+        console.error('Error obteniendo animes populares desde CDN:', error);
+        // Fallback a Jikan
+        const response = await axios.get('https://api.jikan.moe/v4/top/anime?limit=10');
+        const data = response.data;
+        recommendations = data.data.map(anime => ({
+          ...anime,
+          images: normalizeImages(anime.images) || anime.images
+        }));
+      }
     }
-    res.json({ results: recommendations });
+    
+    res.json({ recommendations: recommendations.slice(0, 10) });
   } catch (err) {
     console.error('Error en recomendaciones:', err);
     res.status(500).json({ error: 'Error al obtener recomendaciones' });

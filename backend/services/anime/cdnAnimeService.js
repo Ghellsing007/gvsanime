@@ -311,31 +311,18 @@ export async function getAnimesBySeason(year, season, page = 1, limit = 24) {
   await ensureDataLoaded();
   
   const seasonMap = {
-    'spring': 'spring',
-    'summer': 'summer', 
-    'fall': 'fall',
-    'winter': 'winter'
+    'spring': 'Spring',
+    'summer': 'Summer', 
+    'fall': 'Fall',
+    'winter': 'Winter'
   };
   
-  const seasonName = seasonMap[season.toLowerCase()];
-  if (!seasonName) {
-    throw new Error(`Temporada no válida: ${season}`);
-  }
+  const seasonName = seasonMap[season.toLowerCase()] || season;
+  const yearInt = parseInt(year);
   
-  const filteredAnimes = animeData.filter(anime => 
-    anime.year === parseInt(year) && 
-    anime.season === seasonName
-  );
-
-  // Ordenar por score y popularidad
-  filteredAnimes.sort((a, b) => {
-    const scoreA = a.score || 0;
-    const scoreB = b.score || 0;
-    const popularityA = a.popularity || 999999;
-    const popularityB = b.popularity || 999999;
-    
-    if (scoreA !== scoreB) return scoreB - scoreA;
-    return popularityA - popularityB;
+  const filteredAnimes = animeData.filter(anime => {
+    if (!anime.year || !anime.season) return false;
+    return anime.year === yearInt && anime.season === seasonName;
   });
 
   const startIndex = (page - 1) * limit;
@@ -354,6 +341,100 @@ export async function getAnimesBySeason(year, season, page = 1, limit = 24) {
       last_visible_page: Math.ceil(filteredAnimes.length / limit)
     }
   };
+}
+
+/**
+ * Obtiene la lista de géneros únicos desde el CDN
+ */
+export async function getGenresFromCDN() {
+  await ensureDataLoaded();
+  
+  const genreMap = new Map();
+  
+  animeData.forEach(anime => {
+    if (anime.genres) {
+      anime.genres.forEach(genre => {
+        if (!genreMap.has(genre.mal_id)) {
+          genreMap.set(genre.mal_id, {
+            mal_id: genre.mal_id,
+            name: genre.name,
+            type: genre.type || 'anime',
+            url: genre.url
+          });
+        }
+      });
+    }
+  });
+  
+  // Convertir a array y ordenar por nombre
+  const genres = Array.from(genreMap.values()).sort((a, b) => a.name.localeCompare(b.name));
+  
+  return genres;
+}
+
+/**
+ * Obtiene animes populares desde el CDN
+ */
+export async function getTopAnimesFromCDN(limit = 20) {
+  await ensureDataLoaded();
+  
+  // Ordenar por score y popularidad
+  const sortedAnimes = animeData
+    .filter(anime => anime.score && anime.score > 0)
+    .sort((a, b) => {
+      const scoreA = a.score || 0;
+      const scoreB = b.score || 0;
+      const popularityA = a.popularity || 999999;
+      const popularityB = b.popularity || 999999;
+      
+      if (scoreA !== scoreB) return scoreB - scoreA;
+      return popularityA - popularityB;
+    })
+    .slice(0, limit);
+  
+  return sortedAnimes;
+}
+
+/**
+ * Obtiene animes recientes desde el CDN
+ */
+export async function getRecentAnimesFromCDN(limit = 20) {
+  await ensureDataLoaded();
+  
+  // Ordenar por año de lanzamiento (más recientes primero)
+  const sortedAnimes = animeData
+    .filter(anime => anime.year && anime.year > 0)
+    .sort((a, b) => b.year - a.year)
+    .slice(0, limit);
+  
+  return sortedAnimes;
+}
+
+/**
+ * Obtiene animes destacados desde el CDN
+ */
+export async function getFeaturedAnimesFromCDN(limit = 20) {
+  await ensureDataLoaded();
+  
+  // Combinar criterios: score alto, popularidad, y año reciente
+  const sortedAnimes = animeData
+    .filter(anime => anime.score && anime.score >= 7.5)
+    .sort((a, b) => {
+      const scoreA = a.score || 0;
+      const scoreB = b.score || 0;
+      const popularityA = a.popularity || 999999;
+      const popularityB = b.popularity || 999999;
+      const yearA = a.year || 0;
+      const yearB = b.year || 0;
+      
+      // Priorizar score, luego popularidad, luego año
+      if (scoreA !== scoreB) return scoreB - scoreA;
+      if (popularityA !== popularityB) return popularityA - popularityB;
+      return yearB - yearA;
+    })
+    .slice(0, limit);
+  
+  return sortedAnimes;
 }
 
 // Inicializar carga de datos al importar el módulo

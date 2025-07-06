@@ -1,7 +1,6 @@
 // controllers/adminController.js
-// Controlador para obtener estadísticas del sistema para el dashboard de administración
+// Controlador optimizado para CDN + Supabase + MongoDB (solo interacciones)
 
-import User from '../services/anime/userModel.js';
 import Favorite from '../services/anime/favoriteModel.js';
 import Watchlist from '../services/anime/watchlistModel.js';
 import Rating from '../services/anime/ratingModel.js';
@@ -56,7 +55,7 @@ export async function getSystemStats(req, res) {
   }
 }
 
-// Estadísticas de usuarios
+// Estadísticas de usuarios (Supabase)
 async function getUserStats() {
   const supabase = getSupabaseClient();
   
@@ -127,10 +126,11 @@ async function getUserStats() {
   }
 }
 
-// Estadísticas de anime
+// Estadísticas de anime (CDN + MongoDB para interacciones)
 async function getAnimeStats() {
   const cdnStats = getDataStats();
   
+  // Solo obtener estadísticas de interacciones de MongoDB
   const [
     totalFavorites,
     totalWatchlist,
@@ -159,12 +159,12 @@ async function getAnimeStats() {
     ratings: totalRatings,
     reviews: totalReviews,
     comments: totalComments,
-    averageRating: averageRating[0]?.avgRating?.toFixed(1) || 0,
+    averageRating: averageRating[0]?.avgRating?.toFixed(1) || '0',
     topGenres: topGenres || []
   };
 }
 
-// Estadísticas de foros
+// Estadísticas de foros (MongoDB)
 async function getForumStats() {
   const [
     totalCategories,
@@ -209,7 +209,7 @@ async function getForumStats() {
   };
 }
 
-// Estadísticas de actividad
+// Estadísticas de actividad (Supabase + MongoDB)
 async function getActivityStats() {
   const supabase = getSupabaseClient();
   const now = new Date();
@@ -232,7 +232,7 @@ async function getActivityStats() {
     const newUsers7d = allUsers ? allUsers.filter(user => new Date(user.created_at) >= last7d).length : 0;
     const newUsers30d = allUsers ? allUsers.filter(user => new Date(user.created_at) >= last30d).length : 0;
 
-    // Obtener otras estadísticas de MongoDB
+    // Obtener estadísticas de interacciones de MongoDB
     const [
       newRatings24h,
       newReviews24h,
@@ -286,7 +286,7 @@ async function getCDNStats() {
   };
 }
 
-// Actividad reciente
+// Actividad reciente (Supabase + MongoDB)
 async function getRecentActivity() {
   const supabase = getSupabaseClient();
   
@@ -302,7 +302,7 @@ async function getRecentActivity() {
       console.error('Error obteniendo usuarios recientes:', usersError);
     }
 
-    // Obtener otras actividades de MongoDB
+    // Obtener interacciones recientes de MongoDB
     const [
       recentRatings,
       recentTopics,
@@ -358,7 +358,7 @@ async function getTopGenresFromCDN() {
   }
 }
 
-// Obtener usuarios con más actividad
+// Obtener usuarios con más actividad (Supabase + MongoDB)
 export async function getTopUsers(req, res) {
   try {
     if (req.user?.role !== 'admin') {
