@@ -21,11 +21,32 @@ interface CDNStatus {
   };
 }
 
+interface Particle {
+  left: string;
+  top: string;
+  animationDelay: string;
+  animationDuration: string;
+}
+
 export default function CDNLoading({ children }: { children: React.ReactNode }) {
   const [cdnStatus, setCdnStatus] = useState<CDNStatus | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [retryCount, setRetryCount] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [particles, setParticles] = useState<Particle[]>([]);
+  const [isClient, setIsClient] = useState(false);
+
+  // Generar partículas solo en el cliente para evitar problemas de hidratación
+  useEffect(() => {
+    setIsClient(true);
+    const newParticles = [...Array(6)].map(() => ({
+      left: `${Math.random() * 100}%`,
+      top: `${Math.random() * 100}%`,
+      animationDelay: `${Math.random() * 2}s`,
+      animationDuration: `${2 + Math.random() * 2}s`
+    }));
+    setParticles(newParticles);
+  }, []);
 
   const checkCDNStatus = async () => {
     try {
@@ -64,21 +85,23 @@ export default function CDNLoading({ children }: { children: React.ReactNode }) 
         <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-accent/10 to-secondary/20 animate-pulse"></div>
         <div className="absolute inset-0 bg-gradient-to-tl from-background via-transparent to-background"></div>
         
-        {/* Partículas flotantes */}
-        <div className="absolute inset-0 overflow-hidden">
-          {[...Array(6)].map((_, i) => (
-            <div
-              key={i}
-              className="absolute w-2 h-2 bg-primary/30 rounded-full animate-bounce"
-              style={{
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-                animationDelay: `${Math.random() * 2}s`,
-                animationDuration: `${2 + Math.random() * 2}s`
-              }}
-            />
-          ))}
-        </div>
+        {/* Partículas flotantes - solo renderizar en cliente */}
+        {isClient && (
+          <div className="absolute inset-0 overflow-hidden">
+            {particles.map((particle, i) => (
+              <div
+                key={i}
+                className="absolute w-2 h-2 bg-primary/30 rounded-full animate-bounce"
+                style={{
+                  left: particle.left,
+                  top: particle.top,
+                  animationDelay: particle.animationDelay,
+                  animationDuration: particle.animationDuration
+                }}
+              />
+            ))}
+          </div>
+        )}
 
         <Card className="w-full max-w-lg bg-card/80 backdrop-blur-xl border-border/50 shadow-2xl relative z-10">
           <CardContent className="p-8 text-center">
