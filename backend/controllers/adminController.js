@@ -11,6 +11,7 @@ import ForumCategory from '../services/anime/forumCategoryModel.js';
 import ForumTopic from '../services/anime/forumTopicModel.js';
 import ForumPost from '../services/anime/forumPostModel.js';
 import { getDataStats } from '../services/anime/cdnAnimeService.js';
+import getSupabaseClient from '../services/shared/supabaseClient.js';
 
 // Obtener estadísticas generales del sistema
 export async function getSystemStats(req, res) {
@@ -57,39 +58,73 @@ export async function getSystemStats(req, res) {
 
 // Estadísticas de usuarios
 async function getUserStats() {
-  const [
-    totalUsers,
-    usersThisMonth,
-    usersThisWeek,
-    usersToday,
-    usersByRole,
-    activeUsers,
-    verifiedUsers
-  ] = await Promise.all([
-    User.countDocuments(),
-    User.countDocuments({ createdAt: { $gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) } }),
-    User.countDocuments({ createdAt: { $gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) } }),
-    User.countDocuments({ createdAt: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) } }),
-    User.aggregate([
-      { $group: { _id: '$role', count: { $sum: 1 } } }
-    ]),
-    User.countDocuments({ lastLogin: { $gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) } }),
-    User.countDocuments({ emailVerified: true })
-  ]);
+  const supabase = getSupabaseClient();
+  
+  try {
+    // Obtener todos los usuarios
+    const { data: allUsers, error: allUsersError } = await supabase
+      .from('users')
+      .select('*');
+    
+    if (allUsersError) {
+      console.error('Error obteniendo usuarios:', allUsersError);
+      return {
+        total: 0,
+        thisMonth: 0,
+        thisWeek: 0,
+        today: 0,
+        byRole: {},
+        active: 0,
+        verified: 0,
+        verificationRate: '0'
+      };
+    }
 
-  return {
-    total: totalUsers,
-    thisMonth: usersThisMonth,
-    thisWeek: usersThisWeek,
-    today: usersToday,
-    byRole: usersByRole.reduce((acc, item) => {
-      acc[item._id] = item.count;
-      return acc;
-    }, {}),
-    active: activeUsers,
-    verified: verifiedUsers,
-    verificationRate: totalUsers > 0 ? ((verifiedUsers / totalUsers) * 100).toFixed(1) : 0
-  };
+    const now = new Date();
+    const lastMonth = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const lastWeek = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const lastDay = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    const lastWeekLogin = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+    // Calcular estadísticas
+    const totalUsers = allUsers.length;
+    const usersThisMonth = allUsers.filter(user => new Date(user.created_at) >= lastMonth).length;
+    const usersThisWeek = allUsers.filter(user => new Date(user.created_at) >= lastWeek).length;
+    const usersToday = allUsers.filter(user => new Date(user.created_at) >= lastDay).length;
+    const activeUsers = allUsers.filter(user => user.last_login && new Date(user.last_login) >= lastWeekLogin).length;
+    const verifiedUsers = allUsers.filter(user => user.email_verified).length;
+
+    // Calcular usuarios por rol
+    const usersByRole = {};
+    allUsers.forEach(user => {
+      const role = user.role || 'user';
+      usersByRole[role] = (usersByRole[role] || 0) + 1;
+    });
+
+    return {
+      total: totalUsers,
+      thisMonth: usersThisMonth,
+      thisWeek: usersThisWeek,
+      today: usersToday,
+      byRole: usersByRole,
+      active: activeUsers,
+      verified: verifiedUsers,
+      verificationRate: totalUsers > 0 ? ((verifiedUsers / totalUsers) * 100).toFixed(1) : '0'
+    };
+
+  } catch (error) {
+    console.error('Error en getUserStats:', error);
+    return {
+      total: 0,
+      thisMonth: 0,
+      thisWeek: 0,
+      today: 0,
+      byRole: {},
+      active: 0,
+      verified: 0,
+      verificationRate: '0'
+    };
+  }
 }
 
 // Estadísticas de anime
@@ -176,47 +211,67 @@ async function getForumStats() {
 
 // Estadísticas de actividad
 async function getActivityStats() {
+  const supabase = getSupabaseClient();
   const now = new Date();
   const last24h = new Date(now.getTime() - 24 * 60 * 60 * 1000);
   const last7d = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
   const last30d = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
-  const [
-    newUsers24h,
-    newUsers7d,
-    newUsers30d,
-    newRatings24h,
-    newReviews24h,
-    newTopics24h,
-    newPosts24h,
-    newFavorites24h
-  ] = await Promise.all([
-    User.countDocuments({ createdAt: { $gte: last24h } }),
-    User.countDocuments({ createdAt: { $gte: last7d } }),
-    User.countDocuments({ createdAt: { $gte: last30d } }),
-    Rating.countDocuments({ createdAt: { $gte: last24h } }),
-    Review.countDocuments({ createdAt: { $gte: last24h } }),
-    ForumTopic.countDocuments({ createdAt: { $gte: last24h } }),
-    ForumPost.countDocuments({ createdAt: { $gte: last24h } }),
-    Favorite.countDocuments({ createdAt: { $gte: last24h } })
-  ]);
-
-  return {
-    last24h: {
-      users: newUsers24h,
-      ratings: newRatings24h,
-      reviews: newReviews24h,
-      topics: newTopics24h,
-      posts: newPosts24h,
-      favorites: newFavorites24h
-    },
-    last7d: {
-      users: newUsers7d
-    },
-    last30d: {
-      users: newUsers30d
+  try {
+    // Obtener usuarios de Supabase
+    const { data: allUsers, error: usersError } = await supabase
+      .from('users')
+      .select('created_at');
+    
+    if (usersError) {
+      console.error('Error obteniendo usuarios para actividad:', usersError);
     }
-  };
+
+    // Calcular usuarios por período
+    const newUsers24h = allUsers ? allUsers.filter(user => new Date(user.created_at) >= last24h).length : 0;
+    const newUsers7d = allUsers ? allUsers.filter(user => new Date(user.created_at) >= last7d).length : 0;
+    const newUsers30d = allUsers ? allUsers.filter(user => new Date(user.created_at) >= last30d).length : 0;
+
+    // Obtener otras estadísticas de MongoDB
+    const [
+      newRatings24h,
+      newReviews24h,
+      newTopics24h,
+      newPosts24h,
+      newFavorites24h
+    ] = await Promise.all([
+      Rating.countDocuments({ createdAt: { $gte: last24h } }),
+      Review.countDocuments({ createdAt: { $gte: last24h } }),
+      ForumTopic.countDocuments({ createdAt: { $gte: last24h } }),
+      ForumPost.countDocuments({ createdAt: { $gte: last24h } }),
+      Favorite.countDocuments({ createdAt: { $gte: last24h } })
+    ]);
+
+    return {
+      last24h: {
+        users: newUsers24h,
+        ratings: newRatings24h,
+        reviews: newReviews24h,
+        topics: newTopics24h,
+        posts: newPosts24h,
+        favorites: newFavorites24h
+      },
+      last7d: {
+        users: newUsers7d
+      },
+      last30d: {
+        users: newUsers30d
+      }
+    };
+
+  } catch (error) {
+    console.error('Error en getActivityStats:', error);
+    return {
+      last24h: { users: 0, ratings: 0, reviews: 0, topics: 0, posts: 0, favorites: 0 },
+      last7d: { users: 0 },
+      last30d: { users: 0 }
+    };
+  }
 }
 
 // Estadísticas del CDN
@@ -233,24 +288,47 @@ async function getCDNStats() {
 
 // Actividad reciente
 async function getRecentActivity() {
-  const [
-    recentUsers,
-    recentRatings,
-    recentTopics,
-    recentPosts
-  ] = await Promise.all([
-    User.find().sort({ createdAt: -1 }).limit(5).select('username email role createdAt'),
-    Rating.find().sort({ createdAt: -1 }).limit(5).populate('userId', 'username'),
-    ForumTopic.find().sort({ createdAt: -1 }).limit(5).populate('user', 'username'),
-    ForumPost.find().sort({ createdAt: -1 }).limit(5).populate('user', 'username')
-  ]);
+  const supabase = getSupabaseClient();
+  
+  try {
+    // Obtener usuarios recientes de Supabase
+    const { data: recentUsers, error: usersError } = await supabase
+      .from('users')
+      .select('username, email, role, created_at')
+      .order('created_at', { ascending: false })
+      .limit(5);
 
-  return {
-    users: recentUsers,
-    ratings: recentRatings,
-    topics: recentTopics,
-    posts: recentPosts
-  };
+    if (usersError) {
+      console.error('Error obteniendo usuarios recientes:', usersError);
+    }
+
+    // Obtener otras actividades de MongoDB
+    const [
+      recentRatings,
+      recentTopics,
+      recentPosts
+    ] = await Promise.all([
+      Rating.find().sort({ createdAt: -1 }).limit(5).select('rating createdAt userId'),
+      ForumTopic.find().sort({ createdAt: -1 }).limit(5).select('title createdAt'),
+      ForumPost.find().sort({ createdAt: -1 }).limit(5).select('content createdAt')
+    ]);
+
+    return {
+      users: recentUsers || [],
+      ratings: recentRatings,
+      topics: recentTopics,
+      posts: recentPosts
+    };
+
+  } catch (error) {
+    console.error('Error en getRecentActivity:', error);
+    return {
+      users: [],
+      ratings: [],
+      topics: [],
+      posts: []
+    };
+  }
 }
 
 // Obtener géneros más populares desde el CDN
@@ -287,63 +365,47 @@ export async function getTopUsers(req, res) {
       return res.status(403).json({ error: 'Acceso denegado' });
     }
 
-    const topUsers = await User.aggregate([
-      {
-        $lookup: {
-          from: 'ratings',
-          localField: '_id',
-          foreignField: 'userId',
-          as: 'ratings'
-        }
-      },
-      {
-        $lookup: {
-          from: 'favorites',
-          localField: '_id',
-          foreignField: 'userId',
-          as: 'favorites'
-        }
-      },
-      {
-        $lookup: {
-          from: 'forumtopics',
-          localField: '_id',
-          foreignField: 'user',
-          as: 'topics'
-        }
-      },
-      {
-        $lookup: {
-          from: 'forumposts',
-          localField: '_id',
-          foreignField: 'user',
-          as: 'posts'
-        }
-      },
-      {
-        $project: {
-          username: 1,
-          email: 1,
-          role: 1,
-          createdAt: 1,
-          lastLogin: 1,
-          ratingCount: { $size: '$ratings' },
-          favoriteCount: { $size: '$favorites' },
-          topicCount: { $size: '$topics' },
-          postCount: { $size: '$posts' },
-          totalActivity: {
-            $add: [
-              { $size: '$ratings' },
-              { $size: '$favorites' },
-              { $size: '$topics' },
-              { $size: '$posts' }
-            ]
-          }
-        }
-      },
-      { $sort: { totalActivity: -1 } },
-      { $limit: 10 }
-    ]);
+    const supabase = getSupabaseClient();
+
+    // Obtener usuarios de Supabase
+    const { data: users, error: usersError } = await supabase
+      .from('users')
+      .select('id, username, email, role, created_at, last_login');
+    
+    if (usersError) {
+      console.error('Error obteniendo usuarios:', usersError);
+      return res.status(500).json({ error: 'Error obteniendo usuarios' });
+    }
+
+    // Obtener estadísticas de actividad para cada usuario
+    const usersWithStats = await Promise.all(
+      users.map(async (user) => {
+        const [ratingCount, favoriteCount, topicCount, postCount] = await Promise.all([
+          Rating.countDocuments({ userId: user.id }),
+          Favorite.countDocuments({ userId: user.id }),
+          ForumTopic.countDocuments({ user: user.id }),
+          ForumPost.countDocuments({ user: user.id })
+        ]);
+
+        return {
+          username: user.username,
+          email: user.email,
+          role: user.role,
+          createdAt: user.created_at,
+          lastLogin: user.last_login,
+          ratingCount,
+          favoriteCount,
+          topicCount,
+          postCount,
+          totalActivity: ratingCount + favoriteCount + topicCount + postCount
+        };
+      })
+    );
+
+    // Ordenar por actividad total y tomar los top 10
+    const topUsers = usersWithStats
+      .sort((a, b) => b.totalActivity - a.totalActivity)
+      .slice(0, 10);
 
     res.json({
       success: true,

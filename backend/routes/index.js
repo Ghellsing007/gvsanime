@@ -8,6 +8,7 @@ import forumsRoutes from './forums.js';
 import animeRoutes from './anime.js';
 import authRoutes from './auth.js';
 import backupRoutes from './backup.js';
+import adminRoutes from './admin.js';
 // import reviewsRoutes from './reviews.js';
 // ...otros imports
 
@@ -22,6 +23,7 @@ router.use('/forums', forumsRoutes);
 router.use('/anime', animeRoutes);
 router.use('/auth', authRoutes);
 router.use('/backup', backupRoutes);
+router.use('/admin', adminRoutes);
 // router.use('/reviews', reviewsRoutes);
 // ...otros recursos
 
