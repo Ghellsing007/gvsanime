@@ -1,1 +1,1 @@
-export const SITE_NAME = "Anime"; 
+export const SITE_NAME = "GVSanime"; 
