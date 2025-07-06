@@ -358,10 +358,17 @@ export async function getGenresFromCDN() {
   await ensureDataLoaded();
   
   const genreMap = new Map();
+  const genreCounts = new Map();
   
+  // Contar animes por género
   animeData.forEach(anime => {
     if (anime.genres) {
       anime.genres.forEach(genre => {
+        // Contar animes por género
+        const currentCount = genreCounts.get(genre.mal_id) || 0;
+        genreCounts.set(genre.mal_id, currentCount + 1);
+        
+        // Agregar información del género si no existe
         if (!genreMap.has(genre.mal_id)) {
           genreMap.set(genre.mal_id, {
             mal_id: genre.mal_id,
@@ -374,8 +381,14 @@ export async function getGenresFromCDN() {
     }
   });
   
-  // Convertir a array y ordenar por nombre
-  const genres = Array.from(genreMap.values()).sort((a, b) => a.name.localeCompare(b.name));
+  // Combinar información del género con el contador
+  const genres = Array.from(genreMap.values()).map(genre => ({
+    ...genre,
+    count: genreCounts.get(genre.mal_id) || 0
+  }));
+  
+  // Ordenar por cantidad de animes (más populares primero)
+  genres.sort((a, b) => b.count - a.count);
   
   return genres;
 }
