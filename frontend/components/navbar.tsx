@@ -168,6 +168,29 @@ export default function Navbar() {
               </Link>
             ))}
 
+            {/* Cambio de tema en móvil */}
+            <div className="flex items-center gap-2 px-3 py-2">
+              <span className="text-sm">Tema:</span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+                className="flex items-center gap-2"
+              >
+                {mounted && theme === "light" ? (
+                  <>
+                    <Sun className="h-4 w-4" />
+                    <span className="text-sm">Claro</span>
+                  </>
+                ) : (
+                  <>
+                    <Moon className="h-4 w-4" />
+                    <span className="text-sm">Oscuro</span>
+                  </>
+                )}
+              </Button>
+            </div>
+
             {!authLoading && !isAuthenticated && (
               <div className="space-y-2">
                 <Button variant="ghost" className="w-full justify-start" asChild>

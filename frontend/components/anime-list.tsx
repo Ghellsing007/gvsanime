@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Loader2, Search, ChevronLeft, ChevronRight } from "lucide-react"
 import { RetryButton } from "@/components/ui/retry-button"
+import { LoadingSpinner, AnimeListSkeleton } from "@/components/ui/loading-spinner"
 import api from "@/lib/api"
 import { useSearchParams } from "next/navigation"
 import AnimeSearchAutocomplete from "@/components/AnimeSearchAutocomplete"
@@ -201,29 +202,36 @@ export default function AnimeList({ initialPage = 1, initialLimit = 15 }: AnimeL
         </div>
       )}
 
+      {/* Mostrar skeleton mientras carga */}
+      {loading && animes.length === 0 && (
+        <AnimeListSkeleton count={15} />
+      )}
+
       {/* Cuadrícula de 3 filas × 5 columnas */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 mb-8">
-        {uniqueAnimes.map((anime, index) => (
-          <motion.div
-            key={anime.mal_id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.05 }}
-          >
-            <AnimeCard
-              id={anime.mal_id}
-              title={anime.title}
-              images={anime.images}
-              score={anime.score}
-              episodes={anime.episodes}
-              genres={anime.genres.map((g) => g.name)}
-              year={anime.year}
-              season={anime.season}
-              variant="compact"
-            />
-          </motion.div>
-        ))}
-      </div>
+      {!loading && (
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 mb-8">
+          {uniqueAnimes.map((anime, index) => (
+            <motion.div
+              key={anime.mal_id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.05 }}
+            >
+              <AnimeCard
+                id={anime.mal_id}
+                title={anime.title}
+                images={anime.images}
+                score={anime.score}
+                episodes={anime.episodes}
+                genres={anime.genres.map((g) => g.name)}
+                year={anime.year}
+                season={anime.season}
+                variant="compact"
+              />
+            </motion.div>
+          ))}
+        </div>
+      )}
 
       {/* Navegación de páginas en la parte inferior */}
       {totalPages > 1 && (
@@ -256,9 +264,10 @@ export default function AnimeList({ initialPage = 1, initialLimit = 15 }: AnimeL
         </div>
       )}
 
-      {loading && (
+      {/* Loading spinner para búsquedas */}
+      {searching && (
         <div className="flex justify-center my-8">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <LoadingSpinner size="lg" text="Buscando animes..." />
         </div>
       )}
     </div>

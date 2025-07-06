@@ -9,6 +9,9 @@ import { motion } from "framer-motion"
 import { Heart, Star, Bookmark, Eye } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { useToast } from "@/hooks/use-toast"
+import { useFavorites } from "@/hooks/useFavorites"
+import { useWatchlist } from "@/hooks/useWatchlist"
 import { getCardImage } from "../lib/imageUtils"
 import type { AnimeImages } from "../lib/types"
 
@@ -36,8 +39,9 @@ export default function AnimeCard({
   variant = "default",
 }: AnimeCardProps) {
   const [isHovered, setIsHovered] = useState(false)
-  const [isFavorite, setIsFavorite] = useState(false)
-  const [isBookmarked, setIsBookmarked] = useState(false)
+  const { toast } = useToast()
+  const { isFavorite, toggleFavorite } = useFavorites()
+  const { isInWatchlist, toggleWatchlist } = useWatchlist()
 
   // Función helper para obtener el nombre del género
   const getGenreName = (genre: string | {mal_id: number, name: string}) => {
@@ -50,16 +54,46 @@ export default function AnimeCard({
     return genres.map(getGenreName);
   }
 
-  const toggleFavorite = (e: React.MouseEvent) => {
+  const handleToggleFavorite = async (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    setIsFavorite(!isFavorite)
+    
+    try {
+      const imageUrl = getCardImage(images)
+      await toggleFavorite(id, title, imageUrl)
+      
+      toast({
+        title: isFavorite(id) ? "Removido de favoritos" : "Agregado a favoritos",
+        description: isFavorite(id) ? `${title} fue removido de tus favoritos` : `${title} fue agregado a tus favoritos`,
+      })
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      })
+    }
   }
 
-  const toggleBookmark = (e: React.MouseEvent) => {
+  const handleToggleWatchlist = async (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    setIsBookmarked(!isBookmarked)
+    
+    try {
+      const imageUrl = getCardImage(images)
+      await toggleWatchlist(id, title, imageUrl)
+      
+      toast({
+        title: isInWatchlist(id) ? "Removido de watchlist" : "Agregado a watchlist",
+        description: isInWatchlist(id) ? `${title} fue removido de tu watchlist` : `${title} fue agregado a tu watchlist`,
+      })
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      })
+    }
   }
 
   if (variant === "compact") {
@@ -136,14 +170,11 @@ export default function AnimeCard({
                         variant="ghost"
                         size="icon"
                         className="h-8 w-8 rounded-full bg-background/50 backdrop-blur-sm hover:bg-background/80"
-                        onClick={toggleFavorite}
+                        onClick={handleToggleFavorite}
                       >
-                        <Heart className={`h-4 w-4 ${isFavorite ? "fill-red-500 text-red-500" : ""}`} />
+                        <Heart className={`h-4 w-4 ${isFavorite(id) ? "fill-red-500 text-red-500" : ""}`} />
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent className="px-2 py-1 text-xs">
-                      <p>{isFavorite ? "Unfav" : "Fav"}</p>
-                    </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
 
@@ -154,14 +185,11 @@ export default function AnimeCard({
                         variant="ghost"
                         size="icon"
                         className="h-8 w-8 rounded-full bg-background/50 backdrop-blur-sm hover:bg-background/80"
-                        onClick={toggleBookmark}
+                        onClick={handleToggleWatchlist}
                       >
-                        <Bookmark className={`h-4 w-4 ${isBookmarked ? "fill-primary text-primary" : ""}`} />
+                        <Bookmark className={`h-4 w-4 ${isInWatchlist(id) ? "fill-blue-500 text-blue-500" : ""}`} />
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent className="px-2 py-1 text-xs">
-                      <p>{isBookmarked ? "Unwatch" : "Watch"}</p>
-                    </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
               </div>
@@ -197,14 +225,11 @@ export default function AnimeCard({
                     variant="ghost"
                     size="icon"
                     className="h-8 w-8 rounded-full bg-background/50 backdrop-blur-sm hover:bg-background/80"
-                    onClick={toggleFavorite}
+                    onClick={handleToggleFavorite}
                   >
-                    <Heart className={`h-4 w-4 ${isFavorite ? "fill-red-500 text-red-500" : ""}`} />
+                    <Heart className={`h-4 w-4 ${isFavorite(id) ? "fill-red-500 text-red-500" : ""}`} />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent className="px-2 py-1 text-xs">
-                  <p>{isFavorite ? "Unfav" : "Fav"}</p>
-                </TooltipContent>
               </Tooltip>
             </TooltipProvider>
 
@@ -215,14 +240,11 @@ export default function AnimeCard({
                     variant="ghost"
                     size="icon"
                     className="h-8 w-8 rounded-full bg-background/50 backdrop-blur-sm hover:bg-background/80"
-                    onClick={toggleBookmark}
+                    onClick={handleToggleWatchlist}
                   >
-                    <Bookmark className={`h-4 w-4 ${isBookmarked ? "fill-primary text-primary" : ""}`} />
+                    <Bookmark className={`h-4 w-4 ${isInWatchlist(id) ? "fill-blue-500 text-blue-500" : ""}`} />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent className="px-2 py-1 text-xs">
-                  <p>{isBookmarked ? "Unwatch" : "Watch"}</p>
-                </TooltipContent>
               </Tooltip>
             </TooltipProvider>
           </div>
@@ -257,7 +279,7 @@ export default function AnimeCard({
         >
           <Button className="pointer-events-auto">
             <Eye className="h-4 w-4 mr-2" />
-            View Details
+            Ver Detalles
           </Button>
         </div>
       </motion.div>

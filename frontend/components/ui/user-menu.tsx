@@ -11,7 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { User, Settings, LogOut, MessageSquare, Heart, Shield } from "lucide-react"
+import { User, Settings, LogOut, MessageSquare, Heart, Shield, Bookmark } from "lucide-react"
 import Link from "next/link"
 
 interface UserMenuProps {
@@ -66,6 +66,12 @@ export function UserMenu({ user, onLogout }: UserMenuProps) {
           <Link href="/favorites" className="cursor-pointer">
             <Heart className="mr-2 h-4 w-4" />
             <span>Favoritos</span>
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link href="/watchlist" className="cursor-pointer">
+            <Bookmark className="mr-2 h-4 w-4" />
+            <span>Watchlist</span>
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>

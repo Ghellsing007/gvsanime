@@ -56,7 +56,7 @@ export default function RegisterPage() {
           router.push("/")
         }
       } else {
-        setError(result.error)
+        setError(result.error || "Error en el registro")
       }
     } catch (err) {
       setError("Error inesperado. Por favor intenta de nuevo.")
