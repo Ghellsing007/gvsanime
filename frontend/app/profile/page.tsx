@@ -4,7 +4,7 @@ import { useAuth } from "@/contexts/AuthContext"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { User, MessageSquare, Heart, Settings, LogOut, Edit, Shield } from "lucide-react"
-import { useEffect, useState } from "react"
+import { useEffect, useState, Suspense } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import AdminDashboard from "@/components/admin-dashboard"
 
@@ -12,7 +12,7 @@ function isAdminOrMod(user: { role?: string }): boolean {
   return user?.role === "admin" || user?.role === "moderator";
 }
 
-export default function ProfilePage() {
+function ProfileContent() {
   const { user, logout } = useAuth()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -102,5 +102,13 @@ export default function ProfilePage() {
         </Button>
       </div>
     </div>
+  )
+}
+
+export default function ProfilePage() {
+  return (
+    <Suspense fallback={<div className="max-w-7xl mx-auto py-10 px-4">Cargando perfil...</div>}>
+      <ProfileContent />
+    </Suspense>
   )
 } 

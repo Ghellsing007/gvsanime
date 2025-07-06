@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Loader2, UserPlus, Eye, EyeOff, Sparkles, Anime, CheckCircle } from "lucide-react"
+import { Loader2, UserPlus, Eye, EyeOff, Sparkles, CheckCircle } from "lucide-react"
 import { useAuth } from "@/contexts/AuthContext"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -97,7 +97,7 @@ export default function RegisterPage() {
         {/* Header con logo y título */}
         <div className="text-center mb-6 sm:mb-8">
           <div className="inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-secondary to-primary rounded-2xl mb-3 sm:mb-4 shadow-lg">
-            <Anime className="h-7 w-7 sm:h-8 sm:w-8 text-white" />
+            <Sparkles className="h-7 w-7 sm:h-8 sm:w-8 text-white" />
           </div>
           
           <h1 className="text-2xl sm:text-4xl font-bold bg-gradient-to-r from-secondary via-primary to-secondary bg-clip-text text-transparent mb-1 sm:mb-2">
