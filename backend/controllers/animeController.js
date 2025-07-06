@@ -4,6 +4,7 @@ import {
   getTopAnimeManager, 
   getRecentAnimeManager, 
   getFeaturedAnimeManager,
+  getRecentHighQualityAnimeManager,
   getDataSourceInfo,
   clearMongoDBCache,
   forceReloadCDN
@@ -74,7 +75,8 @@ export async function searchAnimeController(req, res) {
   
   try {
     if (featured === 'true' || sort === 'featured') {
-      const results = await getFeaturedAnimeManager();
+      // Para Hero Section, usar animes recientes de alta calidad (más nuevos primero con buen score)
+      const results = await getRecentHighQualityAnimeManager(6); // Límite de 6 para Hero Section
       return res.json({ 
         pagination: { current_page: page, items: { count: results.length } },
         data: results 
@@ -390,6 +392,44 @@ export async function getCDNStatsController(req, res) {
   } catch (err) {
     console.error('Error obteniendo estadísticas CDN:', err);
     res.status(500).json({ error: 'Error al obtener estadísticas CDN' });
+  }
+}
+
+// Controlador para obtener animes destacados limitados a 6
+export async function getFeaturedAnimeLimitedController(req, res) {
+  // Headers para evitar cache
+  res.set({
+    'Cache-Control': 'no-cache, no-store, must-revalidate',
+    'Pragma': 'no-cache',
+    'Expires': '0'
+  });
+  
+  try {
+    // Usar CDN para animes destacados limitados a 6
+    const { getFeaturedAnimesFromCDN } = await import('../services/anime/cdnAnimeService.js');
+    const results = await getFeaturedAnimesFromCDN(6);
+    
+    return res.json({ 
+      pagination: { current_page: 1, items: { count: results.length } },
+      data: results 
+    });
+  } catch (error) {
+    console.error('Error obteniendo animes destacados:', error.message);
+    // Fallback a Jikan si falla el CDN
+    try {
+      const response = await axios.get('https://api.jikan.moe/v4/top/anime?limit=6');
+      const data = response.data;
+      const results = data.data.map(anime => ({
+        ...anime,
+        images: normalizeImages(anime.images) || anime.images
+      }));
+      return res.json({ 
+        pagination: { current_page: 1, items: { count: results.length } },
+        data: results 
+      });
+    } catch (jikanError) {
+      res.status(500).json({ error: 'Error al obtener animes destacados' });
+    }
   }
 }
 

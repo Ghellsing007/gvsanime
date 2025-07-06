@@ -19,7 +19,7 @@ export default function FeaturedAnime() {
     try {
       setLoading(true)
       setError(null)
-      const res = await api.get('/anime/search?featured=true')
+      const res = await api.get('/anime/featured')
       
       // Verificar si el backend está cargando datos del CDN
       if (res.status === 503 && res.data?.status === 'loading') {
@@ -90,8 +90,8 @@ export default function FeaturedAnime() {
       <div className="flex justify-between items-center mb-6">
         <Skeleton className="h-8 w-48 rounded" />
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {[...Array(3)].map((_, i) => (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {[...Array(6)].map((_, i) => (
           <div key={i} className="relative rounded-lg overflow-visible">
             <Skeleton className="aspect-video w-full rounded-lg mb-2" />
             <div className="absolute bottom-0 left-0 right-0 p-4">
@@ -149,7 +149,7 @@ export default function FeaturedAnime() {
       </div>
 
       <motion.div
-        className="grid grid-cols-1 md:grid-cols-3 gap-6"
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
         variants={container}
         initial="hidden"
         whileInView="show"

@@ -14,7 +14,9 @@ import {
   getAnimesByGenre,
   getAnimesBySeason,
   getDataStats,
-  forceReload
+  forceReload,
+  getRecentHighQualityAnimes,
+  getFeaturedAnimesFromCDN
 } from './cdnAnimeService.js';
 import { normalizeImages } from './normalizers/jikanNormalizer.js';
 import axios from 'axios';
@@ -253,6 +255,41 @@ export async function getFeaturedAnimeManager() {
       console.log('🔄 Fallback a Jikan...');
       try {
         return await getFeaturedAnimeFromJikan();
+      } catch (jikanError) {
+        console.error('❌ Fallback a Jikan también falló:', jikanError.message);
+        throw error;
+      }
+    }
+    
+    throw error;
+  }
+}
+
+// Función para obtener animes recientes de alta calidad para Hero Section
+export async function getRecentHighQualityAnimeManager(limit = 20) {
+  const source = getDataSource();
+  console.log(`🔍 Obteniendo animes recientes de alta calidad para Hero Section desde: ${source} (límite: ${limit})`);
+
+  try {
+    switch (source) {
+      case 'jikan':
+        return await getRecentAnimeFromJikan();
+      
+      case 'hybrid':
+        return await getRecentAnimeHybrid();
+      
+      case 'cdn':
+      default:
+        return await getRecentHighQualityAnimes(limit);
+    }
+  } catch (error) {
+    console.error('❌ Error obteniendo animes recientes de alta calidad:', error.message);
+    
+    // Fallback: CDN -> Jikan
+    if (source === 'cdn') {
+      console.log('🔄 Fallback a Jikan...');
+      try {
+        return await getRecentAnimeFromJikan();
       } catch (jikanError) {
         console.error('❌ Fallback a Jikan también falló:', jikanError.message);
         throw error;
@@ -659,7 +696,7 @@ async function getRecentAnimeFromCDN() {
 
 async function getFeaturedAnimeFromCDN() {
   try {
-    const featuredAnimes = await getFeaturedAnimes(20);
+    const featuredAnimes = await getFeaturedAnimesFromCDN(20);
     return featuredAnimes;
   } catch (error) {
     console.error('Error obteniendo animes destacados desde CDN:', error.message);

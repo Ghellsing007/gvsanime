@@ -10,7 +10,8 @@ import {
   clearCacheController,
   forceReloadCDNController,
   getAnimesByGenreController,
-  getCDNStatsController
+  getCDNStatsController,
+  getFeaturedAnimeLimitedController
 } from '../controllers/animeController.js';
 import authMiddleware from '../middleware/auth.js';
 import { requireRole } from '../middleware/roles.js';
@@ -20,6 +21,9 @@ const router = express.Router();
 
 // Ruta para buscar animes por nombre (público) - Requiere CDN listo
 router.get('/search', cdnReady, searchAnimeController);
+
+// Ruta para obtener animes destacados limitados a 6 (público) - Requiere CDN listo
+router.get('/featured', cdnReady, getFeaturedAnimeLimitedController);
 
 // Ruta para obtener la lista de géneros (público) - Requiere CDN listo
 router.get('/genres', cdnReady, getGenresController);

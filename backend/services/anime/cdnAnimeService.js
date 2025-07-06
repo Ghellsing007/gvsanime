@@ -415,26 +415,65 @@ export async function getRecentAnimesFromCDN(limit = 20) {
  */
 export async function getFeaturedAnimesFromCDN(limit = 20) {
   await ensureDataLoaded();
-  
-  // Combinar criterios: score alto, popularidad, y año reciente
-  const sortedAnimes = animeData
-    .filter(anime => anime.score && anime.score >= 7.5)
+  // Combinar criterios: priorizar animes recientes con buen score
+  let sortedAnimes = animeData
+    .filter(anime => anime.score && anime.score >= 7.0 && anime.year && anime.year >= 2020)
     .sort((a, b) => {
+      const scoreA = a.score || 0;
+      const scoreB = b.score || 0;
+      const yearA = a.year || 0;
+      const yearB = b.year || 0;
+      const popularityA = a.popularity || 999999;
+      const popularityB = b.popularity || 999999;
+      // Priorizar año reciente, luego score alto, luego popularidad
+      if (yearA !== yearB) return yearB - yearA;
+      if (scoreA !== scoreB) return scoreB - scoreA;
+      return popularityA - popularityB;
+    });
+  // Filtrar duplicados por mal_id
+  const unique = [];
+  const seen = new Set();
+  for (const anime of sortedAnimes) {
+    const id = anime.mal_id || anime.id;
+    if (!seen.has(id)) {
+      unique.push(anime);
+      seen.add(id);
+    }
+    if (unique.length >= limit) break;
+  }
+  return unique;
+}
+
+/**
+ * Obtiene animes recientes de alta calidad para Hero Section
+ */
+export async function getRecentHighQualityAnimes(limit = 20) {
+  await ensureDataLoaded();
+  let sortedAnimes = animeData
+    .filter(anime => anime.score && anime.score >= 7.5 && anime.year && anime.year >= 2022)
+    .sort((a, b) => {
+      const yearA = a.year || 0;
+      const yearB = b.year || 0;
       const scoreA = a.score || 0;
       const scoreB = b.score || 0;
       const popularityA = a.popularity || 999999;
       const popularityB = b.popularity || 999999;
-      const yearA = a.year || 0;
-      const yearB = b.year || 0;
-      
-      // Priorizar score, luego popularidad, luego año
+      if (yearA !== yearB) return yearB - yearA;
       if (scoreA !== scoreB) return scoreB - scoreA;
-      if (popularityA !== popularityB) return popularityA - popularityB;
-      return yearB - yearA;
-    })
-    .slice(0, limit);
-  
-  return sortedAnimes;
+      return popularityA - popularityB;
+    });
+  // Filtrar duplicados por mal_id
+  const unique = [];
+  const seen = new Set();
+  for (const anime of sortedAnimes) {
+    const id = anime.mal_id || anime.id;
+    if (!seen.has(id)) {
+      unique.push(anime);
+      seen.add(id);
+    }
+    if (unique.length >= limit) break;
+  }
+  return unique;
 }
 
 // Inicializar carga de datos al importar el módulo
