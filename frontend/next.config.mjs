@@ -23,6 +23,10 @@ const nextConfig = {
       },
     ],
   },
+  allowedDevOrigins: [
+    'http://localhost:3000',
+    'http://192.168.1.7:3000', // Cambia esta IP por la de tu PC si es diferente
+  ],
 }
 
 export default nextConfig

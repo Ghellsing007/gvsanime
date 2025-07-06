@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Loader2, Search, ChevronLeft, ChevronRight } from "lucide-react"
 import { RetryButton } from "@/components/ui/retry-button"
-import { LoadingSpinner, AnimeListSkeleton } from "@/components/ui/loading-spinner"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import api from "@/lib/api"
 import { useSearchParams } from "next/navigation"
 import AnimeSearchAutocomplete from "@/components/AnimeSearchAutocomplete"
@@ -204,7 +204,7 @@ export default function AnimeList({ initialPage = 1, initialLimit = 15 }: AnimeL
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
         {loading ? (
-          <AnimeListSkeleton count={initialLimit} />
+          <LoadingSpinner size="lg" text="Cargando animes..." />
         ) : (
           uniqueAnimes.map((anime) => (
             <AnimeCard
