@@ -16,16 +16,35 @@ export default function AllGenresPage() {
   const [searchTerm, setSearchTerm] = useState("")
 
   useEffect(() => {
-    api.get('/anime/genres')
-      .then(res => {
-        const allGenres = res.data?.genres || []
-        // Ordenar por popularidad
-        const sortedGenres = allGenres.sort((a: any, b: any) => b.count - a.count)
-        setGenres(sortedGenres)
-        setFilteredGenres(sortedGenres)
-      })
-      .catch(() => setError("No se pudieron cargar los géneros"))
-      .finally(() => setLoading(false))
+    let retryTimeout: NodeJS.Timeout | null = null;
+    let retryCount = 0;
+    const fetchGenres = () => {
+      api.get('/anime/genres')
+        .then(res => {
+          const allGenres = res.data?.genres || []
+          // Ordenar por popularidad
+          const sortedGenres = allGenres.sort((a: any, b: any) => b.count - a.count)
+          setGenres(sortedGenres)
+          setFilteredGenres(sortedGenres)
+          setError("")
+        })
+        .catch((err) => {
+          if (err.response?.status === 503 && err.response?.data?.status === 'loading') {
+            setError("Cargando datos del CDN... Por favor, espera unos segundos.")
+            if (retryCount < 10) {
+              retryTimeout = setTimeout(() => {
+                retryCount++;
+                fetchGenres();
+              }, err.response.data.retryAfter * 1000 || 3000)
+            }
+          } else {
+            setError("No se pudieron cargar los géneros")
+          }
+        })
+        .finally(() => setLoading(false))
+    }
+    fetchGenres();
+    return () => { if (retryTimeout) clearTimeout(retryTimeout); };
   }, [])
 
   // Filtrar géneros basado en el término de búsqueda
@@ -56,7 +75,7 @@ export default function AllGenresPage() {
   }
 
   if (loading) return <div className="container mx-auto px-4 py-8">Cargando géneros...</div>
-  if (error) return <div className="container mx-auto px-4 py-8">{error}</div>
+  if (error) return <div className="container mx-auto px-4 py-8 text-center text-muted-foreground">{error}</div>
 
   return (
     <div className="container mx-auto px-4 py-8">

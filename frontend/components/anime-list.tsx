@@ -62,8 +62,10 @@ export default function AnimeList({ initialPage = 1, initialLimit = 15 }: AnimeL
   const searchParams = useSearchParams()
   const genero = searchParams.get("genero")
   const season = searchParams.get("season")
+  const [retryCount, setRetryCount] = useState(0)
+  const maxRetries = 10
 
-  const fetchAnimes = async (pageNum: number, query = "", retryCount = 0) => {
+  const fetchAnimes = async (pageNum: number, query = "", retryCountLocal = 0) => {
     try {
       setLoading(true)
       const response = await api.get(
@@ -72,18 +74,16 @@ export default function AnimeList({ initialPage = 1, initialLimit = 15 }: AnimeL
       
       // Verificar si el backend está cargando datos del CDN
       if (response.status === 503 && response.data?.status === 'loading') {
-        console.log('🔄 Backend cargando datos del CDN, reintentando en 3 segundos...')
-        if (retryCount < 5) { // Máximo 5 reintentos
+        setError("Cargando datos del CDN... Por favor, espera unos segundos.")
+        if (retryCountLocal < maxRetries) {
           setTimeout(() => {
-            fetchAnimes(pageNum, query, retryCount + 1)
-          }, 3000)
-          return
-        } else {
-          setError("El servidor está cargando datos. Por favor, espera unos minutos y recarga la página.")
-          setLoading(false)
-          setSearching(false)
-          return
+            setRetryCount(retryCountLocal + 1)
+            fetchAnimes(pageNum, query, retryCountLocal + 1)
+          }, response.data.retryAfter * 1000 || 3000)
         }
+        setLoading(false)
+        setSearching(false)
+        return
       }
       
       const data = response.data
@@ -91,19 +91,18 @@ export default function AnimeList({ initialPage = 1, initialLimit = 15 }: AnimeL
       setTotalPages(data.pagination.last_visible_page || Math.ceil(data.pagination.items.total / initialLimit))
       setAnimes(data.data)
       setError("")
+      setRetryCount(0)
     } catch (err: any) {
       // Manejar errores específicos del CDN
       if (err.response?.status === 503) {
         const errorData = err.response.data
         if (errorData?.status === 'loading') {
-          console.log('🔄 CDN cargando, reintentando...')
-          if (retryCount < 5) {
+          setError("Cargando datos del CDN... Por favor, espera unos segundos.")
+          if (retryCountLocal < maxRetries) {
             setTimeout(() => {
-              fetchAnimes(pageNum, query, retryCount + 1)
+              setRetryCount(retryCountLocal + 1)
+              fetchAnimes(pageNum, query, retryCountLocal + 1)
             }, errorData.retryAfter * 1000 || 3000)
-            return
-          } else {
-            setError("El servidor está cargando datos del CDN. Por favor, espera unos minutos.")
           }
         } else if (errorData?.status === 'error') {
           setError("Error en el servidor: " + (errorData.message || "Error desconocido"))
@@ -121,6 +120,7 @@ export default function AnimeList({ initialPage = 1, initialLimit = 15 }: AnimeL
 
   useEffect(() => {
     fetchAnimes(initialPage)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialPage])
 
   const handlePreviousPage = () => {
@@ -151,6 +151,8 @@ export default function AnimeList({ initialPage = 1, initialLimit = 15 }: AnimeL
   const uniqueAnimes = Array.from(
     new Map(animes.filter(Boolean).map(a => [a.mal_id, a])).values()
   );
+
+  if (error) return <div className="container mx-auto px-4 py-8 text-center text-muted-foreground">{error}</div>
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -196,14 +198,6 @@ export default function AnimeList({ initialPage = 1, initialLimit = 15 }: AnimeL
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
-        </div>
-      )}
-
-      {error && (
-        <div className="mb-6">
-          <RetryButton onRetry={() => fetchAnimes(currentPage, searchQuery)} loading={loading}>
-            {error}
-          </RetryButton>
         </div>
       )}
 

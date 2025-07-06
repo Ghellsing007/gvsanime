@@ -59,4 +59,38 @@ export function enrichGenresWithImages(genres) {
     image: getGenreImage(genre.name),
     description: `Explora animes del género ${genre.name}`
   }));
+}
+
+// Función para obtener la imagen real del anime más popular de cada género
+export function getGenreImagesFromPopularAnime(genres, animeData) {
+  // Para cada género, buscar el anime con mayor score (y si hay empate, el más popular)
+  const genreImages = {};
+  genres.forEach(genre => {
+    // Filtrar animes que tengan este género
+    const animesOfGenre = animeData.filter(anime =>
+      anime.genres && anime.genres.some(g => g.mal_id === genre.mal_id)
+    );
+    if (animesOfGenre.length > 0) {
+      // Ordenar por score descendente, luego por popularidad ascendente
+      animesOfGenre.sort((a, b) => {
+        const scoreA = a.score || 0;
+        const scoreB = b.score || 0;
+        const popA = a.popularity || 999999;
+        const popB = b.popularity || 999999;
+        if (scoreA !== scoreB) return scoreB - scoreA;
+        return popA - popB;
+      });
+      // Tomar la imagen principal del anime más popular (estructura real del CDN)
+      const topAnime = animesOfGenre[0];
+      let image = topAnime.images?.webp?.largeImageUrl ||
+                  topAnime.images?.jpg?.largeImageUrl ||
+                  topAnime.images?.webp?.imageUrl ||
+                  topAnime.images?.jpg?.imageUrl ||
+                  null;
+      genreImages[genre.mal_id] = image;
+    } else {
+      genreImages[genre.mal_id] = null;
+    }
+  });
+  return genreImages;
 } 

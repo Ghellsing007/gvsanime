@@ -11,7 +11,7 @@ import {
 } from '../services/anime/dataSourceManager.js';
 import { searchAnime } from '../services/anime/jikanService.js';
 import { normalizeImages } from '../services/anime/normalizers/jikanNormalizer.js';
-import { enrichGenresWithImages } from '../services/anime/genreImages.js';
+import { enrichGenresWithImages, getGenreImagesFromPopularAnime } from '../services/anime/genreImages.js';
 import Favorite from '../services/anime/favoriteModel.js';
 import Watchlist from '../services/anime/watchlistModel.js';
 import Rating from '../services/anime/ratingModel.js';
@@ -177,12 +177,23 @@ export async function getGenresController(req, res) {
   
   try {
     // Usar CDN para géneros
-    const { getGenresFromCDN } = await import('../services/anime/cdnAnimeService.js');
+    const { getGenresFromCDN, getAllAnimes } = await import('../services/anime/cdnAnimeService.js');
     const genres = await getGenresFromCDN();
     
     if (genres && genres.length > 0) {
-      // Enriquecer géneros con imágenes y descripciones
-      const enrichedGenres = enrichGenresWithImages(genres);
+      // Obtener todos los animes para calcular imágenes por género
+      const allAnimesResult = await getAllAnimes(1, 28816); // Obtener todos los animes
+      const allAnimes = allAnimesResult.data || [];
+      
+      // Obtener imágenes reales por género
+      const genreImages = getGenreImagesFromPopularAnime(genres, allAnimes);
+      
+      // Enriquecer géneros con imagen real si existe
+      const enrichedGenres = enrichGenresWithImages(genres).map(g => ({
+        ...g,
+        image: genreImages[g.mal_id] || g.image
+      }));
+      
       res.json({ genres: enrichedGenres });
     } else {
       // Fallback a Jikan si no hay géneros en CDN
@@ -443,6 +454,40 @@ export async function getFeaturedAnimeLimitedController(req, res) {
       res.status(500).json({ error: 'Error al obtener animes destacados' });
     }
   }
+}
+
+/**
+ * Verifica si el CDN está completamente cargado y listo
+ */
+export async function checkCDNReadyController(req, res) {
+    try {
+        const { getDataStats } = await import('../services/anime/cdnAnimeService.js');
+        const stats = getDataStats();
+        
+        const isReady = stats.isLoaded && stats.totalAnimes > 0 && !stats.loadError;
+        
+        res.json({
+            success: true,
+            ready: isReady,
+            stats: {
+                isLoaded: stats.isLoaded,
+                totalAnimes: stats.totalAnimes,
+                lastLoadTime: stats.lastLoadTime,
+                loadError: stats.loadError,
+                memoryUsage: {
+                    used: Math.round(stats.memoryUsage.used / 1024 / 1024), // MB
+                    total: Math.round(stats.memoryUsage.total / 1024 / 1024) // MB
+                }
+            }
+        });
+    } catch (error) {
+        console.error('Error verificando estado del CDN:', error);
+        res.status(500).json({
+            success: false,
+            ready: false,
+            error: 'Error interno del servidor'
+        });
+    }
 }
 
 /*

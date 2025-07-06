@@ -11,13 +11,17 @@ import {
   forceReloadCDNController,
   getAnimesByGenreController,
   getCDNStatsController,
-  getFeaturedAnimeLimitedController
+  getFeaturedAnimeLimitedController,
+  checkCDNReadyController
 } from '../controllers/animeController.js';
 import authMiddleware from '../middleware/auth.js';
 import { requireRole } from '../middleware/roles.js';
 import cdnReady from '../middleware/cdnReady.js';
 
 const router = express.Router();
+
+// Ruta para verificar si el CDN está listo (público) - No requiere CDN listo
+router.get('/ready', checkCDNReadyController);
 
 // Ruta para buscar animes por nombre (público) - Requiere CDN listo
 router.get('/search', cdnReady, searchAnimeController);

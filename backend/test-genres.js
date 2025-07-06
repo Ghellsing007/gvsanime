@@ -10,10 +10,11 @@ async function testGenres() {
     console.log('✅ Géneros obtenidos exitosamente');
     console.log(`📊 Total de géneros: ${data.genres.length}`);
     
-    // Mostrar los primeros 10 géneros
-    console.log('\n🎬 Primeros 10 géneros:');
-    data.genres.slice(0, 10).forEach((genre, index) => {
+    // Mostrar los primeros 5 géneros con más detalle
+    console.log('\n🎬 Primeros 5 géneros con detalles:');
+    data.genres.slice(0, 5).forEach((genre, index) => {
       console.log(`   ${index + 1}. ${genre.name} (ID: ${genre.mal_id})`);
+      console.log(`      Contador: ${genre.count?.toLocaleString()} animes`);
       console.log(`      Imagen: ${genre.image}`);
       console.log(`      Descripción: ${genre.description}`);
       console.log('');
@@ -32,6 +33,14 @@ async function testGenres() {
           console.log(`   ${index + 1}. ${genre.name}: ${genre.count?.toLocaleString()} animes`);
         });
     }
+    
+    // Verificar imágenes únicas
+    const uniqueImages = new Set(data.genres.map(g => g.image));
+    console.log(`\n🖼️ Imágenes únicas encontradas: ${uniqueImages.size}`);
+    console.log('🖼️ URLs de imágenes:');
+    Array.from(uniqueImages).slice(0, 3).forEach((img, index) => {
+      console.log(`   ${index + 1}. ${img}`);
+    });
     
     // Verificar si todos los géneros tienen imagen
     const genresWithoutImage = data.genres.filter(g => !g.image);
