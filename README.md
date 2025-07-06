@@ -872,3 +872,11 @@ curl -X POST http://localhost:5000/api/forums \
 - Lee las variables de entorno para las credenciales, nunca las hardcodees.
 - Si agregas nuevos servicios, workers o scripts, aplica la misma lógica de singleton.
 - Esto evita fugas de memoria, conexiones duplicadas y mejora el rendimiento y la estabilidad de la app. 
+
+
+Autenticación - Conectar con el sistema de usuarios verificar creo que esta listo
+creacion del dashboard 
+Moderación - Roles de admin para gestionar contenido 
+Notificaciones - Alertas de nuevas respuestas
+Búsqueda avanzada - Filtros por fecha, autor, etc.
+Markdown - Soporte para formato en posts

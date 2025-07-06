@@ -11,6 +11,7 @@ import type { AnimeImages } from "../lib/types"
 import { Slot } from "@radix-ui/react-slot"
 import { useRouter } from "next/navigation"
 import { Skeleton } from "@/components/ui/skeleton"
+import { RetryButton } from "@/components/ui/retry-button"
 
 type Anime = {
   mal_id?: number;
@@ -39,7 +40,9 @@ export default function HeroSection() {
   const [showTrailer, setShowTrailer] = useState(false)
   const router = useRouter();
 
-  useEffect(() => {
+  const fetchAnimes = () => {
+    setLoading(true)
+    setError(null)
     api.get('/anime/search?featured=true')
       .then((res: any) => {
         // Adaptar la respuesta del backend a la estructura esperada
@@ -48,6 +51,10 @@ export default function HeroSection() {
       })
       .catch((err: any) => setError(err))
       .finally(() => setLoading(false))
+  }
+
+  useEffect(() => {
+    fetchAnimes()
   }, [])
 
   useEffect(() => {
@@ -81,8 +88,20 @@ export default function HeroSection() {
       </div>
     </section>
   );
-  if (error) return <div>Error: {error.message}</div>;
-  if (!animes.length) return <div>No hay animes destacados.</div>;
+  if (error) return (
+    <section className="relative h-[500px] md:h-[600px] overflow-hidden rounded-xl mb-12">
+      <RetryButton onRetry={fetchAnimes} loading={loading}>
+        No se pudieron cargar los animes destacados
+      </RetryButton>
+    </section>
+  );
+  if (!animes.length) return (
+    <section className="relative h-[500px] md:h-[600px] overflow-hidden rounded-xl mb-12">
+      <RetryButton onRetry={fetchAnimes} loading={loading}>
+        No hay animes destacados disponibles
+      </RetryButton>
+    </section>
+  );
 
   const anime = animes[currentSlide]
 

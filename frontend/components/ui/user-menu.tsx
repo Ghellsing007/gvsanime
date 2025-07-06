@@ -11,7 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { User, Settings, LogOut, MessageSquare, Heart } from "lucide-react"
+import { User, Settings, LogOut, MessageSquare, Heart, Shield } from "lucide-react"
 import Link from "next/link"
 
 interface UserMenuProps {
@@ -74,6 +74,14 @@ export function UserMenu({ user, onLogout }: UserMenuProps) {
             <span>Configuración</span>
           </Link>
         </DropdownMenuItem>
+        {(user.role === 'admin' || user.role === 'moderator') && (
+          <DropdownMenuItem asChild>
+            <Link href="/profile?tab=admin" className="cursor-pointer">
+              <Shield className="mr-2 h-4 w-4 text-primary" />
+              <span>Administrar</span>
+            </Link>
+          </DropdownMenuItem>
+        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem 
           className="cursor-pointer text-red-600 focus:text-red-600"

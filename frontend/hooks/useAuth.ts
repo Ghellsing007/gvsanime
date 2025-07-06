@@ -49,20 +49,13 @@ export function useAuth() {
   const login = async (email: string, password: string) => {
     try {
       const response = await api.post('/auth/login', { email, password })
-      const { access_token, user } = response.data
+      const { access_token } = response.data
       
       localStorage.setItem('token', access_token)
       api.defaults.headers.common['Authorization'] = `Bearer ${access_token}`
       
-      setAuthState({
-        user: {
-          id: user.id,
-          email: user.email,
-          username: user.user_metadata?.username || user.email?.split('@')[0] || 'Usuario'
-        },
-        loading: false,
-        isAuthenticated: true
-      })
+      // Refrescar el usuario completo desde el backend (incluyendo el rol)
+      await checkAuth()
       
       return { success: true }
     } catch (error: any) {

@@ -1,15 +1,16 @@
 import express from 'express';
 import { getCategories, createCategory, getCategory, updateCategory, deleteCategory, getTopics, createTopic, getTopic, updateTopic, deleteTopic, getPosts, createPost, updatePost, deletePost, likePost } from '../controllers/forumsController.js';
 import authMiddleware from '../middleware/auth.js';
+import { requireRole } from '../middleware/roles.js';
 
 const router = express.Router();
 
 // Categorías
 router.get('/categories', getCategories);
-router.post('/categories', authMiddleware, createCategory);
+router.post('/categories', authMiddleware, requireRole(['admin', 'moderator']), createCategory);
 router.get('/categories/:id', getCategory);
-router.put('/categories/:id', authMiddleware, updateCategory);
-router.delete('/categories/:id', authMiddleware, deleteCategory);
+router.put('/categories/:id', authMiddleware, requireRole(['admin', 'moderator']), updateCategory);
+router.delete('/categories/:id', authMiddleware, requireRole(['admin', 'moderator']), deleteCategory);
 
 // Temas
 router.get('/topics', getTopics);

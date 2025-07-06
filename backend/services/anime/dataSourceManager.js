@@ -1,14 +1,26 @@
 // dataSourceManager.js
 // Gestor centralizado de fuentes de datos para anime
-// Permite alternar fácilmente entre MongoDB (cache) y Jikan (API externa)
+// Permite alternar fácilmente entre MongoDB (cache), Jikan (API externa) y CDN (JSON)
 
 import mongoose from '../../services/shared/mongooseClient.js';
 import { getAnimeById, searchAnime, getAllAnimes } from './jikanService.js';
+import { 
+  getAnimeById as getAnimeByIdCDN,
+  searchAnime as searchAnimeCDN,
+  getAllAnimes as getAllAnimesCDN,
+  getTopAnimes,
+  getRecentAnimes,
+  getFeaturedAnimes,
+  getAnimesByGenre,
+  getAnimesBySeason,
+  getDataStats,
+  forceReload
+} from './cdnAnimeService.js';
 import { normalizeImages } from './normalizers/jikanNormalizer.js';
 import axios from 'axios';
 
 // Configuración de fuente de datos desde variables de entorno
-const DATA_SOURCE = process.env.ANIME_DATA_SOURCE || 'hybrid'; // 'mongodb', 'jikan', 'hybrid'
+const DATA_SOURCE = process.env.ANIME_DATA_SOURCE || 'hybrid'; // 'mongodb', 'jikan', 'cdn', 'hybrid'
 const FORCE_JIKAN = process.env.FORCE_JIKAN === 'true';
 const CACHE_ENABLED = process.env.CACHE_ENABLED !== 'false'; // true por defecto
 
@@ -77,8 +89,13 @@ function getDataSource() {
     return 'mongodb';
   }
   
+  if (currentDataSource === 'cdn') {
+    console.log('🔧 ANIME_DATA_SOURCE=cdn, usando solo CDN JSON');
+    return 'cdn';
+  }
+  
   // Por defecto usar hybrid
-  console.log('🔧 Usando modo hybrid (MongoDB + Jikan)');
+  console.log('🔧 Usando modo hybrid (MongoDB + Jikan + CDN)');
   return 'hybrid';
 }
 
@@ -95,6 +112,9 @@ export async function getAnimeByIdManager(animeId, userId = null) {
       case 'jikan':
         return await getAnimeFromJikanWithSupabase(animeId, userId);
       
+      case 'cdn':
+        return await getAnimeFromCDN(animeId, userId);
+      
       case 'hybrid':
       default:
         return await getAnimeHybrid(animeId, userId);
@@ -102,13 +122,31 @@ export async function getAnimeByIdManager(animeId, userId = null) {
   } catch (error) {
     console.error(`❌ Error obteniendo anime ${animeId}:`, error.message);
     
-    // Fallback: si falla la fuente principal, intentar con la otra
+    // Fallback: intentar con otras fuentes
     if (source === 'mongodb') {
-      console.log('🔄 Fallback a Jikan...');
-      return await getAnimeFromJikanWithSupabase(animeId, userId);
+      console.log('🔄 Fallback a CDN...');
+      try {
+        return await getAnimeFromCDN(animeId, userId);
+      } catch (cdnError) {
+        console.log('🔄 Fallback a Jikan...');
+        return await getAnimeFromJikanWithSupabase(animeId, userId);
+      }
     } else if (source === 'jikan') {
-      console.log('🔄 Fallback a MongoDB...');
-      return await getAnimeFromMongoDB(animeId);
+      console.log('🔄 Fallback a CDN...');
+      try {
+        return await getAnimeFromCDN(animeId, userId);
+      } catch (cdnError) {
+        console.log('🔄 Fallback a MongoDB...');
+        return await getAnimeFromMongoDB(animeId);
+      }
+    } else if (source === 'cdn') {
+      console.log('🔄 Fallback a Jikan...');
+      try {
+        return await getAnimeFromJikanWithSupabase(animeId, userId);
+      } catch (jikanError) {
+        console.log('🔄 Fallback a MongoDB...');
+        return await getAnimeFromMongoDB(animeId);
+      }
     }
     
     throw error;
@@ -128,6 +166,9 @@ export async function searchAnimeManager(query, page = 1, limit = 12) {
       case 'jikan':
         return await searchAnimeFromJikanOnly(query, page, limit);
       
+      case 'cdn':
+        return await searchAnimeFromCDN(query, page, limit);
+      
       case 'hybrid':
       default:
         return await searchAnimeHybrid(query, page, limit);
@@ -137,11 +178,29 @@ export async function searchAnimeManager(query, page = 1, limit = 12) {
     
     // Fallback
     if (source === 'mongodb') {
-      console.log('🔄 Fallback a Jikan...');
-      return await searchAnimeFromJikanOnly(query, page, limit);
+      console.log('🔄 Fallback a CDN...');
+      try {
+        return await searchAnimeFromCDN(query, page, limit);
+      } catch (cdnError) {
+        console.log('🔄 Fallback a Jikan...');
+        return await searchAnimeFromJikanOnly(query, page, limit);
+      }
     } else if (source === 'jikan') {
-      console.log('🔄 Fallback a MongoDB...');
-      return await searchAnimeFromMongoDB(query, page, limit);
+      console.log('🔄 Fallback a CDN...');
+      try {
+        return await searchAnimeFromCDN(query, page, limit);
+      } catch (cdnError) {
+        console.log('🔄 Fallback a MongoDB...');
+        return await searchAnimeFromMongoDB(query, page, limit);
+      }
+    } else if (source === 'cdn') {
+      console.log('🔄 Fallback a Jikan...');
+      try {
+        return await searchAnimeFromJikanOnly(query, page, limit);
+      } catch (jikanError) {
+        console.log('🔄 Fallback a MongoDB...');
+        return await searchAnimeFromMongoDB(query, page, limit);
+      }
     }
     
     throw error;
@@ -160,6 +219,9 @@ export async function getTopAnimeManager() {
       
       case 'jikan':
         return await getTopAnimeFromJikan();
+      
+      case 'cdn':
+        return await getTopAnimeFromCDN();
       
       case 'hybrid':
       default:
@@ -184,6 +246,9 @@ export async function getRecentAnimeManager() {
       case 'jikan':
         return await getRecentAnimeFromJikan();
       
+      case 'cdn':
+        return await getRecentAnimeFromCDN();
+      
       case 'hybrid':
       default:
         return await getRecentAnimeHybrid();
@@ -206,6 +271,9 @@ export async function getFeaturedAnimeManager() {
       
       case 'jikan':
         return await getFeaturedAnimeFromJikan();
+      
+      case 'cdn':
+        return await getFeaturedAnimeFromCDN();
       
       case 'hybrid':
       default:
@@ -550,22 +618,100 @@ async function getFeaturedAnimeHybrid() {
   return jikanData;
 }
 
-// Función para obtener información de la configuración actual
+// ===== IMPLEMENTACIONES CDN =====
+
+async function getAnimeFromCDN(animeId, userId = null) {
+  try {
+    const animeData = await getAnimeByIdCDN(animeId);
+    
+    // Enriquecer con datos de Supabase si el usuario está autenticado
+    if (userId) {
+      const [favorito, watchlist, rating] = await Promise.all([
+        Favorite.findOne({ userId, animeId }),
+        Watchlist.findOne({ userId, animeId }),
+        Rating.findOne({ userId, animeId })
+      ]);
+      
+      return {
+        ...animeData,
+        userData: {
+          isFavorite: !!favorito,
+          inWatchlist: !!watchlist,
+          userRating: rating?.rating || null
+        }
+      };
+    }
+    
+    return animeData;
+  } catch (error) {
+    console.error('Error obteniendo anime desde CDN:', error.message);
+    throw error;
+  }
+}
+
+async function searchAnimeFromCDN(query, page, limit) {
+  try {
+    const result = await searchAnimeCDN(query, page, limit);
+    return result;
+  } catch (error) {
+    console.error('Error buscando anime desde CDN:', error.message);
+    throw error;
+  }
+}
+
+async function getTopAnimeFromCDN() {
+  try {
+    const topAnimes = await getTopAnimes(20);
+    return topAnimes;
+  } catch (error) {
+    console.error('Error obteniendo top anime desde CDN:', error.message);
+    throw error;
+  }
+}
+
+async function getRecentAnimeFromCDN() {
+  try {
+    const recentAnimes = await getRecentAnimes(20);
+    return recentAnimes;
+  } catch (error) {
+    console.error('Error obteniendo animes recientes desde CDN:', error.message);
+    throw error;
+  }
+}
+
+async function getFeaturedAnimeFromCDN() {
+  try {
+    const featuredAnimes = await getFeaturedAnimes(20);
+    return featuredAnimes;
+  } catch (error) {
+    console.error('Error obteniendo animes destacados desde CDN:', error.message);
+    throw error;
+  }
+}
+
+// ===== FUNCIONES DE EXPORTACIÓN =====
+
 export function getDataSourceInfo() {
-  const currentDataSource = process.env.ANIME_DATA_SOURCE || 'hybrid';
-  const currentForceJikan = process.env.FORCE_JIKAN === 'true';
-  const currentCacheEnabled = process.env.CACHE_ENABLED !== 'false';
+  const source = getDataSource();
+  const cdnStats = getDataStats();
   
   return {
-    currentSource: getDataSource(),
-    forceJikan: currentForceJikan,
-    cacheEnabled: currentCacheEnabled,
-    dataSource: currentDataSource,
-    availableSources: ['mongodb', 'jikan', 'hybrid']
+    currentSource: source,
+    availableSources: ['mongodb', 'jikan', 'cdn', 'hybrid'],
+    cdnStats: {
+      isLoaded: cdnStats.isLoaded,
+      totalAnimes: cdnStats.totalAnimes,
+      lastLoadTime: cdnStats.lastLoadTime,
+      loadError: cdnStats.loadError
+    },
+    environment: {
+      ANIME_DATA_SOURCE: process.env.ANIME_DATA_SOURCE || 'hybrid',
+      FORCE_JIKAN: process.env.FORCE_JIKAN === 'true',
+      CACHE_ENABLED: process.env.CACHE_ENABLED !== 'false'
+    }
   };
 }
 
-// Función para limpiar cache de MongoDB
 export async function clearMongoDBCache() {
   try {
     await Promise.all([
@@ -576,10 +722,22 @@ export async function clearMongoDBCache() {
       FeaturedAnimeCache.deleteMany({}),
       GenreCache.deleteMany({})
     ]);
-    console.log('🗑️ Cache de MongoDB limpiado');
+    console.log('✅ Cache de MongoDB limpiado');
     return { success: true, message: 'Cache limpiado exitosamente' };
   } catch (error) {
     console.error('❌ Error limpiando cache:', error);
+    throw error;
+  }
+}
+
+// Nueva función para forzar recarga de datos CDN
+export async function forceReloadCDN() {
+  try {
+    await forceReload();
+    console.log('✅ Datos CDN recargados exitosamente');
+    return { success: true, message: 'Datos CDN recargados exitosamente' };
+  } catch (error) {
+    console.error('❌ Error recargando datos CDN:', error);
     throw error;
   }
 } 

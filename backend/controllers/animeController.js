@@ -5,7 +5,8 @@ import {
   getRecentAnimeManager, 
   getFeaturedAnimeManager,
   getDataSourceInfo,
-  clearMongoDBCache
+  clearMongoDBCache,
+  forceReloadCDN
 } from '../services/anime/dataSourceManager.js';
 import { searchAnime } from '../services/anime/jikanService.js';
 import { normalizeImages } from '../services/anime/normalizers/jikanNormalizer.js';
@@ -79,17 +80,26 @@ export async function searchAnimeController(req, res) {
     if (season) {
       // season: "2024-Spring"
       const [year, seasonName] = season.split('-');
-      // Por ahora, para temporadas específicas usamos Jikan directamente
-      const response = await axios.get(`https://api.jikan.moe/v4/seasons/${year}/${seasonName.toLowerCase()}?limit=24`);
-      const data = response.data;
-      const results = data.data.map(anime => ({
-        ...anime,
-        images: normalizeImages(anime.images) || anime.images
-      }));
-      return res.json({ 
-        pagination: { current_page: page, items: { count: results.length } },
-        data: results 
-      });
+      
+      try {
+        // Usar CDN para temporadas
+        const { getAnimesBySeason } = await import('../services/anime/cdnAnimeService.js');
+        const results = await getAnimesBySeason(year, seasonName, page, limit);
+        return res.json(results);
+      } catch (error) {
+        console.error('Error obteniendo temporada desde CDN:', error.message);
+        // Fallback a Jikan si falla el CDN
+        const response = await axios.get(`https://api.jikan.moe/v4/seasons/${year}/${seasonName.toLowerCase()}?limit=24`);
+        const data = response.data;
+        const results = data.data.map(anime => ({
+          ...anime,
+          images: normalizeImages(anime.images) || anime.images
+        }));
+        return res.json({ 
+          pagination: { current_page: page, items: { count: results.length } },
+          data: results 
+        });
+      }
     }
     if (genre) {
       // Por ahora, para géneros específicos usamos Jikan directamente
@@ -276,23 +286,64 @@ export async function getAllAnimeController(req, res) {
   }
 }
 
-// Controlador para obtener información de la fuente de datos actual
+// Controlador para obtener información de la fuente de datos
 export async function getDataSourceInfoController(req, res) {
   try {
     const info = getDataSourceInfo();
     res.json(info);
   } catch (err) {
-    res.status(500).json({ error: 'Error al obtener información de la fuente de datos' });
+    console.error('Error obteniendo info de fuente de datos:', err);
+    res.status(500).json({ error: 'Error al obtener información de fuente de datos' });
   }
 }
 
-// Controlador para limpiar cache de MongoDB
+// Controlador para limpiar cache
 export async function clearCacheController(req, res) {
   try {
     const result = await clearMongoDBCache();
     res.json(result);
   } catch (err) {
+    console.error('Error limpiando cache:', err);
     res.status(500).json({ error: 'Error al limpiar cache' });
+  }
+}
+
+// Controlador para forzar recarga de datos CDN
+export async function forceReloadCDNController(req, res) {
+  try {
+    const result = await forceReloadCDN();
+    res.json(result);
+  } catch (err) {
+    console.error('Error recargando datos CDN:', err);
+    res.status(500).json({ error: 'Error al recargar datos CDN' });
+  }
+}
+
+// Controlador para obtener animes por género usando CDN
+export async function getAnimesByGenreController(req, res) {
+  const { genreId } = req.params;
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 24;
+  
+  try {
+    const { getAnimesByGenre } = await import('../services/anime/cdnAnimeService.js');
+    const result = await getAnimesByGenre(genreId, page, limit);
+    res.json(result);
+  } catch (err) {
+    console.error('Error obteniendo animes por género:', err);
+    res.status(500).json({ error: 'Error al obtener animes por género' });
+  }
+}
+
+// Controlador para obtener estadísticas de datos CDN
+export async function getCDNStatsController(req, res) {
+  try {
+    const { getDataStats } = await import('../services/anime/cdnAnimeService.js');
+    const stats = getDataStats();
+    res.json(stats);
+  } catch (err) {
+    console.error('Error obteniendo estadísticas CDN:', err);
+    res.status(500).json({ error: 'Error al obtener estadísticas CDN' });
   }
 }
 

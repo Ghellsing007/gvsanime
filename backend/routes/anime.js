@@ -7,8 +7,13 @@ import {
   getRecommendationsController, 
   getAllAnimeController,
   getDataSourceInfoController,
-  clearCacheController
+  clearCacheController,
+  forceReloadCDNController,
+  getAnimesByGenreController,
+  getCDNStatsController
 } from '../controllers/animeController.js';
+import authMiddleware from '../middleware/auth.js';
+import { requireRole } from '../middleware/roles.js';
 
 const router = express.Router();
 
@@ -35,8 +40,17 @@ router.get('/', getAllAnimeController);
 // Obtener información de la fuente de datos actual
 router.get('/datasource/info', getDataSourceInfoController);
 
-// Limpiar cache de MongoDB
-router.delete('/datasource/cache', clearCacheController);
+// Limpiar cache de MongoDB (solo admin)
+router.delete('/datasource/cache', authMiddleware, requireRole(['admin']), clearCacheController);
+
+// Forzar recarga de datos CDN (solo admin)
+router.post('/datasource/cdn/reload', authMiddleware, requireRole(['admin']), forceReloadCDNController);
+
+// Obtener estadísticas de datos CDN (público)
+router.get('/datasource/cdn/stats', getCDNStatsController);
+
+// Obtener animes por género usando CDN (público)
+router.get('/genre/:genreId', getAnimesByGenreController);
 
 // --- ADMINISTRACIÓN DE CACHÉ ---
 
@@ -82,8 +96,8 @@ router.get('/cache/anime/:id', async (req, res) => {
   }
 });
 
-// Eliminar una búsqueda del caché
-router.delete('/cache/search/:query', async (req, res) => {
+// Eliminar una búsqueda del caché (solo admin)
+router.delete('/cache/search/:query', authMiddleware, requireRole(['admin']), async (req, res) => {
   try {
     const result = await deleteSearchCacheByQuery(req.params.query);
     if (result.deletedCount === 0) return res.status(404).json({ error: 'No se encontró esa búsqueda en caché' });
@@ -93,8 +107,8 @@ router.delete('/cache/search/:query', async (req, res) => {
   }
 });
 
-// Eliminar un anime del caché
-router.delete('/cache/anime/:id', async (req, res) => {
+// Eliminar un anime del caché (solo admin)
+router.delete('/cache/anime/:id', authMiddleware, requireRole(['admin']), async (req, res) => {
   try {
     const result = await deleteAnimeCacheById(req.params.id);
     if (result.deletedCount === 0) return res.status(404).json({ error: 'No se encontró ese anime en caché' });
@@ -104,8 +118,8 @@ router.delete('/cache/anime/:id', async (req, res) => {
   }
 });
 
-// Limpiar todo el caché (animes y búsquedas)
-router.delete('/cache/clean', async (req, res) => {
+// Limpiar todo el caché (solo admin)
+router.delete('/cache/clean', authMiddleware, requireRole(['admin']), async (req, res) => {
   try {
     const result = await cleanAllCache();
     res.json({ message: 'Caché de animes y búsquedas limpiado', ...result });

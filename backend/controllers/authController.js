@@ -115,8 +115,8 @@ export async function verifyEmail(req, res) {
 export async function getMe(req, res) {
   try {
     // El middleware de auth ya verifica el token y agrega req.user
-    const { id, email, username } = req.user;
-    res.json({ id, email, username });
+    const { id, email, username, role } = req.user;
+    res.json({ id, email, username, role });
   } catch (err) {
     res.status(500).json({ error: 'Error al obtener información del usuario.' });
   }

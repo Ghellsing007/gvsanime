@@ -8,13 +8,16 @@ import { Button } from "@/components/ui/button"
 import { ChevronRight } from "lucide-react"
 import api from "../lib/api"
 import { Skeleton } from "@/components/ui/skeleton"
+import { RetryButton } from "@/components/ui/retry-button"
 
 export default function GenreShowcase() {
   const [genres, setGenres] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
 
-  useEffect(() => {
+  const fetchGenres = () => {
+    setLoading(true)
+    setError("")
     api.get('/anime/genres')
       .then(res => {
         const allGenres = res.data?.genres || []
@@ -26,6 +29,10 @@ export default function GenreShowcase() {
       })
       .catch(() => setError("No se pudieron cargar los géneros"))
       .finally(() => setLoading(false))
+  }
+
+  useEffect(() => {
+    fetchGenres()
   }, [])
 
   const container = {
@@ -63,7 +70,21 @@ export default function GenreShowcase() {
       </div>
     </section>
   )
-  if (error) return <div>{error}</div>
+  if (error) return (
+    <section className="mb-12">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold">Explore Genres</h2>
+        <Link href="/explorar/generos">
+          <Button variant="ghost" className="gap-1 text-muted-foreground">
+            View All <ChevronRight className="h-4 w-4" />
+          </Button>
+        </Link>
+      </div>
+      <RetryButton onRetry={fetchGenres} loading={loading}>
+        {error}
+      </RetryButton>
+    </section>
+  )
 
   return (
     <section className="mb-12">

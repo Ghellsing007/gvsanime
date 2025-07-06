@@ -33,14 +33,15 @@ export default async function authMiddleware(req, res, next) {
     // Obtener información adicional del usuario desde la tabla users
     const { data: userProfile } = await supabase
       .from('users')
-      .select('username')
+      .select('username, role')
       .eq('id', user.user.id)
       .single();
 
     req.user = {
       id: user.user.id,
       email: user.user.email,
-      username: userProfile?.username || user.user.email?.split('@')[0] || 'Usuario'
+      username: userProfile?.username || user.user.email?.split('@')[0] || 'Usuario',
+      role: userProfile?.role || 'user'
     };
     
     // 5. Continuar con la siguiente función o controlador
