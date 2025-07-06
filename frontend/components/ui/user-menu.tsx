@@ -74,12 +74,12 @@ export function UserMenu({ user, onLogout }: UserMenuProps) {
             <span>Watchlist</span>
           </Link>
         </DropdownMenuItem>
-        <DropdownMenuItem asChild>
+        {/* <DropdownMenuItem asChild>
           <Link href="/settings" className="cursor-pointer">
             <Settings className="mr-2 h-4 w-4" />
             <span>Configuración</span>
           </Link>
-        </DropdownMenuItem>
+        </DropdownMenuItem> */}
         {(user.role === 'admin' || user.role === 'moderator') && (
           <DropdownMenuItem asChild>
             <Link href="/profile?tab=admin" className="cursor-pointer">

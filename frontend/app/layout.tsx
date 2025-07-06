@@ -32,13 +32,11 @@ export default function RootLayout({
           storageKey="gvsanime-theme"
         >
           <AuthProvider>
-            <CDNLoading>
-              <div className="flex min-h-screen flex-col">
-                <Navbar />
-                <main className="flex-1">{children}</main>
-                <Footer />
-              </div>
-            </CDNLoading>
+            <div className="flex min-h-screen flex-col">
+              <Navbar />
+              <main className="flex-1">{children}</main>
+              <Footer />
+            </div>
           </AuthProvider>
         </ThemeProvider>
       </body>

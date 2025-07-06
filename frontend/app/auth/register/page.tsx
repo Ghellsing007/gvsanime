@@ -5,10 +5,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Loader2, UserPlus, Eye, EyeOff } from "lucide-react"
+import { Loader2, UserPlus, Eye, EyeOff, Sparkles, Anime, CheckCircle } from "lucide-react"
 import { useAuth } from "@/contexts/AuthContext"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { SITE_NAME } from "@/lib/siteConfig"
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -71,47 +72,93 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-md">
-      <div className="flex flex-col items-center">
-        <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold">Crear Cuenta</h1>
-          <p className="text-muted-foreground mt-2">
-            Únete a nuestra comunidad de anime
+    <div className="min-h-screen bg-gradient-to-br from-background via-secondary/5 to-primary/5 flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Fondo animado con partículas */}
+      <div className="absolute inset-0 overflow-hidden">
+        {[...Array(8)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute w-1 h-1 bg-secondary/20 rounded-full animate-pulse"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              animationDelay: `${Math.random() * 2}s`,
+              animationDuration: `${3 + Math.random() * 2}s`
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Gradientes decorativos */}
+      <div className="absolute top-0 right-0 w-96 h-96 bg-secondary/10 rounded-full blur-3xl translate-x-1/2 -translate-y-1/2"></div>
+      <div className="absolute bottom-0 left-0 w-96 h-96 bg-primary/10 rounded-full blur-3xl -translate-x-1/2 translate-y-1/2"></div>
+
+      <div className="w-full max-w-md relative z-10">
+        {/* Header con logo y título */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-secondary to-primary rounded-2xl mb-4 shadow-lg">
+            <Anime className="h-8 w-8 text-white" />
+          </div>
+          
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-secondary via-primary to-secondary bg-clip-text text-transparent mb-2">
+            {SITE_NAME}
+          </h1>
+          
+          <div className="flex items-center justify-center gap-2 text-muted-foreground mb-6">
+            <Sparkles className="h-4 w-4" />
+            <span className="text-sm">Tu universo de anime</span>
+            <Sparkles className="h-4 w-4" />
+          </div>
+
+          <h2 className="text-2xl font-semibold text-foreground mb-2">
+            ¡Únete a la comunidad!
+          </h2>
+          <p className="text-muted-foreground">
+            Crea tu cuenta y comienza a explorar
           </p>
         </div>
 
-        <Card className="w-full">
-          <CardHeader>
-            <CardTitle className="text-center">Regístrate gratis</CardTitle>
+        {/* Formulario */}
+        <Card className="w-full bg-card/80 backdrop-blur-xl border-border/50 shadow-2xl">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-center text-xl">Crear Cuenta</CardTitle>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-2">
-                <Label htmlFor="username">Nombre de usuario</Label>
+                <Label htmlFor="username" className="text-sm font-medium">
+                  Nombre de usuario
+                </Label>
                 <Input
                   id="username"
                   type="text"
                   placeholder="tu_usuario"
                   value={formData.username}
                   onChange={(e) => handleInputChange('username', e.target.value)}
+                  className="h-11 bg-background/50 border-border/50 focus:border-secondary/50"
                   required
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="email">Correo electrónico</Label>
+                <Label htmlFor="email" className="text-sm font-medium">
+                  Correo electrónico
+                </Label>
                 <Input
                   id="email"
                   type="email"
                   placeholder="tu@email.com"
                   value={formData.email}
                   onChange={(e) => handleInputChange('email', e.target.value)}
+                  className="h-11 bg-background/50 border-border/50 focus:border-secondary/50"
                   required
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password">Contraseña</Label>
+                <Label htmlFor="password" className="text-sm font-medium">
+                  Contraseña
+                </Label>
                 <div className="relative">
                   <Input
                     id="password"
@@ -119,6 +166,7 @@ export default function RegisterPage() {
                     placeholder="Mínimo 6 caracteres"
                     value={formData.password}
                     onChange={(e) => handleInputChange('password', e.target.value)}
+                    className="h-11 bg-background/50 border-border/50 focus:border-secondary/50 pr-10"
                     required
                   />
                   <Button
@@ -129,16 +177,18 @@ export default function RegisterPage() {
                     onClick={() => setShowPassword(!showPassword)}
                   >
                     {showPassword ? (
-                      <EyeOff className="h-4 w-4" />
+                      <EyeOff className="h-4 w-4 text-muted-foreground" />
                     ) : (
-                      <Eye className="h-4 w-4" />
+                      <Eye className="h-4 w-4 text-muted-foreground" />
                     )}
                   </Button>
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirmar contraseña</Label>
+                <Label htmlFor="confirmPassword" className="text-sm font-medium">
+                  Confirmar contraseña
+                </Label>
                 <div className="relative">
                   <Input
                     id="confirmPassword"
@@ -146,6 +196,7 @@ export default function RegisterPage() {
                     placeholder="Repite tu contraseña"
                     value={formData.confirmPassword}
                     onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
+                    className="h-11 bg-background/50 border-border/50 focus:border-secondary/50 pr-10"
                     required
                   />
                   <Button
@@ -156,21 +207,40 @@ export default function RegisterPage() {
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   >
                     {showConfirmPassword ? (
-                      <EyeOff className="h-4 w-4" />
+                      <EyeOff className="h-4 w-4 text-muted-foreground" />
                     ) : (
-                      <Eye className="h-4 w-4" />
+                      <Eye className="h-4 w-4 text-muted-foreground" />
                     )}
                   </Button>
                 </div>
               </div>
 
+              {/* Requisitos de contraseña */}
+              <div className="space-y-2 p-3 bg-muted/30 rounded-lg border border-border/50">
+                <p className="text-xs font-medium text-muted-foreground mb-2">Requisitos de contraseña:</p>
+                <div className="space-y-1">
+                  <div className={`flex items-center gap-2 text-xs ${
+                    formData.password.length >= 6 ? 'text-green-600' : 'text-muted-foreground'
+                  }`}>
+                    <CheckCircle className="h-3 w-3" />
+                    Mínimo 6 caracteres
+                  </div>
+                  <div className={`flex items-center gap-2 text-xs ${
+                    formData.password === formData.confirmPassword && formData.confirmPassword ? 'text-green-600' : 'text-muted-foreground'
+                  }`}>
+                    <CheckCircle className="h-3 w-3" />
+                    Las contraseñas coinciden
+                  </div>
+                </div>
+              </div>
+
               {error && (
-                <div className={`p-3 border rounded-lg ${
+                <div className={`p-4 border rounded-lg animate-in slide-in-from-top-2 ${
                   error.includes('verifica') 
                     ? 'bg-blue-50 border-blue-200 dark:bg-blue-950/20 dark:border-blue-800' 
                     : 'bg-destructive/10 border-destructive/20'
                 }`}>
-                  <p className={`text-sm ${
+                  <p className={`text-sm font-medium ${
                     error.includes('verifica') ? 'text-blue-700 dark:text-blue-300' : 'text-destructive'
                   }`}>{error}</p>
                 </div>
@@ -178,7 +248,7 @@ export default function RegisterPage() {
 
               <Button
                 type="submit"
-                className="w-full gap-2"
+                className="w-full h-11 bg-gradient-to-r from-secondary to-primary hover:from-secondary/90 hover:to-primary/90 text-white font-medium gap-2 shadow-lg hover:shadow-xl transition-all duration-200"
                 disabled={loading}
               >
                 {loading ? (
@@ -190,30 +260,38 @@ export default function RegisterPage() {
               </Button>
             </form>
 
-            <div className="mt-6 text-center">
-              <p className="text-sm text-muted-foreground">
-                ¿Ya tienes una cuenta?{" "}
+            {/* Enlaces adicionales */}
+            <div className="mt-8 space-y-4">
+              <div className="text-center">
+                <p className="text-sm text-muted-foreground">
+                  ¿Ya tienes una cuenta?{" "}
+                  <Link 
+                    href="/auth/login" 
+                    className="text-secondary hover:text-secondary/80 font-medium transition-colors"
+                  >
+                    Inicia sesión aquí
+                  </Link>
+                </p>
+              </div>
+              
+              <div className="text-center">
                 <Link 
-                  href="/auth/login" 
-                  className="text-primary hover:underline font-medium"
+                  href="/" 
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  Inicia sesión aquí
+                  ← Volver al inicio
                 </Link>
-              </p>
-            </div>
-
-            <div className="mt-4 text-xs text-center text-muted-foreground">
-              Al registrarte, aceptas nuestros{" "}
-              <Link href="/terms" className="text-primary hover:underline">
-                Términos de Servicio
-              </Link>{" "}
-              y{" "}
-              <Link href="/privacy" className="text-primary hover:underline">
-                Política de Privacidad
-              </Link>
+              </div>
             </div>
           </CardContent>
         </Card>
+
+        {/* Footer */}
+        <div className="text-center mt-8">
+          <p className="text-xs text-muted-foreground">
+            Al registrarte, aceptas nuestros términos y condiciones
+          </p>
+        </div>
       </div>
     </div>
   )

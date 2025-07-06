@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import AnimeDetails from "@/components/anime-details"
+import CDNLoading from "@/components/cdn-loading"
 import { SITE_NAME } from "../../../lib/siteConfig"
 
 interface AnimePageProps {
@@ -29,6 +30,10 @@ export async function generateMetadata({ params }: AnimePageProps): Promise<Meta
 
 export default async function AnimePage({ params }: AnimePageProps) {
   const { id } = await params;
-  return <AnimeDetails id={id} />
+  return (
+    <CDNLoading>
+      <AnimeDetails id={id} />
+    </CDNLoading>
+  )
 }
 

@@ -1,6 +1,7 @@
 'use client'
 
 import AnimeList from "@/components/anime-list"
+import CDNLoading from "@/components/cdn-loading"
 import { SITE_NAME } from "../../lib/siteConfig"
 import Link from "next/link"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -41,18 +42,20 @@ export default function ExplorePage() {
   ]
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <ExploreHeader />
-      
-      {/* Solo mostrar secciones si no hay filtros activos */}
-      <ExploreSections sections={exploreSections} />
+    <CDNLoading>
+      <div className="container mx-auto px-4 py-8">
+        <ExploreHeader />
+        
+        {/* Solo mostrar secciones si no hay filtros activos */}
+        <ExploreSections sections={exploreSections} />
 
-      {/* Búsqueda general */}
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold mb-4">Búsqueda General</h2>
-        <AnimeList />
+        {/* Búsqueda general */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold mb-4">Búsqueda General</h2>
+          <AnimeList />
+        </div>
       </div>
-    </div>
+    </CDNLoading>
   )
 }
 

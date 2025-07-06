@@ -45,7 +45,7 @@ export default function ProfilePage() {
           <TabsTrigger value="info"><User className="mr-2 h-4 w-4" /> Información</TabsTrigger>
           <TabsTrigger value="foros"><MessageSquare className="mr-2 h-4 w-4" /> Mis Foros</TabsTrigger>
           <TabsTrigger value="favoritos"><Heart className="mr-2 h-4 w-4" /> Favoritos</TabsTrigger>
-          <TabsTrigger value="config"><Settings className="mr-2 h-4 w-4" /> Configuración</TabsTrigger>
+          {/* <TabsTrigger value="config"><Settings className="mr-2 h-4 w-4" /> Configuración</TabsTrigger> */}
           {isAdminOrMod(user ?? {}) && (
             <TabsTrigger value="admin"><Shield className="mr-2 h-4 w-4" /> Administrar</TabsTrigger>
           )}
@@ -74,12 +74,12 @@ export default function ProfilePage() {
           </div>
         </TabsContent>
         
-        <TabsContent value="config">
+        {/* <TabsContent value="config">
           <div className="bg-muted rounded-lg p-6">
             <h3 className="text-lg font-semibold mb-2">Configuración</h3>
             <p className="text-muted-foreground">Aquí podrás personalizar tus preferencias de usuario.</p>
           </div>
-        </TabsContent>
+        </TabsContent> */}
         
         {isAdminOrMod(user ?? {}) && (
           <TabsContent value="admin">

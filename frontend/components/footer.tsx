@@ -115,14 +115,14 @@ export default function Footer() {
         <div className="mt-8 pt-8 border-t text-center text-muted-foreground">
           <p>&copy; {new Date().getFullYear()} {SITE_NAME}. All rights reserved.</p>
           <p className="text-xs mt-2">
-            Data provided by{" "}
+            Provided by{" "}
             <a
-              href="https://jikan.moe"
+              href="https://gvservices.netlify.app"
               target="_blank"
               rel="noopener noreferrer"
               className="underline hover:text-foreground"
             >
-              Jikan API
+              Gvservices
             </a>
           </p>
         </div>

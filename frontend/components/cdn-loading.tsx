@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { SITE_NAME } from '@/lib/siteConfig';
+import { API_URL } from '@/lib/config';
 import { Loader2, Database, Zap, CheckCircle, AlertCircle } from 'lucide-react';
 
 interface CDNStatus {
@@ -50,7 +51,7 @@ export default function CDNLoading({ children }: { children: React.ReactNode }) 
 
   const checkCDNStatus = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/anime/ready');
+      const response = await fetch(`${API_URL}/anime/ready`);
       const data: CDNStatus = await response.json();
       
       setCdnStatus(data);
@@ -118,7 +119,7 @@ export default function CDNLoading({ children }: { children: React.ReactNode }) 
                 {SITE_NAME}
               </h1>
               <h2 className="text-xl font-semibold text-foreground mb-2">
-                Inicializando Base de Datos
+                Inicializando
               </h2>
               <p className="text-muted-foreground text-sm">
                 Preparando {cdnStatus?.stats?.totalAnimes?.toLocaleString() || '28,000+'} animes para ti...

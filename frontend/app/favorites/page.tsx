@@ -10,6 +10,7 @@ import { useAuth } from "@/contexts/AuthContext"
 import { useFavorites } from "@/hooks/useFavorites"
 import { useToast } from "@/hooks/use-toast"
 import AnimeCard from "@/components/anime-card"
+import CDNLoading from "@/components/cdn-loading"
 import api from "@/lib/api"
 import Link from "next/link"
 
@@ -136,105 +137,107 @@ export default function FavoritesPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2">
-            <Heart className="h-8 w-8 text-red-500" />
-            Mis Favoritos
-          </h1>
-          <p className="text-muted-foreground">
-            {favorites.length} anime{favorites.length !== 1 ? 's' : ''} en tu lista de favoritos
-          </p>
-        </div>
-      </div>
-
-      {/* Search */}
-      {favorites.length > 0 && (
-        <div className="mb-6">
-          <div className="relative max-w-md">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-            <Input
-              placeholder="Buscar en favoritos..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-        </div>
-      )}
-
-      {/* Content */}
-      {favorites.length === 0 ? (
-        <Card>
-          <CardContent className="text-center py-12">
-            <Heart className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-            <h2 className="text-xl font-semibold mb-2">No tienes favoritos</h2>
-            <p className="text-muted-foreground mb-4">
-              Agrega animes a tus favoritos para verlos aquí
+    <CDNLoading>
+      <div className="container mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h1 className="text-3xl font-bold flex items-center gap-2">
+              <Heart className="h-8 w-8 text-red-500" />
+              Mis Favoritos
+            </h1>
+            <p className="text-muted-foreground">
+              {favorites.length} anime{favorites.length !== 1 ? 's' : ''} en tu lista de favoritos
             </p>
-            <Button asChild>
-              <Link href="/explorar">
-                Explorar Animes
-              </Link>
-            </Button>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="space-y-6">
-          {filteredFavorites.length === 0 ? (
-            <Card>
-              <CardContent className="text-center py-8">
-                <p className="text-muted-foreground">
-                  No se encontraron favoritos que coincidan con tu búsqueda
-                </p>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-              {filteredFavorites.map((favorite) => {
-                const anime = animeDetails[favorite.animeId]
-                
-                return (
-                  <div key={favorite._id} className="relative group">
-                    <AnimeCard
-                      id={parseInt(favorite.animeId)}
-                      title={favorite.title}
-                      images={anime?.images}
-                      score={anime?.score}
-                      episodes={anime?.episodes}
-                      genres={anime?.genres}
-                      year={anime?.year}
-                      season={anime?.season}
-                    />
-                    
-                    {/* Botón de remover */}
-                    <Button
-                      variant="destructive"
-                      size="icon"
-                      className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity z-20"
-                      onClick={() => handleRemoveFavorite(favorite.animeId, favorite.title)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                )
-              })}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Loading indicator for anime details */}
-      {loadingDetails && (
-        <div className="flex justify-center mt-8">
-          <div className="flex items-center gap-2">
-            <Loader2 className="h-4 w-4 animate-spin" />
-            <span className="text-sm text-muted-foreground">Cargando detalles...</span>
           </div>
         </div>
-      )}
-    </div>
+
+        {/* Search */}
+        {favorites.length > 0 && (
+          <div className="mb-6">
+            <div className="relative max-w-md">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+              <Input
+                placeholder="Buscar en favoritos..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Content */}
+        {favorites.length === 0 ? (
+          <Card>
+            <CardContent className="text-center py-12">
+              <Heart className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+              <h2 className="text-xl font-semibold mb-2">No tienes favoritos</h2>
+              <p className="text-muted-foreground mb-4">
+                Agrega animes a tus favoritos para verlos aquí
+              </p>
+              <Button asChild>
+                <Link href="/explorar">
+                  Explorar Animes
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="space-y-6">
+            {filteredFavorites.length === 0 ? (
+              <Card>
+                <CardContent className="text-center py-8">
+                  <p className="text-muted-foreground">
+                    No se encontraron favoritos que coincidan con tu búsqueda
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                {filteredFavorites.map((favorite) => {
+                  const anime = animeDetails[favorite.animeId]
+                  
+                  return (
+                    <div key={favorite._id} className="relative group">
+                      <AnimeCard
+                        id={parseInt(favorite.animeId)}
+                        title={favorite.title}
+                        images={anime?.images}
+                        score={anime?.score}
+                        episodes={anime?.episodes}
+                        genres={anime?.genres}
+                        year={anime?.year}
+                        season={anime?.season}
+                      />
+                      
+                      {/* Botón de remover */}
+                      <Button
+                        variant="destructive"
+                        size="icon"
+                        className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity z-20"
+                        onClick={() => handleRemoveFavorite(favorite.animeId, favorite.title)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Loading indicator for anime details */}
+        {loadingDetails && (
+          <div className="flex justify-center mt-8">
+            <div className="flex items-center gap-2">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span className="text-sm text-muted-foreground">Cargando detalles...</span>
+            </div>
+          </div>
+        )}
+      </div>
+    </CDNLoading>
   )
 } 

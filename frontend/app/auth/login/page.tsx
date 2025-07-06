@@ -5,10 +5,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Loader2, LogIn, Eye, EyeOff } from "lucide-react"
+import { Loader2, LogIn, Eye, EyeOff, Sparkles, Anime } from "lucide-react"
 import { useAuth } from "@/contexts/AuthContext"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { SITE_NAME } from "@/lib/siteConfig"
 
 export default function LoginPage() {
   const [formData, setFormData] = useState({
@@ -54,35 +55,78 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-md">
-      <div className="flex flex-col items-center">
-        <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold">Iniciar Sesión</h1>
-          <p className="text-muted-foreground mt-2">
-            Accede a tu cuenta para continuar
+    <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-secondary/5 flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Fondo animado con partículas */}
+      <div className="absolute inset-0 overflow-hidden">
+        {[...Array(8)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute w-1 h-1 bg-primary/20 rounded-full animate-pulse"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              animationDelay: `${Math.random() * 2}s`,
+              animationDuration: `${3 + Math.random() * 2}s`
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Gradientes decorativos */}
+      <div className="absolute top-0 left-0 w-96 h-96 bg-primary/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
+      <div className="absolute bottom-0 right-0 w-96 h-96 bg-secondary/10 rounded-full blur-3xl translate-x-1/2 translate-y-1/2"></div>
+
+      <div className="w-full max-w-md relative z-10">
+        {/* Header con logo y título */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-primary to-secondary rounded-2xl mb-4 shadow-lg">
+            <Anime className="h-8 w-8 text-white" />
+          </div>
+          
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent mb-2">
+            {SITE_NAME}
+          </h1>
+          
+          <div className="flex items-center justify-center gap-2 text-muted-foreground mb-6">
+            <Sparkles className="h-4 w-4" />
+            <span className="text-sm">Tu universo de anime</span>
+            <Sparkles className="h-4 w-4" />
+          </div>
+
+          <h2 className="text-2xl font-semibold text-foreground mb-2">
+            ¡Bienvenido de vuelta!
+          </h2>
+          <p className="text-muted-foreground">
+            Accede a tu cuenta para continuar explorando
           </p>
         </div>
 
-        <Card className="w-full">
-          <CardHeader>
-            <CardTitle className="text-center">Bienvenido de vuelta</CardTitle>
+        {/* Formulario */}
+        <Card className="w-full bg-card/80 backdrop-blur-xl border-border/50 shadow-2xl">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-center text-xl">Iniciar Sesión</CardTitle>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="email">Correo electrónico</Label>
+                <Label htmlFor="email" className="text-sm font-medium">
+                  Correo electrónico
+                </Label>
                 <Input
                   id="email"
                   type="email"
                   placeholder="tu@email.com"
                   value={formData.email}
                   onChange={(e) => handleInputChange('email', e.target.value)}
+                  className="h-11 bg-background/50 border-border/50 focus:border-primary/50"
                   required
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password">Contraseña</Label>
+                <Label htmlFor="password" className="text-sm font-medium">
+                  Contraseña
+                </Label>
                 <div className="relative">
                   <Input
                     id="password"
@@ -90,6 +134,7 @@ export default function LoginPage() {
                     placeholder="Tu contraseña"
                     value={formData.password}
                     onChange={(e) => handleInputChange('password', e.target.value)}
+                    className="h-11 bg-background/50 border-border/50 focus:border-primary/50 pr-10"
                     required
                   />
                   <Button
@@ -100,23 +145,23 @@ export default function LoginPage() {
                     onClick={() => setShowPassword(!showPassword)}
                   >
                     {showPassword ? (
-                      <EyeOff className="h-4 w-4" />
+                      <EyeOff className="h-4 w-4 text-muted-foreground" />
                     ) : (
-                      <Eye className="h-4 w-4" />
+                      <Eye className="h-4 w-4 text-muted-foreground" />
                     )}
                   </Button>
                 </div>
               </div>
 
               {error && (
-                <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
-                  <p className="text-destructive text-sm">{error}</p>
+                <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-lg animate-in slide-in-from-top-2">
+                  <p className="text-destructive text-sm font-medium">{error}</p>
                 </div>
               )}
 
               <Button
                 type="submit"
-                className="w-full gap-2"
+                className="w-full h-11 bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-white font-medium gap-2 shadow-lg hover:shadow-xl transition-all duration-200"
                 disabled={loading}
               >
                 {loading ? (
@@ -128,19 +173,38 @@ export default function LoginPage() {
               </Button>
             </form>
 
-            <div className="mt-6 text-center">
-              <p className="text-sm text-muted-foreground">
-                ¿No tienes una cuenta?{" "}
+            {/* Enlaces adicionales */}
+            <div className="mt-8 space-y-4">
+              <div className="text-center">
+                <p className="text-sm text-muted-foreground">
+                  ¿No tienes una cuenta?{" "}
+                  <Link 
+                    href="/auth/register" 
+                    className="text-primary hover:text-primary/80 font-medium transition-colors"
+                  >
+                    Regístrate aquí
+                  </Link>
+                </p>
+              </div>
+              
+              <div className="text-center">
                 <Link 
-                  href="/auth/register" 
-                  className="text-primary hover:underline font-medium"
+                  href="/" 
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  Regístrate aquí
+                  ← Volver al inicio
                 </Link>
-              </p>
+              </div>
             </div>
           </CardContent>
         </Card>
+
+        {/* Footer */}
+        <div className="text-center mt-8">
+          <p className="text-xs text-muted-foreground">
+            Al iniciar sesión, aceptas nuestros términos y condiciones
+          </p>
+        </div>
       </div>
     </div>
   )
