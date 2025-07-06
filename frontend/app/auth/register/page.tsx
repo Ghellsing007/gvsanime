@@ -5,28 +5,41 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Loader2, LogIn, Eye, EyeOff } from "lucide-react"
+import { Loader2, UserPlus, Eye, EyeOff } from "lucide-react"
 import { useAuth } from "@/hooks/useAuth"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 
-export default function LoginPage() {
+export default function RegisterPage() {
   const [formData, setFormData] = useState({
+    username: "",
     email: "",
-    password: ""
+    password: "",
+    confirmPassword: ""
   })
   const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   
-  const { login } = useAuth()
+  const { register } = useAuth()
   const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!formData.email || !formData.password) {
+    if (!formData.username || !formData.email || !formData.password || !formData.confirmPassword) {
       setError("Por favor completa todos los campos")
+      return
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      setError("Las contraseñas no coinciden")
+      return
+    }
+
+    if (formData.password.length < 6) {
+      setError("La contraseña debe tener al menos 6 caracteres")
       return
     }
 
@@ -34,10 +47,14 @@ export default function LoginPage() {
       setLoading(true)
       setError("")
       
-      const result = await login(formData.email, formData.password)
+      const result = await register(formData.username, formData.email, formData.password)
       
       if (result.success) {
-        router.push("/")
+        if (result.message) {
+          setError(result.message) // Mostrar mensaje de verificación
+        } else {
+          router.push("/")
+        }
       } else {
         setError(result.error)
       }
@@ -57,18 +74,30 @@ export default function LoginPage() {
     <div className="container mx-auto px-4 py-8 max-w-md">
       <div className="flex flex-col items-center">
         <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold">Iniciar Sesión</h1>
+          <h1 className="text-3xl font-bold">Crear Cuenta</h1>
           <p className="text-muted-foreground mt-2">
-            Accede a tu cuenta para continuar
+            Únete a nuestra comunidad de anime
           </p>
         </div>
 
         <Card className="w-full">
           <CardHeader>
-            <CardTitle className="text-center">Bienvenido de vuelta</CardTitle>
+            <CardTitle className="text-center">Regístrate gratis</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="username">Nombre de usuario</Label>
+                <Input
+                  id="username"
+                  type="text"
+                  placeholder="tu_usuario"
+                  value={formData.username}
+                  onChange={(e) => handleInputChange('username', e.target.value)}
+                  required
+                />
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="email">Correo electrónico</Label>
                 <Input
@@ -87,7 +116,7 @@ export default function LoginPage() {
                   <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
-                    placeholder="Tu contraseña"
+                    placeholder="Mínimo 6 caracteres"
                     value={formData.password}
                     onChange={(e) => handleInputChange('password', e.target.value)}
                     required
@@ -108,9 +137,42 @@ export default function LoginPage() {
                 </div>
               </div>
 
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword">Confirmar contraseña</Label>
+                <div className="relative">
+                  <Input
+                    id="confirmPassword"
+                    type={showConfirmPassword ? "text" : "password"}
+                    placeholder="Repite tu contraseña"
+                    value={formData.confirmPassword}
+                    onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
+                    required
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  >
+                    {showConfirmPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+              </div>
+
               {error && (
-                <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
-                  <p className="text-destructive text-sm">{error}</p>
+                <div className={`p-3 border rounded-lg ${
+                  error.includes('verifica') 
+                    ? 'bg-blue-50 border-blue-200 dark:bg-blue-950/20 dark:border-blue-800' 
+                    : 'bg-destructive/10 border-destructive/20'
+                }`}>
+                  <p className={`text-sm ${
+                    error.includes('verifica') ? 'text-blue-700 dark:text-blue-300' : 'text-destructive'
+                  }`}>{error}</p>
                 </div>
               )}
 
@@ -122,27 +184,37 @@ export default function LoginPage() {
                 {loading ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
-                  <LogIn className="h-4 w-4" />
+                  <UserPlus className="h-4 w-4" />
                 )}
-                Iniciar Sesión
+                Crear Cuenta
               </Button>
             </form>
 
             <div className="mt-6 text-center">
               <p className="text-sm text-muted-foreground">
-                ¿No tienes una cuenta?{" "}
+                ¿Ya tienes una cuenta?{" "}
                 <Link 
-                  href="/auth/register" 
+                  href="/auth/login" 
                   className="text-primary hover:underline font-medium"
                 >
-                  Regístrate aquí
+                  Inicia sesión aquí
                 </Link>
               </p>
+            </div>
+
+            <div className="mt-4 text-xs text-center text-muted-foreground">
+              Al registrarte, aceptas nuestros{" "}
+              <Link href="/terms" className="text-primary hover:underline">
+                Términos de Servicio
+              </Link>{" "}
+              y{" "}
+              <Link href="/privacy" className="text-primary hover:underline">
+                Política de Privacidad
+              </Link>
             </div>
           </CardContent>
         </Card>
       </div>
     </div>
   )
-}
-
+} 

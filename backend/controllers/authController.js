@@ -1,4 +1,5 @@
 import getSupabaseClient from '../services/shared/supabaseClient.js';
+import authMiddleware from '../middleware/auth.js';
 
 // Controlador para registrar un usuario
 export async function registerUser(req, res) {
@@ -107,5 +108,16 @@ export async function verifyEmail(req, res) {
     return res.status(501).json({ error: 'Esta acción debe completarse desde el frontend usando el link de Supabase.' });
   } catch (err) {
     res.status(500).json({ error: 'Error al verificar el email.' });
+  }
+}
+
+// Obtener información del usuario autenticado
+export async function getMe(req, res) {
+  try {
+    // El middleware de auth ya verifica el token y agrega req.user
+    const { id, email, username } = req.user;
+    res.json({ id, email, username });
+  } catch (err) {
+    res.status(500).json({ error: 'Error al obtener información del usuario.' });
   }
 } 

@@ -1,19 +1,18 @@
 "use client"
 
-import type React from "react"
-
-import { useState, useEffect } from "react"
 import Link from "next/link"
+import { useEffect, useState } from "react"
 import { useTheme } from "next-themes"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Search, Menu, X, Home, Film, Calendar, Compass, MessageSquare, User, Sun, Moon } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Search, Menu, X, Home, Film, Calendar, MessageSquare, User, Sun, Moon, LogIn, UserPlus, LogOut } from "lucide-react"
 import { useMobile } from "@/hooks/use-mobile"
-import { SITE_NAME } from "../lib/siteConfig"
-import api from "@/lib/api"
+import { useAuth } from "@/hooks/useAuth"
 import AnimeSearchAutocomplete from "@/components/AnimeSearchAutocomplete"
+import { UserMenu } from "@/components/ui/user-menu"
+import { SITE_NAME } from "@/lib/siteConfig"
+import api from "@/lib/api"
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
@@ -22,64 +21,18 @@ export default function Navbar() {
   const [mounted, setMounted] = useState(false)
   const { theme, setTheme } = useTheme()
   const isMobile = useMobile()
-  const [suggestions, setSuggestions] = useState<any[]>([])
-  const [loadingSuggestions, setLoadingSuggestions] = useState(false)
-  const [showSuggestions, setShowSuggestions] = useState(false)
-  const [suggestionError, setSuggestionError] = useState("")
-  let debounceTimeout: NodeJS.Timeout
+  const { user, loading: authLoading, isAuthenticated, logout } = useAuth()
 
   useEffect(() => {
     setMounted(true)
-  }, [])
-
-  const toggleMenu = () => setIsOpen(!isOpen)
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 10)
-    }
-
+    const handleScroll = () => setIsScrolled(window.scrollY > 10)
     window.addEventListener("scroll", handleScroll)
     return () => window.removeEventListener("scroll", handleScroll)
   }, [])
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
-    // Implement search functionality
     window.location.href = `/explorar?q=${encodeURIComponent(searchQuery)}`
-  }
-
-  // Autocompletado: buscar sugerencias mientras el usuario escribe
-  useEffect(() => {
-    if (!searchQuery) {
-      setSuggestions([])
-      setShowSuggestions(false)
-      setSuggestionError("")
-      return
-    }
-    setLoadingSuggestions(true)
-    setSuggestionError("")
-    clearTimeout(debounceTimeout)
-    debounceTimeout = setTimeout(async () => {
-      try {
-        const res = await api.get(`/anime/search?q=${encodeURIComponent(searchQuery)}&limit=5`)
-        const data = res.data?.data || []
-        setSuggestions(data.slice(0, 5))
-        setShowSuggestions(true)
-      } catch (err: any) {
-        setSuggestionError("Error buscando sugerencias")
-        setSuggestions([])
-        setShowSuggestions(false)
-      } finally {
-        setLoadingSuggestions(false)
-      }
-    }, 300) // 300ms debounce
-    return () => clearTimeout(debounceTimeout)
-  }, [searchQuery])
-
-  // Cerrar sugerencias al perder foco
-  const handleBlur = () => {
-    setTimeout(() => setShowSuggestions(false), 150)
   }
 
   const navItems = [
@@ -91,29 +44,25 @@ export default function Navbar() {
   ]
 
   return (
-    <header
-      className={cn(
-        "sticky top-0 z-50 w-full transition-all duration-200",
-        isScrolled ? "bg-background/95 backdrop-blur-sm shadow-sm" : "bg-background",
-      )}
-    >
-      <div className="container mx-auto px-4">
-        <div className="flex h-16 items-center justify-between">
-          <div className="flex items-center">
-            <Link href="/" className="flex items-center">
-              <span className="text-2xl font-bold bg-gradient-to-r from-primary via-accent to-secondary bg-clip-text text-transparent">
-                {SITE_NAME}
-              </span>
-            </Link>
-          </div>
+    <header className={cn(
+      "sticky top-0 z-50 w-full transition-all duration-200",
+      isScrolled ? "bg-background/95 backdrop-blur-sm shadow-sm" : "bg-background"
+    )}>
+      <div className="w-full px-4 md:px-6 max-w-screen-xl mx-auto">
+        <div className="flex items-center justify-between h-16 gap-2 flex-wrap">
+          {/* Logo */}
+          <Link href="/" className="text-2xl font-bold bg-gradient-to-r from-primary via-accent to-secondary bg-clip-text text-transparent truncate max-w-[160px] sm:max-w-[200px]">
+            {SITE_NAME}
+          </Link>
 
+          {/* Navegación (Desktop) */}
           {!isMobile && (
-            <nav className="mx-6 hidden md:flex items-center space-x-4 flex-1 justify-center">
+            <nav className="flex-1 hidden md:flex justify-center gap-2 min-w-0">
               {navItems.map((item) => (
                 <Link
                   key={item.name}
                   href={item.href}
-                  className="flex items-center px-3 py-2 text-sm font-medium rounded-md hover:bg-primary/10 transition-colors"
+                  className="flex items-center px-3 py-2 text-sm font-medium rounded-md hover:bg-primary/10 transition-colors whitespace-nowrap truncate"
                 >
                   {item.icon}
                   {item.name}
@@ -122,20 +71,23 @@ export default function Navbar() {
             </nav>
           )}
 
-          <div className="flex items-center gap-2">
-            <form onSubmit={handleSearch} className="hidden md:flex relative items-center">
+          {/* Búsqueda + Acciones */}
+          <div className="flex items-center gap-2 flex-shrink-0 min-w-0">
+            {/* Búsqueda */}
+            <form onSubmit={handleSearch} className="hidden md:flex items-center min-w-0 max-w-[300px] w-full">
               <AnimeSearchAutocomplete
                 size="small"
                 placeholder="Buscar anime..."
                 value={searchQuery}
                 onChange={setSearchQuery}
-                className="mr-2"
+                className="min-w-0 w-[120px] sm:w-[180px] md:w-[220px] lg:w-[280px] truncate"
               />
-              <Button type="submit" size="icon" variant="ghost" className="h-full">
-                <Search className="h-4 w-4" />
+              <Button type="submit" size="icon" variant="ghost" className="ml-1">
+                <Search className="h-5 w-5" />
               </Button>
             </form>
 
+            {/* Tema */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon">
@@ -155,27 +107,50 @@ export default function Navbar() {
               </DropdownMenuContent>
             </DropdownMenu>
 
-            <Button variant="ghost" size="icon" className="md:hidden" onClick={toggleMenu}>
+            {/* Autenticación */}
+            {!authLoading && (
+              isAuthenticated && user ? (
+                <UserMenu user={user} onLogout={logout} />
+              ) : (
+                <div className="hidden md:flex gap-2 items-center">
+                  <Button variant="ghost" size="sm" asChild className="whitespace-nowrap">
+                    <Link href="/auth/login">
+                      <LogIn className="h-4 w-4 mr-1" />
+                      Iniciar Sesión
+                    </Link>
+                  </Button>
+                  <Button size="sm" asChild className="whitespace-nowrap">
+                    <Link href="/auth/register">
+                      <UserPlus className="h-4 w-4 mr-1" />
+                      Registrarse
+                    </Link>
+                  </Button>
+                </div>
+              )
+            )}
+
+            {/* Menú móvil */}
+            <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setIsOpen(!isOpen)}>
               {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </Button>
           </div>
         </div>
       </div>
 
-      {/* Mobile menu */}
-      {isOpen && isMobile && (
-        <div className="md:hidden animate-fade-in">
-          <div className="px-2 pt-2 pb-3 space-y-1">
-            <form onSubmit={handleSearch} className="p-2">
+      {/* Menú móvil */}
+      {isMobile && isOpen && (
+        <div className="md:hidden animate-fade-in bg-background shadow-inner">
+          <div className="p-4 space-y-3">
+            <form onSubmit={handleSearch} className="w-full">
               <div className="relative">
-                <Input
+                <input
                   type="search"
                   placeholder="Buscar anime..."
-                  className="w-full"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full px-4 py-2 rounded-md bg-muted text-sm"
                 />
-                <Button type="submit" size="icon" variant="ghost" className="absolute right-0 top-0 h-full">
+                <Button type="submit" size="icon" variant="ghost" className="absolute right-1 top-1">
                   <Search className="h-4 w-4" />
                 </Button>
               </div>
@@ -185,17 +160,58 @@ export default function Navbar() {
               <Link
                 key={item.name}
                 href={item.href}
-                className="flex items-center px-3 py-2 text-base font-medium rounded-md hover:bg-primary/10 transition-colors"
+                className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-primary/10 transition-colors"
                 onClick={() => setIsOpen(false)}
               >
                 {item.icon}
                 {item.name}
               </Link>
             ))}
+
+            {!authLoading && !isAuthenticated && (
+              <div className="space-y-2">
+                <Button variant="ghost" className="w-full justify-start" asChild>
+                  <Link href="/auth/login" onClick={() => setIsOpen(false)}>
+                    <LogIn className="h-4 w-4 mr-2" />
+                    Iniciar Sesión
+                  </Link>
+                </Button>
+                <Button className="w-full justify-start" asChild>
+                  <Link href="/auth/register" onClick={() => setIsOpen(false)}>
+                    <UserPlus className="h-4 w-4 mr-2" />
+                    Registrarse
+                  </Link>
+                </Button>
+              </div>
+            )}
+
+                         {isAuthenticated && user && (
+               <div className="p-2">
+                 <div className="flex items-center gap-2 mb-2">
+                   <div className="bg-primary/10 w-8 h-8 rounded-full flex items-center justify-center">
+                     {user.username.charAt(0).toUpperCase()}
+                   </div>
+                   <div>
+                     <p className="text-sm font-medium">{user.username}</p>
+                     <p className="text-xs text-muted-foreground">{user.email}</p>
+                   </div>
+                 </div>
+                 <Button 
+                   variant="ghost" 
+                   className="w-full justify-start text-red-600 hover:text-red-600"
+                   onClick={() => {
+                     logout()
+                     setIsOpen(false)
+                   }}
+                 >
+                   <LogOut className="h-4 w-4 mr-2" />
+                   Cerrar Sesión
+                 </Button>
+               </div>
+             )}
           </div>
         </div>
       )}
     </header>
   )
 }
-

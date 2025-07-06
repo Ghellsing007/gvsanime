@@ -3,9 +3,10 @@
 // y extraer el user id del token para usarlo en los controladores
 
 import jwt from 'jsonwebtoken';
+import getSupabaseClient from '../services/shared/supabaseClient.js';
 
 // Middleware principal
-export default function authMiddleware(req, res, next) {
+export default async function authMiddleware(req, res, next) {
   const SUPABASE_JWT_SECRET = process.env.SUPABASE_JWT_SECRET;
   // 1. Leer el header Authorization
   const authHeader = req.headers['authorization'];
@@ -21,8 +22,27 @@ export default function authMiddleware(req, res, next) {
 
   try {
     const decoded = jwt.verify(token, SUPABASE_JWT_SECRET);
-    // 4. Extraer el user id (sub) y ponerlo en req.user
-    req.user = { id: decoded.sub };
+    // 4. Extraer el user id (sub) y obtener información completa del usuario
+    const supabase = getSupabaseClient();
+    const { data: user, error } = await supabase.auth.getUser(token);
+    
+    if (error || !user.user) {
+      return res.status(401).json({ error: 'Token inválido o expirado' });
+    }
+
+    // Obtener información adicional del usuario desde la tabla users
+    const { data: userProfile } = await supabase
+      .from('users')
+      .select('username')
+      .eq('id', user.user.id)
+      .single();
+
+    req.user = {
+      id: user.user.id,
+      email: user.user.email,
+      username: userProfile?.username || user.user.email?.split('@')[0] || 'Usuario'
+    };
+    
     // 5. Continuar con la siguiente función o controlador
     next();
   } catch (err) {
