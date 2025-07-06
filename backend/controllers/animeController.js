@@ -304,7 +304,7 @@ export async function getRecommendationsController(req, res) {
 export async function getAllAnimeController(req, res) {
   try {
     const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 12;
+    const limit = parseInt(req.query.limit) || 15;
     const q = req.query.q || '';
     const genre = req.query.genre;
     
@@ -313,24 +313,32 @@ export async function getAllAnimeController(req, res) {
       const results = await searchAnimeManager(q, page, limit);
       res.json(results);
     } else {
-      // Si no hay query, obtener animes top
-      const results = await getTopAnimeManager();
-      const startIndex = (page - 1) * limit;
-      const endIndex = startIndex + limit;
-      const paginatedResults = results.slice(startIndex, endIndex);
-      
-      res.json({
-        data: paginatedResults,
-        pagination: {
-          current_page: page,
-          items: { 
-            count: paginatedResults.length,
-            total: results.length 
-          },
-          last_visible_page: Math.ceil(results.length / limit),
-          has_next_page: endIndex < results.length
-        }
-      });
+      // Si no hay query, obtener TODOS los animes disponibles
+      try {
+        const { getAllAnimes } = await import('../services/anime/cdnAnimeService.js');
+        const results = await getAllAnimes(page, limit);
+        res.json(results);
+      } catch (error) {
+        console.error('Error obteniendo todos los animes desde CDN:', error);
+        // Fallback a animes top si falla
+        const results = await getTopAnimeManager();
+        const startIndex = (page - 1) * limit;
+        const endIndex = startIndex + limit;
+        const paginatedResults = results.slice(startIndex, endIndex);
+        
+        res.json({
+          data: paginatedResults,
+          pagination: {
+            current_page: page,
+            items: { 
+              count: paginatedResults.length,
+              total: results.length 
+            },
+            last_visible_page: Math.ceil(results.length / limit),
+            has_next_page: endIndex < results.length
+          }
+        });
+      }
     }
   } catch (err) {
     console.error('Error obteniendo todos los animes:', err);
