@@ -6,11 +6,12 @@ import { useState, useEffect } from "react"
 import AnimeCard from "@/components/anime-card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Loader2, Search } from "lucide-react"
+import { Loader2, Search, ChevronLeft, ChevronRight } from "lucide-react"
 import { RetryButton } from "@/components/ui/retry-button"
 import api from "@/lib/api"
 import { useSearchParams } from "next/navigation"
 import AnimeSearchAutocomplete from "@/components/AnimeSearchAutocomplete"
+import { motion } from "framer-motion"
 
 interface Anime {
   mal_id: number
@@ -49,12 +50,12 @@ interface AnimeListProps {
   initialLimit?: number
 }
 
-export default function AnimeList({ initialPage = 1, initialLimit = 12 }: AnimeListProps) {
+export default function AnimeList({ initialPage = 1, initialLimit = 15 }: AnimeListProps) {
   const [animes, setAnimes] = useState<Anime[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
-  const [page, setPage] = useState(initialPage)
-  const [hasMore, setHasMore] = useState(true)
+  const [currentPage, setCurrentPage] = useState(initialPage)
+  const [totalPages, setTotalPages] = useState(1)
   const [searchQuery, setSearchQuery] = useState("")
   const [searching, setSearching] = useState(false)
   const [totalAnimes, setTotalAnimes] = useState(0)
@@ -87,12 +88,8 @@ export default function AnimeList({ initialPage = 1, initialLimit = 12 }: AnimeL
       
       const data = response.data
       setTotalAnimes(data.pagination.items.total)
-      setHasMore(pageNum < data.pagination.last_visible_page)
-      if (pageNum === 1) {
-        setAnimes(data.data)
-      } else {
-        setAnimes((prev) => [...prev, ...data.data])
-      }
+      setTotalPages(data.pagination.last_visible_page || Math.ceil(data.pagination.items.total / initialLimit))
+      setAnimes(data.data)
       setError("")
     } catch (err: any) {
       // Manejar errores específicos del CDN
@@ -126,16 +123,26 @@ export default function AnimeList({ initialPage = 1, initialLimit = 12 }: AnimeL
     fetchAnimes(initialPage)
   }, [initialPage])
 
-  const handleLoadMore = () => {
-    const nextPage = page + 1
-    setPage(nextPage)
-    fetchAnimes(nextPage, searchQuery)
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      const newPage = currentPage - 1
+      setCurrentPage(newPage)
+      fetchAnimes(newPage, searchQuery)
+    }
+  }
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      const newPage = currentPage + 1
+      setCurrentPage(newPage)
+      fetchAnimes(newPage, searchQuery)
+    }
   }
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
     setSearching(true)
-    setPage(1)
+    setCurrentPage(1)
     setAnimes([])
     fetchAnimes(1, searchQuery)
   }
@@ -164,46 +171,100 @@ export default function AnimeList({ initialPage = 1, initialLimit = 12 }: AnimeL
       </div>
 
       {totalAnimes > 0 && (
-        <p className="text-center text-muted-foreground mb-6">
-          Mostrando {animes.length} de {totalAnimes} resultados
-        </p>
+        <div className="flex justify-between items-center mb-6">
+          <p className="text-muted-foreground">
+            Mostrando página {currentPage} de {totalPages} ({totalAnimes} animes total)
+          </p>
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="outline" 
+              size="icon" 
+              onClick={handlePreviousPage}
+              disabled={currentPage <= 1 || loading}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <span className="text-sm font-medium min-w-[60px] text-center">
+              {currentPage} / {totalPages}
+            </span>
+            <Button 
+              variant="outline" 
+              size="icon" 
+              onClick={handleNextPage}
+              disabled={currentPage >= totalPages || loading}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
       )}
 
       {error && (
         <div className="mb-6">
-          <RetryButton onRetry={() => fetchAnimes(1, searchQuery)} loading={loading}>
+          <RetryButton onRetry={() => fetchAnimes(currentPage, searchQuery)} loading={loading}>
             {error}
           </RetryButton>
         </div>
       )}
 
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-6">
-        {uniqueAnimes.map((anime) => (
-          <AnimeCard
+      {/* Cuadrícula de 3 filas × 5 columnas */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 mb-8">
+        {uniqueAnimes.map((anime, index) => (
+          <motion.div
             key={anime.mal_id}
-            id={anime.mal_id}
-            title={anime.title}
-            images={anime.images}
-            score={anime.score}
-            episodes={anime.episodes}
-            genres={anime.genres.map((g) => g.name)}
-            year={anime.year}
-            season={anime.season}
-          />
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.05 }}
+          >
+            <AnimeCard
+              id={anime.mal_id}
+              title={anime.title}
+              images={anime.images}
+              score={anime.score}
+              episodes={anime.episodes}
+              genres={anime.genres.map((g) => g.name)}
+              year={anime.year}
+              season={anime.season}
+              variant="compact"
+            />
+          </motion.div>
         ))}
       </div>
+
+      {/* Navegación de páginas en la parte inferior */}
+      {totalPages > 1 && (
+        <div className="flex justify-center items-center gap-4 mt-8">
+          <Button 
+            variant="outline" 
+            onClick={handlePreviousPage}
+            disabled={currentPage <= 1 || loading}
+            className="flex items-center gap-2"
+          >
+            <ChevronLeft className="h-4 w-4" />
+            Anterior
+          </Button>
+          
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium">
+              Página {currentPage} de {totalPages}
+            </span>
+          </div>
+          
+          <Button 
+            variant="outline" 
+            onClick={handleNextPage}
+            disabled={currentPage >= totalPages || loading}
+            className="flex items-center gap-2"
+          >
+            Siguiente
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
 
       {loading && (
         <div className="flex justify-center my-8">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      )}
-
-      {!loading && hasMore && (
-        <div className="flex justify-center mt-8">
-          <Button onClick={handleLoadMore} variant="outline" size="lg">
-            Cargar más
-          </Button>
         </div>
       )}
     </div>

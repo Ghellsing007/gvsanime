@@ -220,8 +220,16 @@ export async function getRecentAnimes(limit = 20) {
   await ensureDataLoaded();
   
   const currentYear = new Date().getFullYear();
+  
+  // Filtrar animes recientes y eliminar duplicados por mal_id
+  const seenIds = new Set();
   const recentAnimes = animeData
-    .filter(anime => anime.year && anime.year >= currentYear - 2)
+    .filter(anime => {
+      if (!anime.year || anime.year < currentYear - 2) return false;
+      if (seenIds.has(anime.mal_id)) return false;
+      seenIds.add(anime.mal_id);
+      return true;
+    })
     .sort((a, b) => b.year - a.year || (b.score || 0) - (a.score || 0))
     .slice(0, limit);
 

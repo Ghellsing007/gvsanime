@@ -323,7 +323,11 @@ export async function getAllAnimeController(req, res) {
         data: paginatedResults,
         pagination: {
           current_page: page,
-          items: { count: results.length },
+          items: { 
+            count: paginatedResults.length,
+            total: results.length 
+          },
+          last_visible_page: Math.ceil(results.length / limit),
           has_next_page: endIndex < results.length
         }
       });
