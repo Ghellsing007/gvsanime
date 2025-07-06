@@ -1,0 +1,31 @@
+services:
+  - type: web
+    name: gvsanime-backend
+    runtime: node
+    plan: free
+    buildCommand: pnpm install
+    startCommand: pnpm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: HOST
+        value: 0.0.0.0
+      # MongoDB Atlas
+      - key: MONGODB_URI
+        sync: false
+      # Supabase
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      # JWT
+      - key: JWT_SECRET
+        sync: false
+      # Jikan API (opcional)
+      - key: JIKAN_API_URL
+        value: https://api.jikan.moe/v4
+      # CDN (opcional)
+      - key: CDN_URL
+        sync: false 

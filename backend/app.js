@@ -22,11 +22,15 @@ if (process.env.NODE_ENV !== 'test') {
   startBackupCronJob();
 }
 
-// Configuración CORS solo para orígenes permitidos
+// Configuración CORS para desarrollo y producción
 const allowedOrigins = [
   'http://localhost:3000',
-  'http://192.168.1.7:3000'
-];
+  'http://192.168.1.7:3000',
+  'https://gvsanime.vercel.app', // Frontend en Vercel
+  'https://gvsanime-frontend.vercel.app', // Alternativo
+  'https://gvsanime.vercel.app', // Dominio principal
+  process.env.FRONTEND_URL // Variable de entorno para el frontend
+].filter(Boolean); // Eliminar valores undefined
 
 app.use(cors({
   origin: function (origin, callback) {
@@ -34,6 +38,7 @@ app.use(cors({
     if (!origin || allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
+      console.log('CORS bloqueado para origen:', origin);
       callback(new Error('No permitido por CORS'));
     }
   },
