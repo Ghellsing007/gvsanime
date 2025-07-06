@@ -62,12 +62,29 @@ export default function AnimeList({ initialPage = 1, initialLimit = 12 }: AnimeL
   const genero = searchParams.get("genero")
   const season = searchParams.get("season")
 
-  const fetchAnimes = async (pageNum: number, query = "") => {
+  const fetchAnimes = async (pageNum: number, query = "", retryCount = 0) => {
     try {
       setLoading(true)
       const response = await api.get(
         `/anime?page=${pageNum}&limit=${initialLimit}${genero ? `&genre=${encodeURIComponent(genero)}` : ""}${season ? `&season=${encodeURIComponent(season)}` : ""}${query ? `&q=${encodeURIComponent(query)}` : ""}`
       )
+      
+      // Verificar si el backend está cargando datos del CDN
+      if (response.status === 503 && response.data?.status === 'loading') {
+        console.log('🔄 Backend cargando datos del CDN, reintentando en 3 segundos...')
+        if (retryCount < 5) { // Máximo 5 reintentos
+          setTimeout(() => {
+            fetchAnimes(pageNum, query, retryCount + 1)
+          }, 3000)
+          return
+        } else {
+          setError("El servidor está cargando datos. Por favor, espera unos minutos y recarga la página.")
+          setLoading(false)
+          setSearching(false)
+          return
+        }
+      }
+      
       const data = response.data
       setTotalAnimes(data.pagination.items.total)
       setHasMore(pageNum < data.pagination.last_visible_page)
@@ -77,8 +94,28 @@ export default function AnimeList({ initialPage = 1, initialLimit = 12 }: AnimeL
         setAnimes((prev) => [...prev, ...data.data])
       }
       setError("")
-    } catch (err) {
-      setError("Error al cargar los animes. Por favor, inténtalo de nuevo más tarde.")
+    } catch (err: any) {
+      // Manejar errores específicos del CDN
+      if (err.response?.status === 503) {
+        const errorData = err.response.data
+        if (errorData?.status === 'loading') {
+          console.log('🔄 CDN cargando, reintentando...')
+          if (retryCount < 5) {
+            setTimeout(() => {
+              fetchAnimes(pageNum, query, retryCount + 1)
+            }, errorData.retryAfter * 1000 || 3000)
+            return
+          } else {
+            setError("El servidor está cargando datos del CDN. Por favor, espera unos minutos.")
+          }
+        } else if (errorData?.status === 'error') {
+          setError("Error en el servidor: " + (errorData.message || "Error desconocido"))
+        } else {
+          setError("Error al cargar los animes. Por favor, inténtalo de nuevo más tarde.")
+        }
+      } else {
+        setError("Error al cargar los animes. Por favor, inténtalo de nuevo más tarde.")
+      }
     } finally {
       setLoading(false)
       setSearching(false)

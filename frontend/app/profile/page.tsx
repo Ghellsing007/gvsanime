@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { User, MessageSquare, Heart, Settings, LogOut, Edit, Shield } from "lucide-react"
 import { useEffect, useState } from "react"
 import { useSearchParams } from "next/navigation"
+import CDNStatus from "@/components/cdn-status"
 
 function isAdminOrMod(user: { role?: string }): boolean {
   return user?.role === "admin" || user?.role === "moderator";
@@ -140,6 +141,15 @@ export default function ProfilePage() {
                   <span className="text-2xl font-bold">{topicCount === null ? '--' : topicCount}</span>
                   <span className="text-muted-foreground">Temas</span>
                 </div>
+              </div>
+              
+              {/* Estado del CDN */}
+              <div className="mb-8">
+                <h4 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                  <Shield className="h-5 w-5 text-primary" />
+                  Estado del Sistema CDN
+                </h4>
+                <CDNStatus />
               </div>
               {/* Placeholders de gráficos */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">

@@ -15,16 +15,52 @@ export default function FeaturedAnime() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<Error | null>(null)
 
-  const fetchFeaturedAnime = async () => {
+  const fetchFeaturedAnime = async (retryCount = 0) => {
     try {
       setLoading(true)
       setError(null)
       const res = await api.get('/anime/search?featured=true')
+      
+      // Verificar si el backend está cargando datos del CDN
+      if (res.status === 503 && res.data?.status === 'loading') {
+        console.log('🔄 Backend cargando datos del CDN, reintentando en 3 segundos...')
+        if (retryCount < 5) { // Máximo 5 reintentos
+          setTimeout(() => {
+            fetchFeaturedAnime(retryCount + 1)
+          }, 3000)
+          return
+        } else {
+          setError(new Error("El servidor está cargando datos. Por favor, espera unos minutos y recarga la página."))
+          setLoading(false)
+          return
+        }
+      }
+      
       // Adaptar la respuesta del backend a la estructura esperada
       const results = res.data?.data || res.data?.results || [];
       setAnimes(results)
     } catch (err: any) {
-      setError(err)
+      // Manejar errores específicos del CDN
+      if (err.response?.status === 503) {
+        const errorData = err.response.data
+        if (errorData?.status === 'loading') {
+          console.log('🔄 CDN cargando, reintentando...')
+          if (retryCount < 5) {
+            setTimeout(() => {
+              fetchFeaturedAnime(retryCount + 1)
+            }, errorData.retryAfter * 1000 || 3000)
+            return
+          } else {
+            setError(new Error("El servidor está cargando datos del CDN. Por favor, espera unos minutos."))
+          }
+        } else if (errorData?.status === 'error') {
+          setError(new Error("Error en el servidor: " + (errorData.message || "Error desconocido")))
+        } else {
+          setError(err)
+        }
+      } else {
+        setError(err)
+      }
     } finally {
       setLoading(false)
     }

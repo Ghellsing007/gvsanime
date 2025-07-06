@@ -14,43 +14,44 @@ import {
 } from '../controllers/animeController.js';
 import authMiddleware from '../middleware/auth.js';
 import { requireRole } from '../middleware/roles.js';
+import cdnReady from '../middleware/cdnReady.js';
 
 const router = express.Router();
 
-// Ruta para buscar animes por nombre (público)
-router.get('/search', searchAnimeController);
+// Ruta para buscar animes por nombre (público) - Requiere CDN listo
+router.get('/search', cdnReady, searchAnimeController);
 
-// Ruta para obtener la lista de géneros (público)
-router.get('/genres', getGenresController);
+// Ruta para obtener la lista de géneros (público) - Requiere CDN listo
+router.get('/genres', cdnReady, getGenresController);
 
-// Ruta para obtener un anime por ID (público)
-router.get('/:id', getAnimeById);
+// Ruta para obtener un anime por ID (público) - Requiere CDN listo
+router.get('/:id', cdnReady, getAnimeById);
 
-// Ruta para obtener reviews externas de Jikan (público)
+// Ruta para obtener reviews externas de Jikan (público) - No requiere CDN
 router.get('/reviews/:animeId', getExternalReviewsController);
 
-// Ruta para recomendaciones de anime (pública/personalizada)
-router.get('/recommendations', getRecommendationsController);
+// Ruta para recomendaciones de anime (pública/personalizada) - Requiere CDN listo
+router.get('/recommendations', cdnReady, getRecommendationsController);
 
-// Ruta para obtener todos los animes paginados y con filtro opcional por nombre (público)
-router.get('/', getAllAnimeController);
+// Ruta para obtener todos los animes paginados y con filtro opcional por nombre (público) - Requiere CDN listo
+router.get('/', cdnReady, getAllAnimeController);
 
 // --- GESTIÓN DE FUENTE DE DATOS ---
 
-// Obtener información de la fuente de datos actual
+// Obtener información de la fuente de datos actual - No requiere CDN
 router.get('/datasource/info', getDataSourceInfoController);
 
-// Limpiar cache de MongoDB (solo admin)
+// Limpiar cache de MongoDB (solo admin) - No requiere CDN
 router.delete('/datasource/cache', authMiddleware, requireRole(['admin']), clearCacheController);
 
-// Forzar recarga de datos CDN (solo admin)
+// Forzar recarga de datos CDN (solo admin) - No requiere CDN
 router.post('/datasource/cdn/reload', authMiddleware, requireRole(['admin']), forceReloadCDNController);
 
-// Obtener estadísticas de datos CDN (público)
+// Obtener estadísticas de datos CDN (público) - No requiere CDN
 router.get('/datasource/cdn/stats', getCDNStatsController);
 
-// Obtener animes por género usando CDN (público)
-router.get('/genre/:genreId', getAnimesByGenreController);
+// Obtener animes por género usando CDN (público) - Requiere CDN listo
+router.get('/genre/:genreId', cdnReady, getAnimesByGenreController);
 
 // --- ADMINISTRACIÓN DE CACHÉ ---
 
