@@ -76,40 +76,40 @@ export default function LoginPage() {
       <div className="absolute top-0 left-0 w-96 h-96 bg-primary/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
       <div className="absolute bottom-0 right-0 w-96 h-96 bg-secondary/10 rounded-full blur-3xl translate-x-1/2 translate-y-1/2"></div>
 
-      <div className="w-full max-w-md relative z-10">
+      <div className="w-full max-w-xs sm:max-w-sm md:max-w-md relative z-10">
         {/* Header con logo y título */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-primary to-secondary rounded-2xl mb-4 shadow-lg">
-            <Anime className="h-8 w-8 text-white" />
+        <div className="text-center mb-6 sm:mb-8">
+          <div className="inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-primary to-secondary rounded-2xl mb-3 sm:mb-4 shadow-lg">
+            <Anime className="h-7 w-7 sm:h-8 sm:w-8 text-white" />
           </div>
           
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent mb-2">
+          <h1 className="text-2xl sm:text-4xl font-bold bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent mb-1 sm:mb-2">
             {SITE_NAME}
           </h1>
           
-          <div className="flex items-center justify-center gap-2 text-muted-foreground mb-6">
+          <div className="flex items-center justify-center gap-1 sm:gap-2 text-muted-foreground mb-4 sm:mb-6">
             <Sparkles className="h-4 w-4" />
-            <span className="text-sm">Tu universo de anime</span>
+            <span className="text-xs sm:text-sm">Tu universo de anime</span>
             <Sparkles className="h-4 w-4" />
           </div>
 
-          <h2 className="text-2xl font-semibold text-foreground mb-2">
+          <h2 className="text-lg sm:text-2xl font-semibold text-foreground mb-1 sm:mb-2">
             ¡Bienvenido de vuelta!
           </h2>
-          <p className="text-muted-foreground">
+          <p className="text-xs sm:text-sm text-muted-foreground">
             Accede a tu cuenta para continuar explorando
           </p>
         </div>
 
         {/* Formulario */}
         <Card className="w-full bg-card/80 backdrop-blur-xl border-border/50 shadow-2xl">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-center text-xl">Iniciar Sesión</CardTitle>
+          <CardHeader className="pb-3 sm:pb-4">
+            <CardTitle className="text-center text-lg sm:text-xl">Iniciar Sesión</CardTitle>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="email" className="text-sm font-medium">
+            <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-6">
+              <div className="space-y-1 sm:space-y-2">
+                <Label htmlFor="email" className="text-xs sm:text-sm font-medium">
                   Correo electrónico
                 </Label>
                 <Input
@@ -118,13 +118,13 @@ export default function LoginPage() {
                   placeholder="tu@email.com"
                   value={formData.email}
                   onChange={(e) => handleInputChange('email', e.target.value)}
-                  className="h-11 bg-background/50 border-border/50 focus:border-primary/50"
+                  className="h-10 sm:h-11 bg-background/50 border-border/50 focus:border-primary/50 text-sm sm:text-base"
                   required
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="password" className="text-sm font-medium">
+              <div className="space-y-1 sm:space-y-2">
+                <Label htmlFor="password" className="text-xs sm:text-sm font-medium">
                   Contraseña
                 </Label>
                 <div className="relative">
@@ -134,7 +134,7 @@ export default function LoginPage() {
                     placeholder="Tu contraseña"
                     value={formData.password}
                     onChange={(e) => handleInputChange('password', e.target.value)}
-                    className="h-11 bg-background/50 border-border/50 focus:border-primary/50 pr-10"
+                    className="h-10 sm:h-11 bg-background/50 border-border/50 focus:border-primary/50 pr-10 text-sm sm:text-base"
                     required
                   />
                   <Button
@@ -154,14 +154,14 @@ export default function LoginPage() {
               </div>
 
               {error && (
-                <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-lg animate-in slide-in-from-top-2">
-                  <p className="text-destructive text-sm font-medium">{error}</p>
+                <div className="p-3 sm:p-4 bg-destructive/10 border border-destructive/20 rounded-lg animate-in slide-in-from-top-2">
+                  <p className="text-destructive text-xs sm:text-sm font-medium">{error}</p>
                 </div>
               )}
 
               <Button
                 type="submit"
-                className="w-full h-11 bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-white font-medium gap-2 shadow-lg hover:shadow-xl transition-all duration-200"
+                className="w-full h-10 sm:h-11 bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-white font-medium gap-2 shadow-lg hover:shadow-xl transition-all duration-200 text-sm sm:text-base"
                 disabled={loading}
               >
                 {loading ? (
@@ -174,9 +174,9 @@ export default function LoginPage() {
             </form>
 
             {/* Enlaces adicionales */}
-            <div className="mt-8 space-y-4">
+            <div className="mt-6 sm:mt-8 space-y-3 sm:space-y-4">
               <div className="text-center">
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs sm:text-sm text-muted-foreground">
                   ¿No tienes una cuenta?{" "}
                   <Link 
                     href="/auth/register" 
@@ -190,7 +190,7 @@ export default function LoginPage() {
               <div className="text-center">
                 <Link 
                   href="/" 
-                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  className="text-xs sm:text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
                   ← Volver al inicio
                 </Link>

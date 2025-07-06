@@ -105,17 +105,17 @@ export default function PopularAnime() {
   }
 
   if (loading) return (
-    <section className="mb-12">
-      <div className="flex justify-between items-center mb-6">
-        <Skeleton className="h-8 w-48 rounded" />
-        <Skeleton className="h-8 w-24 rounded" />
+    <section className="mb-6 lg:mb-12">
+      <div className="flex flex-col sm:flex-row justify-between items-center mb-4 sm:mb-6 gap-2">
+        <Skeleton className="h-7 w-40 rounded" />
+        <Skeleton className="h-7 w-20 rounded" />
       </div>
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-4">
         {[...Array(6)].map((_, i) => (
           <div key={i} className="group relative rounded-lg overflow-hidden border bg-card">
             <Skeleton className="aspect-[3/4] w-full rounded-lg mb-2" />
             <div className="p-2">
-              <Skeleton className="h-6 w-3/4 mb-1 rounded" />
+              <Skeleton className="h-5 w-3/4 mb-1 rounded" />
               <Skeleton className="h-4 w-1/2 rounded" />
             </div>
           </div>
@@ -143,19 +143,19 @@ export default function PopularAnime() {
   }
 
   return (
-    <section className="mb-12">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">Popular Anime</h2>
+    <section className="mb-6 lg:mb-12">
+      <div className="flex flex-col sm:flex-row justify-between items-center mb-4 sm:mb-6 gap-2">
+        <h2 className="text-xl sm:text-2xl font-bold">Popular Anime</h2>
         <Link href="/explorar/popular">
-          <Button variant="ghost" className="gap-1 text-muted-foreground">
-            View All <ChevronRight className="h-4 w-4" />
+          <Button variant="ghost" className="gap-1 text-muted-foreground text-sm sm:text-base">
+            Ver todos <ChevronRight className="h-4 w-4" />
           </Button>
         </Link>
       </div>
 
       <Tabs defaultValue="all" onValueChange={setActiveTab}>
-        <TabsList className="mb-6 items-center justify-center">
-          <TabsTrigger value="all">All</TabsTrigger>
+        <TabsList className="mb-4 sm:mb-6 items-center justify-center flex-wrap gap-1">
+          <TabsTrigger value="all">Todos</TabsTrigger>
           {genres.map((genre) => (
             <TabsTrigger key={genre.id} value={genre.name}>
               {genre.name}
@@ -165,7 +165,7 @@ export default function PopularAnime() {
 
         <TabsContent value="all">
           <motion.div
-            className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4"
+            className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-4"
             variants={container}
             initial="hidden"
             animate={activeTab === "all" ? "show" : "hidden"}
@@ -190,7 +190,7 @@ export default function PopularAnime() {
         {genres.map((genre) => (
           <TabsContent key={genre.id} value={genre.name}>
             <motion.div
-              className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4"
+              className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-4"
               variants={container}
               initial="hidden"
               animate={activeTab === genre.name ? "show" : "hidden"}

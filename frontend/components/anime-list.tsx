@@ -156,9 +156,9 @@ export default function AnimeList({ initialPage = 1, initialLimit = 15 }: AnimeL
   if (error) return <div className="container mx-auto px-4 py-8 text-center text-muted-foreground">{error}</div>
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
-        <form onSubmit={handleSearch} className="flex gap-2 max-w-xl mx-auto items-center">
+    <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-8">
+      <div className="mb-4 sm:mb-8">
+        <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-2 max-w-xl mx-auto items-center">
           <AnimeSearchAutocomplete
             size="large"
             placeholder="Buscar anime..."
@@ -166,7 +166,7 @@ export default function AnimeList({ initialPage = 1, initialLimit = 15 }: AnimeL
             onChange={setSearchQuery}
             className="flex-1"
           />
-          <Button type="submit" disabled={searching}>
+          <Button type="submit" disabled={searching} className="w-full sm:w-auto">
             {searching ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Search className="h-4 w-4 mr-2" />}
             Buscar
           </Button>
@@ -174,8 +174,8 @@ export default function AnimeList({ initialPage = 1, initialLimit = 15 }: AnimeL
       </div>
 
       {totalAnimes > 0 && (
-        <div className="flex justify-between items-center mb-6">
-          <p className="text-muted-foreground">
+        <div className="flex flex-col sm:flex-row justify-between items-center mb-4 sm:mb-6 gap-2">
+          <p className="text-xs sm:text-sm text-muted-foreground">
             Mostrando página {currentPage} de {totalPages} ({totalAnimes} animes total)
           </p>
           <div className="flex items-center gap-2">
@@ -187,7 +187,7 @@ export default function AnimeList({ initialPage = 1, initialLimit = 15 }: AnimeL
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            <span className="text-sm font-medium min-w-[60px] text-center">
+            <span className="text-xs sm:text-sm font-medium min-w-[48px] sm:min-w-[60px] text-center">
               {currentPage} / {totalPages}
             </span>
             <Button 
@@ -202,74 +202,25 @@ export default function AnimeList({ initialPage = 1, initialLimit = 15 }: AnimeL
         </div>
       )}
 
-      {/* Mostrar skeleton mientras carga */}
-      {loading && animes.length === 0 && (
-        <AnimeListSkeleton count={15} />
-      )}
-
-      {/* Cuadrícula de 3 filas × 5 columnas */}
-      {!loading && (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 mb-8">
-          {uniqueAnimes.map((anime, index) => (
-            <motion.div
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+        {loading ? (
+          <AnimeListSkeleton count={initialLimit} />
+        ) : (
+          uniqueAnimes.map((anime) => (
+            <AnimeCard
               key={anime.mal_id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.05 }}
-            >
-              <AnimeCard
-                id={anime.mal_id}
-                title={anime.title}
-                images={anime.images}
-                score={anime.score}
-                episodes={anime.episodes}
-                genres={anime.genres.map((g) => g.name)}
-                year={anime.year}
-                season={anime.season}
-                variant="compact"
-              />
-            </motion.div>
-          ))}
-        </div>
-      )}
-
-      {/* Navegación de páginas en la parte inferior */}
-      {totalPages > 1 && (
-        <div className="flex justify-center items-center gap-4 mt-8">
-          <Button 
-            variant="outline" 
-            onClick={handlePreviousPage}
-            disabled={currentPage <= 1 || loading}
-            className="flex items-center gap-2"
-          >
-            <ChevronLeft className="h-4 w-4" />
-            Anterior
-          </Button>
-          
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium">
-              Página {currentPage} de {totalPages}
-            </span>
-          </div>
-          
-          <Button 
-            variant="outline" 
-            onClick={handleNextPage}
-            disabled={currentPage >= totalPages || loading}
-            className="flex items-center gap-2"
-          >
-            Siguiente
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
-      )}
-
-      {/* Loading spinner para búsquedas */}
-      {searching && (
-        <div className="flex justify-center my-8">
-          <LoadingSpinner size="lg" text="Buscando animes..." />
-        </div>
-      )}
+              id={anime.mal_id}
+              title={anime.title}
+              images={anime.images}
+              score={anime.score}
+              episodes={anime.episodes}
+              genres={anime.genres}
+              year={anime.year}
+              season={anime.season}
+            />
+          ))
+        )}
+      </div>
     </div>
   )
 }

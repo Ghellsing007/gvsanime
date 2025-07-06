@@ -51,17 +51,17 @@ export default function GenreShowcase() {
   }
 
   if (loading) return (
-    <section className="mb-12">
-      <div className="flex justify-between items-center mb-6">
-        <Skeleton className="h-8 w-48 rounded" />
-        <Skeleton className="h-8 w-24 rounded" />
+    <section className="mb-6 lg:mb-12">
+      <div className="flex flex-col sm:flex-row justify-between items-center mb-4 sm:mb-6 gap-2">
+        <Skeleton className="h-7 w-40 rounded" />
+        <Skeleton className="h-7 w-20 rounded" />
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
         {[...Array(4)].map((_, i) => (
           <div key={i} className="group relative rounded-lg overflow-hidden">
             <Skeleton className="aspect-[16/9] w-full rounded-lg mb-2" />
-            <div className="p-4">
-              <Skeleton className="h-6 w-2/3 mb-2 rounded" />
+            <div className="p-2 sm:p-4">
+              <Skeleton className="h-5 w-2/3 mb-2 rounded" />
               <Skeleton className="h-4 w-1/2 mb-2 rounded" />
               <Skeleton className="h-4 w-1/3 rounded-full" />
             </div>
@@ -71,12 +71,12 @@ export default function GenreShowcase() {
     </section>
   )
   if (error) return (
-    <section className="mb-12">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">Explore Genres</h2>
+    <section className="mb-6 lg:mb-12">
+      <div className="flex flex-col sm:flex-row justify-between items-center mb-4 sm:mb-6 gap-2">
+        <h2 className="text-xl sm:text-2xl font-bold">Explora Géneros</h2>
         <Link href="/explorar/generos">
-          <Button variant="ghost" className="gap-1 text-muted-foreground">
-            View All <ChevronRight className="h-4 w-4" />
+          <Button variant="ghost" className="gap-1 text-muted-foreground text-sm sm:text-base">
+            Ver todos <ChevronRight className="h-4 w-4" />
           </Button>
         </Link>
       </div>
@@ -87,18 +87,18 @@ export default function GenreShowcase() {
   )
 
   return (
-    <section className="mb-12">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">Explore Genres</h2>
+    <section className="mb-6 lg:mb-12">
+      <div className="flex flex-col sm:flex-row justify-between items-center mb-4 sm:mb-6 gap-2">
+        <h2 className="text-xl sm:text-2xl font-bold">Explora Géneros</h2>
         <Link href="/explorar/generos">
-          <Button variant="ghost" className="gap-1 text-muted-foreground">
-            View All <ChevronRight className="h-4 w-4" />
+          <Button variant="ghost" className="gap-1 text-muted-foreground text-sm sm:text-base">
+            Ver todos <ChevronRight className="h-4 w-4" />
           </Button>
         </Link>
       </div>
 
       <motion.div
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6"
         variants={container}
         initial="hidden"
         whileInView="show"
@@ -118,9 +118,9 @@ export default function GenreShowcase() {
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/50 to-transparent" />
                 </div>
-                <div className="absolute bottom-0 left-0 right-0 p-4">
-                  <h3 className="text-xl font-bold mb-1">{genre.name}</h3>
-                  <p className="text-sm text-muted-foreground mb-2">
+                <div className="absolute bottom-0 left-0 right-0 p-2 sm:p-4">
+                  <h3 className="text-base sm:text-xl font-bold mb-1">{genre.name}</h3>
+                  <p className="text-xs sm:text-sm text-muted-foreground mb-2">
                     {genre.description || `Explora animes del género ${genre.name}`}
                   </p>
                   <div className="text-xs font-medium bg-primary/20 text-primary-foreground px-2 py-1 rounded-full inline-block">

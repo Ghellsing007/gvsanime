@@ -93,40 +93,40 @@ export default function RegisterPage() {
       <div className="absolute top-0 right-0 w-96 h-96 bg-secondary/10 rounded-full blur-3xl translate-x-1/2 -translate-y-1/2"></div>
       <div className="absolute bottom-0 left-0 w-96 h-96 bg-primary/10 rounded-full blur-3xl -translate-x-1/2 translate-y-1/2"></div>
 
-      <div className="w-full max-w-md relative z-10">
+      <div className="w-full max-w-xs sm:max-w-sm md:max-w-md relative z-10">
         {/* Header con logo y título */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-secondary to-primary rounded-2xl mb-4 shadow-lg">
-            <Anime className="h-8 w-8 text-white" />
+        <div className="text-center mb-6 sm:mb-8">
+          <div className="inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-secondary to-primary rounded-2xl mb-3 sm:mb-4 shadow-lg">
+            <Anime className="h-7 w-7 sm:h-8 sm:w-8 text-white" />
           </div>
           
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-secondary via-primary to-secondary bg-clip-text text-transparent mb-2">
+          <h1 className="text-2xl sm:text-4xl font-bold bg-gradient-to-r from-secondary via-primary to-secondary bg-clip-text text-transparent mb-1 sm:mb-2">
             {SITE_NAME}
           </h1>
           
-          <div className="flex items-center justify-center gap-2 text-muted-foreground mb-6">
+          <div className="flex items-center justify-center gap-1 sm:gap-2 text-muted-foreground mb-4 sm:mb-6">
             <Sparkles className="h-4 w-4" />
-            <span className="text-sm">Tu universo de anime</span>
+            <span className="text-xs sm:text-sm">Tu universo de anime</span>
             <Sparkles className="h-4 w-4" />
           </div>
 
-          <h2 className="text-2xl font-semibold text-foreground mb-2">
+          <h2 className="text-lg sm:text-2xl font-semibold text-foreground mb-1 sm:mb-2">
             ¡Únete a la comunidad!
           </h2>
-          <p className="text-muted-foreground">
+          <p className="text-xs sm:text-sm text-muted-foreground">
             Crea tu cuenta y comienza a explorar
           </p>
         </div>
 
         {/* Formulario */}
         <Card className="w-full bg-card/80 backdrop-blur-xl border-border/50 shadow-2xl">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-center text-xl">Crear Cuenta</CardTitle>
+          <CardHeader className="pb-3 sm:pb-4">
+            <CardTitle className="text-center text-lg sm:text-xl">Crear Cuenta</CardTitle>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-5">
-              <div className="space-y-2">
-                <Label htmlFor="username" className="text-sm font-medium">
+            <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-6">
+              <div className="space-y-1 sm:space-y-2">
+                <Label htmlFor="username" className="text-xs sm:text-sm font-medium">
                   Nombre de usuario
                 </Label>
                 <Input
@@ -135,13 +135,13 @@ export default function RegisterPage() {
                   placeholder="tu_usuario"
                   value={formData.username}
                   onChange={(e) => handleInputChange('username', e.target.value)}
-                  className="h-11 bg-background/50 border-border/50 focus:border-secondary/50"
+                  className="h-10 sm:h-11 bg-background/50 border-border/50 focus:border-secondary/50 text-sm sm:text-base"
                   required
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="email" className="text-sm font-medium">
+              <div className="space-y-1 sm:space-y-2">
+                <Label htmlFor="email" className="text-xs sm:text-sm font-medium">
                   Correo electrónico
                 </Label>
                 <Input
@@ -150,13 +150,13 @@ export default function RegisterPage() {
                   placeholder="tu@email.com"
                   value={formData.email}
                   onChange={(e) => handleInputChange('email', e.target.value)}
-                  className="h-11 bg-background/50 border-border/50 focus:border-secondary/50"
+                  className="h-10 sm:h-11 bg-background/50 border-border/50 focus:border-secondary/50 text-sm sm:text-base"
                   required
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="password" className="text-sm font-medium">
+              <div className="space-y-1 sm:space-y-2">
+                <Label htmlFor="password" className="text-xs sm:text-sm font-medium">
                   Contraseña
                 </Label>
                 <div className="relative">
@@ -166,7 +166,7 @@ export default function RegisterPage() {
                     placeholder="Mínimo 6 caracteres"
                     value={formData.password}
                     onChange={(e) => handleInputChange('password', e.target.value)}
-                    className="h-11 bg-background/50 border-border/50 focus:border-secondary/50 pr-10"
+                    className="h-10 sm:h-11 bg-background/50 border-border/50 focus:border-secondary/50 pr-10 text-sm sm:text-base"
                     required
                   />
                   <Button
@@ -185,8 +185,8 @@ export default function RegisterPage() {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword" className="text-sm font-medium">
+              <div className="space-y-1 sm:space-y-2">
+                <Label htmlFor="confirmPassword" className="text-xs sm:text-sm font-medium">
                   Confirmar contraseña
                 </Label>
                 <div className="relative">
@@ -196,7 +196,7 @@ export default function RegisterPage() {
                     placeholder="Repite tu contraseña"
                     value={formData.confirmPassword}
                     onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
-                    className="h-11 bg-background/50 border-border/50 focus:border-secondary/50 pr-10"
+                    className="h-10 sm:h-11 bg-background/50 border-border/50 focus:border-secondary/50 pr-10 text-sm sm:text-base"
                     required
                   />
                   <Button
@@ -235,20 +235,14 @@ export default function RegisterPage() {
               </div>
 
               {error && (
-                <div className={`p-4 border rounded-lg animate-in slide-in-from-top-2 ${
-                  error.includes('verifica') 
-                    ? 'bg-blue-50 border-blue-200 dark:bg-blue-950/20 dark:border-blue-800' 
-                    : 'bg-destructive/10 border-destructive/20'
-                }`}>
-                  <p className={`text-sm font-medium ${
-                    error.includes('verifica') ? 'text-blue-700 dark:text-blue-300' : 'text-destructive'
-                  }`}>{error}</p>
+                <div className="p-3 sm:p-4 bg-destructive/10 border border-destructive/20 rounded-lg animate-in slide-in-from-top-2">
+                  <p className="text-destructive text-xs sm:text-sm font-medium">{error}</p>
                 </div>
               )}
 
               <Button
                 type="submit"
-                className="w-full h-11 bg-gradient-to-r from-secondary to-primary hover:from-secondary/90 hover:to-primary/90 text-white font-medium gap-2 shadow-lg hover:shadow-xl transition-all duration-200"
+                className="w-full h-10 sm:h-11 bg-gradient-to-r from-secondary to-primary hover:from-secondary/90 hover:to-primary/90 text-white font-medium gap-2 shadow-lg hover:shadow-xl transition-all duration-200 text-sm sm:text-base"
                 disabled={loading}
               >
                 {loading ? (
@@ -261,13 +255,13 @@ export default function RegisterPage() {
             </form>
 
             {/* Enlaces adicionales */}
-            <div className="mt-8 space-y-4">
+            <div className="mt-6 sm:mt-8 space-y-3 sm:space-y-4">
               <div className="text-center">
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs sm:text-sm text-muted-foreground">
                   ¿Ya tienes una cuenta?{" "}
                   <Link 
                     href="/auth/login" 
-                    className="text-secondary hover:text-secondary/80 font-medium transition-colors"
+                    className="text-primary hover:text-primary/80 font-medium transition-colors"
                   >
                     Inicia sesión aquí
                   </Link>
@@ -277,7 +271,7 @@ export default function RegisterPage() {
               <div className="text-center">
                 <Link 
                   href="/" 
-                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  className="text-xs sm:text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
                   ← Volver al inicio
                 </Link>

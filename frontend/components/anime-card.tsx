@@ -200,6 +200,66 @@ export default function AnimeCard({
     )
   }
 
+  if (variant === "default") {
+    return (
+      <Link href={`/anime/${id}`}>
+        <motion.div
+          className="group relative rounded-lg overflow-hidden shadow-sm bg-background flex flex-col h-full transition-transform duration-200 hover:-translate-y-1"
+          whileHover={{ y: -4 }}
+          transition={{ duration: 0.2 }}
+        >
+          <div className="aspect-[3/4] relative">
+            <Image
+              src={getCardImage(images)}
+              alt={title}
+              fill
+              className="object-cover transition-transform duration-300 group-hover:scale-105"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+          </div>
+          <div className="flex-1 flex flex-col justify-between p-2 sm:p-3 lg:p-4">
+            <h3 className="text-base sm:text-lg lg:text-xl font-semibold mb-1 line-clamp-2">{title}</h3>
+            <div className="flex flex-wrap gap-1 mb-2">
+              {getGenreNames().slice(0, 2).map((genreName, index) => (
+                <span key={`${genreName}-${index}`} className="text-xs bg-primary/10 px-2 py-0.5 rounded">
+                  {genreName}
+                </span>
+              ))}
+            </div>
+            <div className="flex items-center justify-between mt-auto">
+              {score && (
+                <div className="flex items-center">
+                  <Star className="h-4 w-4 text-yellow-500 mr-1" />
+                  <span className="text-xs sm:text-sm font-medium">{score}</span>
+                </div>
+              )}
+              {episodes && <div className="text-xs sm:text-sm">{episodes} ep</div>}
+              {year && <div className="text-xs sm:text-sm">{year}</div>}
+            </div>
+            <div className="flex gap-2 mt-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 rounded-full bg-background/50 backdrop-blur-sm hover:bg-background/80"
+                onClick={handleToggleFavorite}
+              >
+                <Heart className={`h-4 w-4 ${isFavorite(id) ? "fill-red-500 text-red-500" : ""}`} />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 rounded-full bg-background/50 backdrop-blur-sm hover:bg-background/80"
+                onClick={handleToggleWatchlist}
+              >
+                <Bookmark className={`h-4 w-4 ${isInWatchlist(id) ? "fill-blue-500 text-blue-500" : ""}`} />
+              </Button>
+            </div>
+          </div>
+        </motion.div>
+      </Link>
+    )
+  }
+
   // Default variant
   return (
     <Link href={`/anime/${id}`}>

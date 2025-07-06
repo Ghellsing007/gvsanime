@@ -48,39 +48,37 @@ export default function Navbar() {
       "sticky top-0 z-50 w-full transition-all duration-200",
       isScrolled ? "bg-background/95 backdrop-blur-sm shadow-sm" : "bg-background"
     )}>
-      <div className="w-full px-4 md:px-6 max-w-screen-xl mx-auto">
-        <div className="flex items-center justify-between h-16 gap-2 flex-wrap">
+      <div className="w-full px-2 sm:px-4 lg:px-6 max-w-full lg:max-w-screen-xl mx-auto">
+        <div className="flex items-center justify-between h-14 lg:h-16 gap-1 sm:gap-2 flex-wrap">
           {/* Logo */}
-          <Link href="/" className="text-2xl font-bold bg-gradient-to-r from-primary via-accent to-secondary bg-clip-text text-transparent truncate max-w-[160px] sm:max-w-[200px]">
+          <Link href="/" className="text-xl sm:text-2xl lg:text-2xl font-bold bg-gradient-to-r from-primary via-accent to-secondary bg-clip-text text-transparent truncate max-w-[120px] sm:max-w-[160px] lg:max-w-[200px]">
             {SITE_NAME}
           </Link>
 
           {/* Navegación (Desktop) */}
-          {!isMobile && (
-            <nav className="flex-1 hidden md:flex justify-center gap-2 min-w-0">
-              {navItems.map((item) => (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className="flex items-center px-3 py-2 text-sm font-medium rounded-md hover:bg-primary/10 transition-colors whitespace-nowrap truncate"
-                >
-                  {item.icon}
-                  {item.name}
-                </Link>
-              ))}
-            </nav>
-          )}
+          <nav className="hidden lg:flex flex-1 justify-center gap-1 sm:gap-2 min-w-0">
+            {navItems.map((item) => (
+              <Link
+                key={item.name}
+                href={item.href}
+                className="flex items-center px-2 py-2 sm:px-3 lg:px-3 text-sm sm:text-base font-medium rounded-md hover:bg-primary/10 transition-colors whitespace-nowrap truncate"
+              >
+                {item.icon}
+                {item.name}
+              </Link>
+            ))}
+          </nav>
 
           {/* Búsqueda + Acciones */}
-          <div className="flex items-center gap-2 flex-shrink-0 min-w-0">
+          <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0 min-w-0">
             {/* Búsqueda */}
-            <form onSubmit={handleSearch} className="hidden md:flex items-center min-w-0 max-w-[300px] w-full">
+            <form onSubmit={handleSearch} className="hidden lg:flex items-center min-w-0 max-w-[180px] sm:max-w-[220px] lg:max-w-[300px] w-full">
               <AnimeSearchAutocomplete
                 size="small"
                 placeholder="Buscar anime..."
                 value={searchQuery}
                 onChange={setSearchQuery}
-                className="min-w-0 w-[120px] sm:w-[180px] md:w-[220px] lg:w-[280px] truncate"
+                className="min-w-0 w-[80px] sm:w-[140px] md:w-[180px] lg:w-[220px] xl:w-[280px] truncate"
               />
               <Button type="submit" size="icon" variant="ghost" className="ml-1">
                 <Search className="h-5 w-5" />
@@ -96,14 +94,8 @@ export default function Navbar() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => setTheme("light")}>
-                  <Sun className="h-4 w-4 mr-2" />
-                  Claro
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setTheme("dark")}>
-                  <Moon className="h-4 w-4 mr-2" />
-                  Oscuro
-                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setTheme("light")}> <Sun className="h-4 w-4 mr-2" /> Claro </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setTheme("dark")}> <Moon className="h-4 w-4 mr-2" /> Oscuro </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
 
@@ -112,7 +104,7 @@ export default function Navbar() {
               isAuthenticated && user ? (
                 <UserMenu user={user} onLogout={logout} />
               ) : (
-                <div className="hidden md:flex gap-2 items-center">
+                <div className="hidden lg:flex gap-1 sm:gap-2 items-center">
                   <Button variant="ghost" size="sm" asChild className="whitespace-nowrap">
                     <Link href="/auth/login">
                       <LogIn className="h-4 w-4 mr-1" />
@@ -130,7 +122,7 @@ export default function Navbar() {
             )}
 
             {/* Menú móvil */}
-            <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setIsOpen(!isOpen)}>
+            <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setIsOpen(!isOpen)}>
               {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </Button>
           </div>
@@ -139,8 +131,8 @@ export default function Navbar() {
 
       {/* Menú móvil */}
       {isMobile && isOpen && (
-        <div className="md:hidden animate-fade-in bg-background shadow-inner">
-          <div className="p-4 space-y-3">
+        <div className="lg:hidden animate-fade-in bg-background shadow-inner">
+          <div className="p-3 sm:p-4 space-y-2 sm:space-y-3">
             <form onSubmit={handleSearch} className="w-full">
               <div className="relative">
                 <input
@@ -148,7 +140,7 @@ export default function Navbar() {
                   placeholder="Buscar anime..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full px-4 py-2 rounded-md bg-muted text-sm"
+                  className="w-full px-4 py-3 rounded-md bg-muted text-base"
                 />
                 <Button type="submit" size="icon" variant="ghost" className="absolute right-1 top-1">
                   <Search className="h-4 w-4" />
@@ -160,7 +152,7 @@ export default function Navbar() {
               <Link
                 key={item.name}
                 href={item.href}
-                className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-primary/10 transition-colors"
+                className="flex items-center gap-2 px-3 py-3 rounded-md hover:bg-primary/10 transition-colors text-base font-medium"
                 onClick={() => setIsOpen(false)}
               >
                 {item.icon}
@@ -170,7 +162,7 @@ export default function Navbar() {
 
             {/* Cambio de tema en móvil */}
             <div className="flex items-center gap-2 px-3 py-2">
-              <span className="text-sm">Tema:</span>
+              <span className="text-base">Tema:</span>
               <Button
                 variant="ghost"
                 size="sm"
@@ -180,12 +172,12 @@ export default function Navbar() {
                 {mounted && theme === "light" ? (
                   <>
                     <Sun className="h-4 w-4" />
-                    <span className="text-sm">Claro</span>
+                    <span className="text-base">Claro</span>
                   </>
                 ) : (
                   <>
                     <Moon className="h-4 w-4" />
-                    <span className="text-sm">Oscuro</span>
+                    <span className="text-base">Oscuro</span>
                   </>
                 )}
               </Button>
@@ -207,31 +199,6 @@ export default function Navbar() {
                 </Button>
               </div>
             )}
-
-                         {isAuthenticated && user && (
-               <div className="p-2">
-                 <div className="flex items-center gap-2 mb-2">
-                   <div className="bg-primary/10 w-8 h-8 rounded-full flex items-center justify-center">
-                     {user.username.charAt(0).toUpperCase()}
-                   </div>
-                   <div>
-                     <p className="text-sm font-medium">{user.username}</p>
-                     <p className="text-xs text-muted-foreground">{user.email}</p>
-                   </div>
-                 </div>
-                 <Button 
-                   variant="ghost" 
-                   className="w-full justify-start text-red-600 hover:text-red-600"
-                   onClick={() => {
-                     logout()
-                     setIsOpen(false)
-                   }}
-                 >
-                   <LogOut className="h-4 w-4 mr-2" />
-                   Cerrar Sesión
-                 </Button>
-               </div>
-             )}
           </div>
         </div>
       )}

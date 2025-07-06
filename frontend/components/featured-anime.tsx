@@ -86,25 +86,25 @@ export default function FeaturedAnime() {
   }
 
   if (loading) return (
-    <section className="mb-12">
-      <div className="flex justify-between items-center mb-6">
-        <Skeleton className="h-8 w-48 rounded" />
+    <section className="mb-6 lg:mb-12">
+      <div className="flex flex-col sm:flex-row justify-between items-center mb-4 sm:mb-6 gap-2">
+        <Skeleton className="h-7 w-40 rounded" />
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
         {[...Array(6)].map((_, i) => (
           <div key={i} className="relative rounded-lg overflow-visible">
             <Skeleton className="aspect-video w-full rounded-lg mb-2" />
-            <div className="absolute bottom-0 left-0 right-0 p-4">
-              <Skeleton className="h-8 w-2/3 mb-2 rounded" />
+            <div className="absolute bottom-0 left-0 right-0 p-2 sm:p-4">
+              <Skeleton className="h-7 w-2/3 mb-2 rounded" />
               <div className="flex gap-1 mb-2">
                 <Skeleton className="h-4 w-12 rounded" />
                 <Skeleton className="h-4 w-12 rounded" />
                 <Skeleton className="h-4 w-12 rounded" />
               </div>
-              <div className="flex items-center space-x-3">
-                <Skeleton className="h-4 w-16 rounded" />
-                <Skeleton className="h-4 w-16 rounded" />
-                <Skeleton className="h-4 w-16 rounded" />
+              <div className="flex items-center space-x-2 sm:space-x-3">
+                <Skeleton className="h-4 w-12 sm:w-16 rounded" />
+                <Skeleton className="h-4 w-12 sm:w-16 rounded" />
+                <Skeleton className="h-4 w-12 sm:w-16 rounded" />
               </div>
             </div>
           </div>
@@ -140,16 +140,13 @@ export default function FeaturedAnime() {
   }
 
   return (
-    <section className="mb-12">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">Featured Anime</h2>
-        {/* <Button variant="ghost" className="gap-1 text-muted-foreground">
-          View All <ChevronRight className="h-4 w-4" />
-        </Button> */}
+    <section className="mb-6 lg:mb-12">
+      <div className="flex flex-col sm:flex-row justify-between items-center mb-4 sm:mb-6 gap-2">
+        <h2 className="text-xl sm:text-2xl font-bold">Featured Anime</h2>
       </div>
 
       <motion.div
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6"
         variants={container}
         initial="hidden"
         whileInView="show"
